@@ -4,8 +4,6 @@ cache: cargo
 
 rust:
   - nightly
-  - beta
-  - stable
 
 before_script:
   - (cargo install mdbook --git https://github.com/azerupi/mdBook.git --force || true)
