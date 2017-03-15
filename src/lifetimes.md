@@ -246,19 +246,18 @@ strings referenced by its arguments, but *without* allocating a new string.
 
 The two references passed at the call-site of `shortest()` have different lifetimes
 since their referents are defined in different scopes. The
-string value `s1` is live longer than the string value `s2`, yet the signature
+string reference `&s1` is valid longer than the string reference `&s2`, yet the signature
 of `shortest()` requires that these two references have the same lifetime.
 Furthermore, the returned string reference must also share this same lifetime too.
-So how does the compiler make this so?
+So how does the compiler make sure this is the case?
 
-Essentially, the signature of `shortest()` asks the compiler to find a single
-lifetime in the *caller* under which the three references annotated `'a` remain
-valid. Rust will try to *convert* each of these three reference
-lifetimes in `main()` into *one* *unified* lifetime which is shorter than, or equally as
-long as, each of the references in isolation. A reference `&'o T` can be
+At the call-site of `shortest()`, the compiler must try to *convert* the lifetimes of
+the references corresponding to a reference marked `&'a` in the function signature
+into a single *unified* lifetime. This new lifetime must be shorter than, or equally as
+long as, each of the reference lifetimes in isolation. A reference `&'o T` can be
 converted to to `&'p T` if (and only if) it can be proven that `'o` lives as
 long as (or longer than) `'p`. In our example the references `'&s1`, `&s2` and
-the returned reference can all be shown to be valid as long as the implicit
+the returned reference can all be shown to be valid for the
 scope created by the `let s2` binding (see above for information on implicit
 scopes introduced by `let` bindings). So in this case, we can prove that the
 lifetimes of `&s1`, `&s2` and the returned reference can be unified, and as a
