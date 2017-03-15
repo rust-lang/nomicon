@@ -213,3 +213,61 @@ totally ok*, because it keeps us from spending all day explaining our program
 to the compiler. However it does mean that several programs that are totally
 correct with respect to Rust's *true* semantics are rejected because lifetimes
 are too dumb.
+
+# Unifying Lifetimes
+
+XXX: is unification a good term to be using?
+
+Often the Rust compiler must prove that two references with different lifetimes
+are compatible. We call this *unification* of lifetimes.
+
+Consider the following program:
+
+```rust,ignore
+fn main() {
+    let s1 = String::from("short");
+    {
+        let s2 = String::from("a long long long string");
+        println!("{}", min(&s1, &s2));
+    }
+}
+
+fn min<'a>(x: &'a str, y: &'a str) -> &'a str {
+    if x.len() < y.len() {
+        return x;
+    } else {
+        return y;
+    }
+}
+```
+
+The idea is that `min()` returns a reference to the shorter of the two strings
+referenced by its arguments, but *without* allocating a new string.
+
+The two references passed at the call-site of `min()` have different lifetimes
+since their referents are defined in different scopes. In this example, the
+string value `s1` is valid longer than the string value `s2`, yet the signature
+of `min()` requires that these two references have the same lifetime.
+Furthermore, the returned string reference must share this same lifetime too.
+Essentially, the signature of `min()` asks the compiler to find a single
+lifetime in the *caller* under which the three references annotated `'a` remain
+valid.
+
+Rust will try to do this by *converting* each of these three reference
+lifetimes in `main()` into *one* lifetime which is shorter than, or equally as
+long as, each of the references in isolation. A reference `&'o T` can be
+converted to to `&'p T` if (and only if) it can be proven that `'o` lives as
+long as (or longer than) `'p`. In our example the references `'&s1`, `&s2` and
+the returned reference can all be shown to be valid as long as the implicit
+scope created by the `let s2` binding (see above for information on implicit
+scopes introduced by `let` bindings). So in this case, we can prove that the
+lifetimes of `&s1`, `&s2` and the returned reference can be unified, and as a
+result he compiler accepts the program.
+
+If, on the other hand, the compiler cannot find such a lifetime, then the
+lifetime constraints described by the program are inconsistent, and the
+compiler will reject the program. For example
+
+```rust,ignore
+XXX
+```
