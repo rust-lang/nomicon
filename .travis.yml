@@ -1,0 +1,11 @@
+language: rust
+
+cache: cargo
+
+rust:
+  - nightly
+
+before_script:
+  - (cargo install mdbook --git https://github.com/azerupi/mdBook.git --force || true)
+
+script: /home/travis/.cargo/bin/mdbook test;
