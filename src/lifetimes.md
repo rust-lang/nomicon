@@ -252,7 +252,7 @@ Furthermore, the returned string reference must also share this same lifetime to
 So how does the compiler make sure this is the case?
 
 At the call-site of `shortest()`, the compiler must try to *convert* the lifetimes of
-the references corresponding to a reference marked `&'a` in the function signature
+the references marked `&'a` in the `shortest()` function signature
 into a single *unified* lifetime. This new lifetime must be shorter than, or equally as
 long as, each of the reference lifetimes in isolation. A reference `&'o T` can be
 converted to to `&'p T` if (and only if) it can be proven that `'o` lives as
@@ -260,7 +260,7 @@ long as (or longer than) `'p`. In our example the references `'&s1`, `&s2` and
 the returned reference can all be shown to be valid for the
 scope created by the `let s2` binding (see above for information on implicit
 scopes introduced by `let` bindings). So in this case, we can prove that the
-lifetimes of `&s1`, `&s2` and the returned reference can be unified, and as a
+lifetimes can be unified, and as a
 result he compiler accepts the program.
 
 If, on the other hand, the compiler cannot find such a lifetime, then the
