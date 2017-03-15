@@ -228,11 +228,11 @@ fn main() {
     let s1 = String::from("short");
     {
         let s2 = String::from("a long long long string");
-        println!("{}", min(&s1, &s2));
+        println!("{}", shortest(&s1, &s2));
     }
 }
 
-fn min<'a>(x: &'a str, y: &'a str) -> &'a str {
+fn shortest<'a>(x: &'a str, y: &'a str) -> &'a str {
     if x.len() < y.len() {
         return x;
     } else {
@@ -241,20 +241,20 @@ fn min<'a>(x: &'a str, y: &'a str) -> &'a str {
 }
 ```
 
-The idea is that `min()` returns a reference to the shorter of the two strings
-referenced by its arguments, but *without* allocating a new string.
+The idea is that `shortest()` returns a reference to the shorter of the two
+strings referenced by its arguments, but *without* allocating a new string.
 
-The two references passed at the call-site of `min()` have different lifetimes
-since their referents are defined in different scopes. In this example, the
-string value `s1` is valid longer than the string value `s2`, yet the signature
-of `min()` requires that these two references have the same lifetime.
-Furthermore, the returned string reference must share this same lifetime too.
-Essentially, the signature of `min()` asks the compiler to find a single
+The two references passed at the call-site of `shortest()` have different lifetimes
+since their referents are defined in different scopes. The
+string value `s1` is live longer than the string value `s2`, yet the signature
+of `shortest()` requires that these two references have the same lifetime.
+Furthermore, the returned string reference must also share this same lifetime too.
+So how does the compiler make this so?
+
+Essentially, the signature of `shortest()` asks the compiler to find a single
 lifetime in the *caller* under which the three references annotated `'a` remain
-valid.
-
-Rust will try to do this by *converting* each of these three reference
-lifetimes in `main()` into *one* lifetime which is shorter than, or equally as
+valid. Rust will try to *convert* each of these three reference
+lifetimes in `main()` into *one* *unified* lifetime which is shorter than, or equally as
 long as, each of the references in isolation. A reference `&'o T` can be
 converted to to `&'p T` if (and only if) it can be proven that `'o` lives as
 long as (or longer than) `'p`. In our example the references `'&s1`, `&s2` and
@@ -266,7 +266,7 @@ result he compiler accepts the program.
 
 If, on the other hand, the compiler cannot find such a lifetime, then the
 lifetime constraints described by the program are inconsistent, and the
-compiler will reject the program. For example
+compiler will reject the program. For example:
 
 ```rust,ignore
 XXX
