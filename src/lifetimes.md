@@ -214,20 +214,15 @@ to the compiler. However it does mean that several programs that are totally
 correct with respect to Rust's *true* semantics are rejected because lifetimes
 are too dumb.
 
-# Unifying Lifetimes
-
-XXX: is unification a good term to be using?
-
-Often the Rust compiler must prove that two references with different lifetimes
-are compatible. We call this *unification* of lifetimes.
+# A More Involved Example.
 
 Consider the following program:
 
 ```rust,ignore
 fn main() {
     let s1 = String::from("short");
-    let s2 = String::from("a long long long string");
-    println!("{}", shortest(&s1, &s2));
+    let s2r = &String::from("a long long long string");
+    println!("{}", shortest(&s1, s2r));
 }
 
 fn shortest<'k>(x: &'k str, y: &'k str) -> &'k str {
@@ -241,18 +236,17 @@ fn shortest<'k>(x: &'k str, y: &'k str) -> &'k str {
 
 The idea is that `shortest()` returns a reference to the shorter of the two
 strings referenced by its arguments, but *without* allocating a new string.
-Let's de-sugar main so we can see the implicit lifetimes:
+Let's de-sugar `main()` so we can see the implicit lifetimes:
 
 ```rust,ignore
 fn main() {
     'a {
         let s1 = String::from("short");
-        'b {
-            let s2 = String::from("a long long long string");
+        b' {
+            let s2r: &'b = &'b String::from("a long long long string");
             'c {
-                // Like before, an anonymous scope introduced since &s1 doesn't
-                // need to last as long as s1 itself, and similarly for s2.
-                println!("{}", shortest(&'b s1, &'a s2));
+                // Annonymous scope for the borrow of s1
+                println!("{}", shortest(&'c s1, s2r));
             }
         }
     }
@@ -260,8 +254,8 @@ fn main() {
 ```
 
 Now we see that the references passed as arguments to `shortest()`, i.e. `&s1`
-and `&s2`, actually have different lifetimes, `&'a` and `&'b`, since their
-referents are defined in different scopes. However, the signature of
+and `&s2`, actually have different lifetimes (`&'b` and `&'c` respectively), since the borrows occur in different scopes.
+However, the signature of
 `shortest()` requires that these two references (and also the returned
 reference, which has lifetime `'c`) have the same lifetime. So how does the
 compiler make sure this is the case?
@@ -269,32 +263,51 @@ compiler make sure this is the case?
 At the call-site of `shortest()`, the compiler must try to *convert* the lifetimes of
 the references marked `&'a` in the signature of `shortest()`
 into a single compatible lifetime. This new lifetime must be shorter than, or equally as
-long as, all three of the original reference lifetimes involved. Therefore a reference `&'o` can be
-converted to to `&'p` if `'o` lives at least as long as `'p`.
+long as, all three of the original reference lifetimes involved. In other words, we must convert to the shortest of the three lifetimes to `&'c`. Conversion from a reference `&'o` can be converted to to `&'p` if `'o` lives at least as long as `'p`, therefore:
 
-In our example:
-
- * `&'b` outlives `'c`, so `&'b` can be converted to `&'c`.
- * `&'a` outlives `'c`, so `&'a` can be converted to `&'c`.
+ * `The first argument &'c s1` already has lifetime `&'c`, so we don't have to do anything here.
+ * `&'b` outlives `&'c`, so we can convert `s2r: &'b` to `s2r: &'c`.
  * The returned reference has lifetime `&'c` already.
 
-So these references are unified in `&'c`, therefore the lifetime constraints
-imposed by `shortest()` are consistent, and the compiler accepts the program.
+After conversion, the call-site satisfies the signature of `shorter()`, we have
+proven the lifetimes in this program to be consistent, and therefore the
+compiler accepts the program.
 
 Now consider a slight variation on `main()` like this:
 
 ```rust,ignore
-fn main()  {
-    let a = String::from("short");
-    {
-        let c: &str;
-        let b = String::from("a long long long string");
-        c = min(&a, &b);
+fn main() {
+    let s1 = String::from("short");
+    let res;
+    let s2 = String::from("a long long long string");
+    res = shortest(&s1, &s2);
+    println!("{}", res);
+}
+```
 
+De-sugared it looks like this:
+
+```rust,ignore
+fn main() {
+    'a {
+        let s1 = String::from("short");
+        'b {
+            let res: &'b str;
+            'c {
+                let s2 = String::from("a long long long string");
+                'd {
+                    // Annonymous scope for the borrows of s1 and s2
+                    // Assigning to the outer scope causes s1 and s2 to have 'b
+                    res: &'b = shortest(&'d s1, &'d s2);
+                    println!("{}", res);
+                }
+            }
+        }
     }
 }
 ```
 
-XXX Desugar.
-
-XXX Explain why it doesn't work.
+XXX: Something is wrong. The above program does not compile, so we should be
+able to show that the lifetimes are inconsistent. To do so we would  to be have
+to show that we can't convert `&'b` to `&'d`, but since `&'b` outlives `&'d`,
+we can. Hrmm.
