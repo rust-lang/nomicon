@@ -226,13 +226,11 @@ Consider the following program:
 ```rust,ignore
 fn main() {
     let s1 = String::from("short");
-    {
-        let s2 = String::from("a long long long string");
-        println!("{}", shortest(&s1, &s2));
-    }
+    let s2 = String::from("a long long long string");
+    println!("{}", shortest(&s1, &s2));
 }
 
-fn shortest<'a>(x: &'a str, y: &'a str) -> &'a str {
+fn shortest<'k>(x: &'k str, y: &'k str) -> &'k str {
     if x.len() < y.len() {
         return x;
     } else {
@@ -243,30 +241,60 @@ fn shortest<'a>(x: &'a str, y: &'a str) -> &'a str {
 
 The idea is that `shortest()` returns a reference to the shorter of the two
 strings referenced by its arguments, but *without* allocating a new string.
-
-The two references passed at the call-site of `shortest()` have different lifetimes
-since their referents are defined in different scopes. The
-string reference `&s1` is valid longer than the string reference `&s2`, yet the signature
-of `shortest()` requires that these two references have the same lifetime.
-Furthermore, the returned string reference must also share this same lifetime too.
-So how does the compiler make sure this is the case?
-
-At the call-site of `shortest()`, the compiler must try to *convert* the lifetimes of
-the references marked `&'a` in the `shortest()` function signature
-into a single *unified* lifetime. This new lifetime must be shorter than, or equally as
-long as, each of the reference lifetimes in isolation. A reference `&'o T` can be
-converted to to `&'p T` if (and only if) it can be proven that `'o` lives as
-long as (or longer than) `'p`. In our example the references `'&s1`, `&s2` and
-the returned reference can all be shown to be valid for the
-scope created by the `let s2` binding (see above for information on implicit
-scopes introduced by `let` bindings). So in this case, we can prove that the
-lifetimes can be unified, and as a
-result he compiler accepts the program.
-
-If, on the other hand, the compiler cannot find such a lifetime, then the
-lifetime constraints described by the program are inconsistent, and the
-compiler will reject the program. For example:
+Let's de-sugar main so we can see the implicit lifetimes:
 
 ```rust,ignore
-XXX
+fn main() {
+    'a {
+        let s1 = String::from("short");
+        'b {
+            let s2 = String::from("a long long long string");
+            'c {
+                // Like before, an anonymous scope introduced since &s1 doesn't
+                // need to last as long as s1 itself, and similarly for s2.
+                println!("{}", shortest(&'b s1, &'a s2));
+            }
+        }
+    }
+}
 ```
+
+Now we see that the references passed as arguments to `shortest()`, i.e. `&s1`
+and `&s2`, actually have different lifetimes, `&'a` and `&'b`, since their
+referents are defined in different scopes. However, the signature of
+`shortest()` requires that these two references (and also the returned
+reference, which has lifetime `'c`) have the same lifetime. So how does the
+compiler make sure this is the case?
+
+At the call-site of `shortest()`, the compiler must try to *convert* the lifetimes of
+the references marked `&'a` in the signature of `shortest()`
+into a single compatible lifetime. This new lifetime must be shorter than, or equally as
+long as, all three of the original reference lifetimes involved. Therefore a reference `&'o` can be
+converted to to `&'p` if `'o` lives at least as long as `'p`.
+
+In our example:
+
+ * `&'b` outlives `'c`, so `&'b` can be converted to `&'c`.
+ * `&'a` outlives `'c`, so `&'a` can be converted to `&'c`.
+ * The returned reference has lifetime `&'c` already.
+
+So these references are unified in `&'c`, therefore the lifetime constraints
+imposed by `shortest()` are consistent, and the compiler accepts the program.
+
+Now consider a slight variation on `main()` like this:
+
+```rust,ignore
+fn main()  {
+    let a = String::from("short");
+    {
+        let c: &str;
+        let b = String::from("a long long long string");
+        c = min(&a, &b);
+
+    }
+}
+```
+
+XXX Desugar.
+
+XXX Explain why it doesn't work.
