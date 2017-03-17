@@ -234,9 +234,9 @@ fn shortest<'k>(x: &'k str, y: &'k str) {
 }
 ```
 
-`print_shortest()` simply prints the shorter of its two pass-by-reference
+`print_shortest` simply prints the shorter of its two pass-by-reference
 string arguments. In Rust, each let binding has its own scope. Let's make the
-scopes introduced to `main()` explicit:
+scopes introduced to `main` explicit:
 
 ```rust,ignore
 fn main() {
@@ -262,23 +262,23 @@ fn main() {
 }
 ```
 
-Now we see that the references passed as arguments to `print_shortest()`
+Now we see that the references passed as arguments to `print_shortest`
 actually have different lifetimes (and thus a different type!) since the values
 they refer to were introduced in different scopes. At the call site of
-`print_shortest()` the compiler must now check that the lifetimes in the
-*caller* (`main()`) are consistent with the lifetimes in the signature of the
-*callee* (`print_shortest()`).
+`print_shortest` the compiler must now check that the lifetimes in the
+*caller* (`main`) are consistent with the lifetimes in the signature of the
+*callee* (`print_shortest`).
 
-The signature of `print_shortest()` simply requires that both of it's arguments
+The signature of `print_shortest` simply requires that both of it's arguments
 have the same lifetime (because both arguments are marked with the same
-lifetime identifier in the signature). If in `main()` we had done:
+lifetime identifier in the signature). If in `main` we had done:
 
 ```rust,ignore
 print_shortest(&s1, &s1);
 
 ```
 
-Then this the consistency is trivially proven, since both arguments would have
+Then consistency is trivially proven, since both arguments would have
 the same lifetime `&'s1` at the call-site. However, for our example, the
 arguments have different lifetimes. We don't want Rust to reject the program
 because it actually is safe. Instead the compiler uses some rules for
@@ -291,7 +291,7 @@ such rule is as follows:
 At our call site, the type of the arguments are `&'s1 str` and `&'s2 str`, and
 we know that  a `&'s1 str' outlives an `&'s2 str`, so we can substitute `&'s1
 s1` with `&'s2 s2`. After this both arguments are of lifetime `&'s2` and the
-call-site is consistent with the signature of `print_shortest()`.
+call-site is consistent with the signature of `print_shortest`.
 
 [More formally, the basis for the above rule is in *type variance*. Under this
 model, you would consider a longer lifetime a sub-type of a shorter lifetime,
@@ -321,12 +321,12 @@ fn shortest<'k>(x: &'k str, y: &'k str) -> &'k str {
 }
 ```
 
-`print_shortest()` has been renamed to `shortest()`, which instead of printing,
+`print_shortest` has been renamed to `shortest`, which instead of printing,
 now returns the shorter of the two strings. It does this using only references
 for efficiency, avoiding the need to re-allocate a new string to pass back to
-`main()`. The responsibility of printing the result has been shifted to `main()`.
+`main`. The responsibility of printing the result has been shifted to `main`.
 
-Let's again de-sugar `main()` by adding explicit scopes and lifetimes:
+Let's again de-sugar `main` by adding explicit scopes and lifetimes:
 
 ```rust,ignore
 fn main() {
@@ -344,9 +344,9 @@ fn main() {
 }
 ```
 
-Again, at the call-site of `shortest()` the comipiler needs to check the
+Again, at the call-site of `shortest` the comipiler needs to check the
 consistency of the arguments in the caller with the signature of the callee.
-The signature of `shortest()` fisrt says that the two reference arguments have
+The signature of `shortest` fisrt says that the two reference arguments have
 the same lifetime, which can be prove ok in the same way as before, thus giving
 us:
 
@@ -401,7 +401,7 @@ fn main() {
 }
 ```
 
-Then at the call-site of `shortest()`:
+Then at the call-site of `shortest`:
  * `&'s1 s1` outlives `&'s2 s2`, so we can replace the first argument with `&'s2 s1`.
  * `&'res str` lives shorter than `'&s2`, so the return value lifetime can become `res: &'s2 str`
 
@@ -411,6 +411,6 @@ Leaving us with:
 res: &'s2 str = shortest(&'s2 s1, &'s2 s2);
 ```
 
-Which matches the signature of `shortest()` and thus this compiles.
+Which matches the signature of `shortest` and thus this compiles.
 Intuitively, the return reference can't point to a freed value as the values
 live strictly longer than the return reference.
