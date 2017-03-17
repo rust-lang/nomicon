@@ -214,15 +214,102 @@ to the compiler. However it does mean that several programs that are totally
 correct with respect to Rust's *true* semantics are rejected because lifetimes
 are too dumb.
 
-# A More Involved Example.
+# Inter-procedural Borrow Checking of Function Arguments
 
 Consider the following program:
 
 ```rust,ignore
 fn main() {
     let s1 = String::from("short");
-    let s2r = &String::from("a long long long string");
-    println!("{}", shortest(&s1, s2r));
+    let s2 = String::from("a long long long string");
+    print_shortest(&s1, &s2);
+}
+
+fn shortest<'k>(x: &'k str, y: &'k str) {
+    if x.len() < y.len() {
+        println!("{}", x);
+    } else {
+        println!("{}", y);
+    }
+}
+```
+
+`print_shortest()` simply prints the shorter of its two pass-by-reference
+string arguments. In Rust, each let binding has its own scope. Let's make the
+scopes introduced to `main()` explicit:
+
+```rust,ignore
+fn main() {
+    's1 {
+        let s1 = String::from("short");
+        's2 {
+            let s2 = String::from("a long long long string");
+            print_shortest(&s1, &s2);
+        }
+}
+```
+
+And now let's explicitly mark the lifetimes of each reference's referent too:
+
+```rust,ignore
+fn main() {
+    's1 {
+        let s1 = String::from("short");
+        's2 {
+            let s2 = String::from("a long long long string");
+            print_shortest(&'s1 s1, &'s2 s2);
+        }
+}
+```
+
+Now we see that the references passed as arguments to `print_shortest()`
+actually have different lifetimes (and thus a different type!) since the values
+they refer to were introduced in different scopes. At the call site of
+`print_shortest()` the compiler must now check that the lifetimes in the
+*caller* (`main()`) are consistent with the lifetimes in the signature of the
+*callee* (`print_shortest()`).
+
+The signature of `print_shortest()` simply requires that both of it's arguments
+have the same lifetime (because both arguments are marked with the same
+lifetime identifier in the signature). If in `main()` we had done:
+
+```rust,ignore
+print_shortest(&s1, &s1);
+
+```
+
+Then this the consistency is trivially proven, since both arguments would have
+the same lifetime `&'s1` at the call-site. However, for our example, the
+arguments have different lifetimes. We don't want Rust to reject the program
+because it actually is safe. Instead the compiler uses some rules for
+converting between lifetimes whilst retaining referential safety. The first
+such rule is as follows:
+
+> A function argument of type `&'p T` can be coerced with an argument of type
+> `&'q T` if the lifetime of `&'p T` is equal or longer than `&'q T`.
+
+At our call site, the type of the arguments are `&'s1 str` and `&'s2 str`, and
+we know that  a `&'s1 str' outlives an `&'s2 str`, so we can substitute `&'s1
+s1` with `&'s2 s2`. After this both arguments are of lifetime `&'s2` and the
+call-site is consistent with the signature of `print_shortest()`.
+
+[More formally, the basis for the above rule is in *type variance*. Under this
+model, you would consider a longer lifetime a sub-type of a shorter lifetime,
+and for function arguments to be *co-variant*. However, an understanding of
+variance isn't strictly required to understand the Rust borrow checker. We've
+tried here to instead to explain using intuitive terminlolgy.]
+
+# Inter-procedural Borrow Checking of Function Return Values
+
+Now consider a slight variation of this example:
+
+```rust,ignore
+fn main() {
+    let s1 = String::from("short");
+    let res;
+    let s2 = String::from("a long long long string");
+    res = shortest(&s1, &s2);
+    println!("{}", res);
 }
 
 fn shortest<'k>(x: &'k str, y: &'k str) -> &'k str {
@@ -234,80 +321,96 @@ fn shortest<'k>(x: &'k str, y: &'k str) -> &'k str {
 }
 ```
 
-The idea is that `shortest()` returns a reference to the shorter of the two
-strings referenced by its arguments, but *without* allocating a new string.
-Let's de-sugar `main()` so we can see the implicit lifetimes:
+`print_shortest()` has been renamed to `shortest()`, which instead of printing,
+now returns the shorter of the two strings. It does this using only references
+for efficiency, avoiding the need to re-allocate a new string to pass back to
+`main()`. The responsibility of printing the result has been shifted to `main()`.
+
+Let's again de-sugar `main()` by adding explicit scopes and lifetimes:
 
 ```rust,ignore
 fn main() {
-    'a {
+    's1 {
         let s1 = String::from("short");
-        b' {
-            let s2r: &'b = &'b String::from("a long long long string");
-            'c {
-                // Annonymous scope for the borrow of s1
-                println!("{}", shortest(&'c s1, s2r));
+        'res {
+            let res: &'res str;
+            's2 {
+                let s2 = String::from("a long long long string");
+                res: &'res: str = shortest(&'s1 s1, &'s2 s2);
+                println!("{}", res);
             }
         }
     }
 }
 ```
 
-Now we see that the references passed as arguments to `shortest()`, i.e. `&s1`
-and `&s2`, actually have different lifetimes (`&'b` and `&'c` respectively), since the borrows occur in different scopes.
-However, the signature of
-`shortest()` requires that these two references (and also the returned
-reference, which has lifetime `'c`) have the same lifetime. So how does the
-compiler make sure this is the case?
+Again, at the call-site of `shortest()` the comipiler needs to check the
+consistency of the arguments in the caller with the signature of the callee.
+The signature of `shortest()` fisrt says that the two reference arguments have
+the same lifetime, which can be prove ok in the same way as before, thus giving
+us:
 
-At the call-site of `shortest()`, the compiler must try to *convert* the lifetimes of
-the references marked `&'a` in the signature of `shortest()`
-into a single compatible lifetime. This new lifetime must be shorter than, or equally as
-long as, all three of the original reference lifetimes involved. In other words, we must convert to the shortest of the three lifetimes to `&'c`. Conversion from a reference `&'o` can be converted to to `&'p` if `'o` lives at least as long as `'p`, therefore:
+```rust,ignore
+res: &'res = shortest(&'s2 s1, &'s2 s2);
+```
 
- * `The first argument &'c s1` already has lifetime `&'c`, so we don't have to do anything here.
- * `&'b` outlives `&'c`, so we can convert `s2r: &'b` to `s2r: &'c`.
- * The returned reference has lifetime `&'c` already.
+But we now have the additional reference to check. We must now prove that the
+returned reference can have the same lifetime as the arguments of lifetime
+'&'s2'. This brings us to a second rule:
 
-After conversion, the call-site satisfies the signature of `shorter()`, we have
-proven the lifetimes in this program to be consistent, and therefore the
-compiler accepts the program.
+> The return value of a function `&'r T` can be converted to an argument `&'s T`
+> if the lifetime of `&'r T` is equal or shorter than `&'s T`.
 
-Now consider a slight variation on `main()` like this:
+To make our program compile, we would have to subsitute `res: &'res` for `res:
+&'s2`, but we can't since `&'res` in fact out-lives `&'s2`. This program is in
+fact inconsistent and the compiler rightfully rejects the program because we
+try make a reference (`&'res`) which outlives one of the values it refer to
+(`&'s2`).
+
+[Formally, function return values are said to be *contravariant*, the opposite
+of *covariant*.]
+
+How can we fix this porgram? Well if you were to swap the `let s2 = ...` with
+the `res = ...` line, you would have:
 
 ```rust,ignore
 fn main() {
     let s1 = String::from("short");
-    let res;
     let s2 = String::from("a long long long string");
+    let res;
     res = shortest(&s1, &s2);
     println!("{}", res);
 }
 ```
 
-De-sugared it looks like this:
+Which de-sugars to:
 
 ```rust,ignore
 fn main() {
-    'a {
+    's1 {
         let s1 = String::from("short");
-        'b {
-            let res: &'b str;
-            'c {
-                let s2 = String::from("a long long long string");
-                'd {
-                    // Annonymous scope for the borrows of s1 and s2
-                    // Assigning to the outer scope causes s1 and s2 to have 'b
-                    res: &'b = shortest(&'d s1, &'d s2);
-                    println!("{}", res);
-                }
+        's2 {
+            let s2 = String::from("a long long long string");
+            'res {
+                let res: &'res str;
+                res: &'res str = shortest(&'s1 s1, &'s2 s2);
+                println!("{}", res);
             }
         }
     }
 }
 ```
 
-XXX: Something is wrong. The above program does not compile, so we should be
-able to show that the lifetimes are inconsistent. To do so we would  to be have
-to show that we can't convert `&'b` to `&'d`, but since `&'b` outlives `&'d`,
-we can. Hrmm.
+Then at the call-site of `shortest()`:
+ * `&'s1 s1` outlives `&'s2 s2`, so we can replace the first argument with `&'s2 s1`.
+ * `&'res str` lives shorter than `'&s2`, so the return value lifetime can become `res: &'s2 str`
+
+Leaving us with:
+
+```rust,ignore
+res: &'s2 str = shortest(&'s2 s1, &'s2 s2);
+```
+
+Which matches the signature of `shortest()` and thus this compiles.
+Intuitively, the return reference can't point to a freed value as the values
+live strictly longer than the return reference.
