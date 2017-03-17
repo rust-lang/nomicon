@@ -289,7 +289,7 @@ such rule is as follows:
 > `&'q T` if the lifetime of `&'p T` is equal or longer than `&'q T`.
 
 At our call site, the type of the arguments are `&'s1 str` and `&'s2 str`, and
-we know that  a `&'s1 str' outlives an `&'s2 str`, so we can substitute `&'s1
+we know that  a `&'s1 str'` outlives an `&'s2 str`, so we can substitute `&'s1
 s1` with `&'s2 s2`. After this both arguments are of lifetime `&'s2` and the
 call-site is consistent with the signature of `print_shortest`.
 
@@ -356,16 +356,16 @@ res: &'res = shortest(&'s2 s1, &'s2 s2);
 
 But we now have the additional reference to check. We must now prove that the
 returned reference can have the same lifetime as the arguments of lifetime
-'&'s2'. This brings us to a second rule:
+`&'s2`. This brings us to a second rule:
 
 > The return value of a function `&'r T` can be converted to an argument `&'s T`
 > if the lifetime of `&'r T` is equal or shorter than `&'s T`.
 
 To make our program compile, we would have to subsitute `res: &'res` for `res:
-&'s2`, but we can't since `&'res` in fact out-lives `&'s2`. This program is in
-fact inconsistent and the compiler rightfully rejects the program because we
-try make a reference (`&'res`) which outlives one of the values it refer to
-(`&'s2`).
+&'s2`, but we can't since `&'res` in fact out-lives `&'s2`. This program is
+inconsistent and the compiler rightfully rejects the program because we
+try make a reference (`res`) which outlives one of the values it may refer to
+(`s2`).
 
 [Formally, function return values are said to be *contravariant*, the opposite
 of *covariant*.]
