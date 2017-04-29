@@ -42,11 +42,11 @@ Examples:
 fn print(s: &str);                                      // elided
 fn print<'a>(s: &'a str);                               // expanded
 
-fn debug(lvl: uint, s: &str);                           // elided
-fn debug<'a>(lvl: uint, s: &'a str);                    // expanded
+fn debug(lvl: usize, s: &str);                          // elided
+fn debug<'a>(lvl: usize, s: &'a str);                   // expanded
 
-fn substr(s: &str, until: uint) -> &str;                // elided
-fn substr<'a>(s: &'a str, until: uint) -> &'a str;      // expanded
+fn substr(s: &str, until: usize) -> &str;               // elided
+fn substr<'a>(s: &'a str, until: usize) -> &'a str;     // expanded
 
 fn get_str() -> &str;                                   // ILLEGAL
 
