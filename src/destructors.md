@@ -40,8 +40,8 @@ struct Box<T>{ ptr: Unique<T> }
 impl<T> Drop for Box<T> {
     fn drop(&mut self) {
         unsafe {
-            drop_in_place(*self.ptr);
-            heap::deallocate((*self.ptr) as *mut u8,
+            drop_in_place(self.ptr.as_ptr());
+            heap::deallocate(self.ptr.as_ptr() as *mut u8,
                              mem::size_of::<T>(),
                              mem::align_of::<T>());
         }
@@ -71,8 +71,8 @@ struct Box<T>{ ptr: Unique<T> }
 impl<T> Drop for Box<T> {
     fn drop(&mut self) {
         unsafe {
-            drop_in_place(*self.ptr);
-            heap::deallocate((*self.ptr) as *mut u8,
+            drop_in_place(self.ptr.as_ptr());
+            heap::deallocate(self.ptr.as_ptr() as *mut u8,
                              mem::size_of::<T>(),
                              mem::align_of::<T>());
         }
@@ -86,7 +86,7 @@ impl<T> Drop for SuperBox<T> {
         unsafe {
             // Hyper-optimized: deallocate the box's contents for it
             // without `drop`ing the contents
-            heap::deallocate((*self.my_box.ptr) as *mut u8,
+            heap::deallocate(self.my_box.ptr.as_ptr() as *mut u8,
                              mem::size_of::<T>(),
                              mem::align_of::<T>());
         }
@@ -149,8 +149,8 @@ struct Box<T>{ ptr: Unique<T> }
 impl<T> Drop for Box<T> {
     fn drop(&mut self) {
         unsafe {
-            drop_in_place(*self.ptr);
-            heap::deallocate((*self.ptr) as *mut u8,
+            drop_in_place(self.ptr.as_ptr());
+            heap::deallocate(self.ptr.as_ptr() as *mut u8,
                              mem::size_of::<T>(),
                              mem::align_of::<T>());
         }
@@ -166,7 +166,7 @@ impl<T> Drop for SuperBox<T> {
             // without `drop`ing the contents. Need to set the `box`
             // field as `None` to prevent Rust from trying to Drop it.
             let my_box = self.my_box.take().unwrap();
-            heap::deallocate((*my_box.ptr) as *mut u8,
+            heap::deallocate(my_box.ptr.as_ptr() as *mut u8,
                              mem::size_of::<T>(),
                              mem::align_of::<T>());
             mem::forget(my_box);

@@ -19,7 +19,7 @@ RawValIter and RawVec respectively. How mysteriously convenient.
 ## Allocating Zero-Sized Types
 
 So if the allocator API doesn't support zero-sized allocations, what on earth
-do we store as our allocation? Why, `heap::EMPTY` of course! Almost every operation
+do we store as our allocation? `Unique::empty()` of course! Almost every operation
 with a ZST is a no-op since ZSTs have exactly one value, and therefore no state needs
 to be considered to store or load them. This actually extends to `ptr::read` and
 `ptr::write`: they won't actually look at the pointer at all. As such we never need
@@ -35,13 +35,11 @@ method of RawVec.
 ```rust,ignore
 impl<T> RawVec<T> {
     fn new() -> Self {
-        unsafe {
-            // !0 is usize::MAX. This branch should be stripped at compile time.
-            let cap = if mem::size_of::<T>() == 0 { !0 } else { 0 };
+        // !0 is usize::MAX. This branch should be stripped at compile time.
+        let cap = if mem::size_of::<T>() == 0 { !0 } else { 0 };
 
-            // heap::EMPTY doubles as "unallocated" and "zero-sized allocation"
-            RawVec { ptr: Unique::new(heap::EMPTY as *mut T), cap: cap }
-        }
+        // Unique::empty() doubles as "unallocated" and "zero-sized allocation"
+        RawVec { ptr: Unique::empty(), cap: cap }
     }
 
     fn grow(&mut self) {
@@ -59,7 +57,7 @@ impl<T> RawVec<T> {
                 (1, ptr)
             } else {
                 let new_cap = 2 * self.cap;
-                let ptr = heap::reallocate(*self.ptr as *mut _,
+                let ptr = heap::reallocate(self.ptr.as_ptr() as *mut _,
                                             self.cap * elem_size,
                                             new_cap * elem_size,
                                             align);
@@ -85,7 +83,7 @@ impl<T> Drop for RawVec<T> {
 
             let num_bytes = elem_size * self.cap;
             unsafe {
-                heap::deallocate(*self.ptr as *mut _, num_bytes, align);
+                heap::deallocate(self.ptr.as_ptr() as *mut _, num_bytes, align);
             }
         }
     }
