@@ -52,7 +52,7 @@ struct Unique<T> {
 unsafe impl<T: Send> Send for Unique<T> {}
 unsafe impl<T: Sync> Sync for Unique<T> {}
 
-impl<T: ?Sized> Unique<T> {
+impl<T> Unique<T> {
     pub fn new(ptr: *mut T) -> Self {
         Unique { ptr: ptr, _marker: PhantomData }
     }
