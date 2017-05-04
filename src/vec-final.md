@@ -20,13 +20,11 @@ struct RawVec<T> {
 
 impl<T> RawVec<T> {
     fn new() -> Self {
-        unsafe {
-            // !0 is usize::MAX. This branch should be stripped at compile time.
-            let cap = if mem::size_of::<T>() == 0 { !0 } else { 0 };
+        // !0 is usize::MAX. This branch should be stripped at compile time.
+        let cap = if mem::size_of::<T>() == 0 { !0 } else { 0 };
 
-            // heap::EMPTY doubles as "unallocated" and "zero-sized allocation"
-            RawVec { ptr: Unique::new(heap::EMPTY as *mut T), cap: cap }
-        }
+        // Unique::empty() doubles as "unallocated" and "zero-sized allocation"
+        RawVec { ptr: Unique::empty(), cap: cap }
     }
 
     fn grow(&mut self) {
@@ -44,7 +42,7 @@ impl<T> RawVec<T> {
                 (1, ptr)
             } else {
                 let new_cap = 2 * self.cap;
-                let ptr = heap::reallocate(*self.ptr as *mut _,
+                let ptr = heap::reallocate(self.ptr.as_ptr() as *mut _,
                                             self.cap * elem_size,
                                             new_cap * elem_size,
                                             align);
@@ -68,7 +66,7 @@ impl<T> Drop for RawVec<T> {
 
             let num_bytes = elem_size * self.cap;
             unsafe {
-                heap::deallocate(*self.ptr as *mut _, num_bytes, align);
+                heap::deallocate(self.ptr.as_ptr() as *mut _, num_bytes, align);
             }
         }
     }
@@ -84,7 +82,7 @@ pub struct Vec<T> {
 }
 
 impl<T> Vec<T> {
-    fn ptr(&self) -> *mut T { *self.buf.ptr }
+    fn ptr(&self) -> *mut T { self.buf.ptr.as_ptr() }
 
     fn cap(&self) -> usize { self.buf.cap }
 

@@ -7,15 +7,11 @@ can't allocate, but also can't put a null pointer in `ptr`, what do we do in
 
 This is perfectly fine because we already have `cap == 0` as our sentinel for no
 allocation. We don't even need to handle it specially in almost any code because
-we usually need to check if `cap > len` or `len > 0` anyway. The traditional
-Rust value to put here is `0x01`. The standard library actually exposes this
-as `alloc::heap::EMPTY`. There are quite a few places where we'll
-want to use `heap::EMPTY` because there's no real allocation to talk about but
+we usually need to check if `cap > len` or `len > 0` anyway. The recommended
+Rust value to put here is `mem::align_of::<T>()`. Unique provides a convenience
+for this: `Unique::empty()`. There are quite a few places where we'll
+want to use `empty` because there's no real allocation to talk about but
 `null` would make the compiler do bad things.
-
-All of the `heap` API is totally unstable under the `heap_api` feature, though.
-We could trivially define `heap::EMPTY` ourselves, but we'll want the rest of
-the `heap` API anyway, so let's just get that dependency over with.
 
 So:
 
@@ -24,16 +20,10 @@ So:
 
 use std::mem;
 
-use alloc::heap::EMPTY;
-
 impl<T> Vec<T> {
     fn new() -> Self {
         assert!(mem::size_of::<T>() != 0, "We're not ready to handle ZSTs");
-        unsafe {
-            // need to cast EMPTY to the actual ptr type we want, let
-            // inference handle it.
-            Vec { ptr: Unique::new(heap::EMPTY as *mut _), len: 0, cap: 0 }
-        }
+        Vec { ptr: Unique::empty(), len: 0, cap: 0 }
     }
 }
 ```
@@ -202,7 +192,7 @@ fn grow(&mut self) {
                     "capacity overflow");
 
             let new_num_bytes = old_num_bytes * 2;
-            let ptr = heap::reallocate(*self.ptr as *mut _,
+            let ptr = heap::reallocate(self.ptr.as_ptr() as *mut _,
                                         old_num_bytes,
                                         new_num_bytes,
                                         align);
