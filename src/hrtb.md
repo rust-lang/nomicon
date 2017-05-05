@@ -25,7 +25,7 @@ fn main() {
 }
 ```
 
-If we try to naively desugar this code in the same way that we did in the
+If we try to naïvely desugar this code in the same way that we did in the
 lifetimes section, we run into some trouble:
 
 ```rust,ignore
