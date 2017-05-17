@@ -225,7 +225,7 @@ fn main() {
     print_shortest(&s1, &s2);
 }
 
-fn shortest<'k>(x: &'k str, y: &'k str) {
+fn print_shortest<'k>(x: &'k str, y: &'k str) {
     if x.len() < y.len() {
         println!("{}", x);
     } else {
@@ -304,7 +304,7 @@ call-site is consistent with the signature of `print_shortest`.
 
 Now consider a slight variation of this example:
 
-```rust
+```rust,ignore
 fn main() {
     let s1 = String::from("short");
     let res;
@@ -374,7 +374,7 @@ try make a reference (`res`) which outlives one of the values it may refer to
 How can we fix this porgram? Well if you were to swap the `let s2 = ...` with
 the `res = ...` line, you would have:
 
-```rust
+```rust,ignore
 fn main() {
     let s1 = String::from("short");
     let s2 = String::from("a long long long string");
