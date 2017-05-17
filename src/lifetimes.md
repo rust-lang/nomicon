@@ -218,7 +218,7 @@ are too dumb.
 
 Consider the following program:
 
-```rust,ignore
+```rust
 fn main() {
     let s1 = String::from("short");
     let s2 = String::from("a long long long string");
@@ -234,7 +234,7 @@ fn shortest<'k>(x: &'k str, y: &'k str) {
 }
 ```
 
-`print_shortest` simply prints the shorter of its two pass-by-reference
+`print_shortest` prints the shorter of its two pass-by-reference
 string arguments. In Rust, each let binding has its own scope. Let's make the
 scopes introduced to `main` explicit:
 
@@ -246,6 +246,7 @@ fn main() {
             let s2 = String::from("a long long long string");
             print_shortest(&s1, &s2);
         }
+    }
 }
 ```
 
@@ -259,6 +260,7 @@ fn main() {
             let s2 = String::from("a long long long string");
             print_shortest(&'s1 s1, &'s2 s2);
         }
+    }
 }
 ```
 
@@ -269,13 +271,12 @@ they refer to were introduced in different scopes. At the call site of
 *caller* (`main`) are consistent with the lifetimes in the signature of the
 *callee* (`print_shortest`).
 
-The signature of `print_shortest` simply requires that both of it's arguments
+The signature of `print_shortest` requires that both of it's arguments
 have the same lifetime (because both arguments are marked with the same
 lifetime identifier in the signature). If in `main` we had done:
 
 ```rust,ignore
 print_shortest(&s1, &s1);
-
 ```
 
 Then consistency is trivially proven, since both arguments would have
@@ -293,17 +294,17 @@ we know that  a `&'s1 str'` outlives an `&'s2 str`, so we can substitute `&'s1
 s1` with `&'s2 s2`. After this both arguments are of lifetime `&'s2` and the
 call-site is consistent with the signature of `print_shortest`.
 
-[More formally, the basis for the above rule is in *type variance*. Under this
-model, you would consider a longer lifetime a sub-type of a shorter lifetime,
-and for function arguments to be *co-variant*. However, an understanding of
-variance isn't strictly required to understand the Rust borrow checker. We've
-tried here to instead to explain using intuitive terminlolgy.]
+> More formally, the basis for the above rule is in *type variance*. Under this
+> model, you would consider a longer lifetime a sub-type of a shorter lifetime,
+> and for function arguments to be *co-variant*. However, an understanding of
+> variance isn't strictly required to understand the Rust borrow checker. We've
+> tried here to instead to explain using intuitive terminlolgy.
 
-# Inter-procedural Borrow Checking of Function Return Values
+## Inter-procedural Borrow Checking of Function Return Values
 
 Now consider a slight variation of this example:
 
-```rust,ignore
+```rust
 fn main() {
     let s1 = String::from("short");
     let res;
@@ -344,9 +345,9 @@ fn main() {
 }
 ```
 
-Again, at the call-site of `shortest` the comipiler needs to check the
+Again, at the call-site of `shortest` the compiler needs to check the
 consistency of the arguments in the caller with the signature of the callee.
-The signature of `shortest` fisrt says that the two reference arguments have
+The signature of `shortest` first says that the two reference arguments have
 the same lifetime, which can be prove ok in the same way as before, thus giving
 us:
 
@@ -367,13 +368,13 @@ inconsistent and the compiler rightfully rejects the program because we
 try make a reference (`res`) which outlives one of the values it may refer to
 (`s2`).
 
-[Formally, function return values are said to be *contravariant*, the opposite
-of *covariant*.]
+> Formally, function return values are said to be *contravariant*, the opposite
+> of *covariant*.
 
 How can we fix this porgram? Well if you were to swap the `let s2 = ...` with
 the `res = ...` line, you would have:
 
-```rust,ignore
+```rust
 fn main() {
     let s1 = String::from("short");
     let s2 = String::from("a long long long string");
