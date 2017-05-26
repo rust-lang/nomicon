@@ -37,6 +37,13 @@ enum representation in C is implementation defined, so this is really a "best
 guess". In particular, this may be incorrect when the C code of interest is
 compiled with certain flags.
 
+* "C-like" enums with `repr(C)` or `repr(u*)` still may not be set to an
+integer value without a corresponding variant, even though this is
+permitted behavior in C or C++. It is undefined behavior to (unsafely)
+construct an instance of an enum that does not match one of its
+variants. (This allows exhaustive matches to continue to be written and
+compiled as normal.)
+
 
 
 # repr(u8), repr(u16), repr(u32), repr(u64)
@@ -47,8 +54,17 @@ ask Rust to allow this by setting the overflowing element to explicitly be 0.
 However Rust will not allow you to create an enum where two variants have the
 same discriminant.
 
-On non-C-like enums, this will inhibit certain optimizations like the null-
-pointer optimization.
+The term "C-like enum" only means that the enum doesn't have data in any
+of its variants. A C-like enum without a `repr(u*)` or `repr(C)` is
+still a Rust native type, and does not have a stable ABI representation.
+Adding a `repr` causes it to be treated exactly like the specified
+integer size for ABI purposes.
+
+A non-C-like enum is a Rust type with no guaranteed ABI (even if the
+only data is `PhantomData` or something else with zero size).
+
+Adding an explicit `repr` to an enum suppresses the null-pointer
+optimization.
 
 These reprs have no effect on a struct.
 
