@@ -23,8 +23,15 @@ passed through the FFI boundary.
 C, and is explicitly contrary to the behavior of an empty type in C++, which
 still consumes a byte of space.
 
-* DSTs, tuples, and tagged unions are not a concept in C and as such are never
-FFI safe.
+* DST pointers (fat pointers), tuples, and enums with data (that is, non-C-like
+  enums) are not a concept in C, and as such are never FFI-safe.
+
+* As an exception to the rule on enum with data, `Option<&T>` is
+  FFI-safe if `*const T` is FFI-safe, and they have the same
+  representation, using the null-pointer optimization: `Some<&T>` is
+  represented as the pointer, and `None` is represented as a null
+  pointer.  (This rule applies to any enum defined the same way as
+  libcore's `Option` type, and using the default repr.)
 
 * Tuple structs are like structs with regards to `repr(C)`, as the only
   difference from a struct is that the fields aren’t named.
