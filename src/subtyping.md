@@ -11,10 +11,11 @@ confusion, because it seems intuitively backwards to many: the bigger scope is a
 *subtype* of the smaller scope.
 
 This does in fact make sense, though. The intuitive reason for this is that if
-you expect an `&'a u8`, then it's totally fine for me to hand you an `&'static
-u8`, in the same way that if you expect an Animal in Java, it's totally fine for
-me to hand you a Cat. Cats are just Animals *and more*, just as `'static` is
-just `'a` *and more*.
+you expect an `&'a u8` (for some concrete `'a` that you have already chosen),
+then it's totally fine for me to hand you an `&'static u8` even if `'static !=
+'a`, in the same way that if you expect an Animal in Java, it's totally fine
+for me to hand you a Cat. Cats are just Animals *and more*, just as `'static`
+is just `'a` *and more*.
 
 (Note, the subtyping relationship and typed-ness of lifetimes is a fairly
 arbitrary construct that some disagree with. However it simplifies our analysis
