@@ -13,7 +13,7 @@ many intrinsics *do* become stabilized elsewhere (`std::ptr` and `str::mem`
 consist of many intrinsics).
 
 Ultimately this means our implementation may not take advantage of all
-possible optimizations, though it will be by no means *naive*. We will
+possible optimizations, though it will be by no means *naïve*. We will
 definitely get into the weeds over nitty-gritty details, even
 when the problem doesn't *really* merit it.
 
