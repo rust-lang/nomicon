@@ -4,6 +4,7 @@
 
 * [Meet Safe and Unsafe](meet-safe-and-unsafe.md)
 	* [How Safe and Unsafe Interact](safe-unsafe-meaning.md)
+	* [What Unsafe Can Do](what-unsafe-does.md)
 	* [Working with Unsafe](working-with-unsafe.md)
 * [Data Layout](data.md)
 	* [repr(Rust)](repr-rust.md)
