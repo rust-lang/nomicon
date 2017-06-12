@@ -11,6 +11,7 @@
 	* [Other reprs](other-reprs.md)
 * [Ownership](ownership.md)
 	* [References](references.md)
+	* [Aliasing](aliasing.md)
 	* [Lifetimes](lifetimes.md)
 	* [Limits of Lifetimes](lifetime-mismatch.md)
 	* [Lifetime Elision](lifetime-elision.md)
