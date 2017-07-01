@@ -80,24 +80,18 @@ fn main() {
 ```
 
 ```text
-<anon>:12:28: 12:32 error: `days` does not live long enough
-<anon>:12     inspector = Inspector(&days);
-                                     ^~~~
-<anon>:9:11: 15:2 note: reference must be valid for the block at 9:10...
-<anon>:9 fn main() {
-<anon>:10     let (inspector, days);
-<anon>:11     days = Box::new(1);
-<anon>:12     inspector = Inspector(&days);
-<anon>:13     // Let's say `days` happens to get dropped first.
-<anon>:14     // Then when Inspector is dropped, it will try to read free'd memory!
-          ...
-<anon>:10:27: 15:2 note: ...but borrowed value is only valid for the block suffix following statement 0 at 10:26
-<anon>:10     let (inspector, days);
-<anon>:11     days = Box::new(1);
-<anon>:12     inspector = Inspector(&days);
-<anon>:13     // Let's say `days` happens to get dropped first.
-<anon>:14     // Then when Inspector is dropped, it will try to read free'd memory!
-<anon>:15 }
+error: `days` does not live long enough
+  --> <anon>:15:1
+   |
+12 |     inspector = Inspector(&days);
+   |                            ---- borrow occurs here
+...
+15 | }
+   | ^ `days` dropped here while still borrowed
+   |
+   = note: values in a scope are dropped in the opposite order they are created
+
+error: aborting due to previous error
 ```
 
 Implementing Drop lets the Inspector execute some arbitrary code during its
