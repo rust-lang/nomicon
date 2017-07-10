@@ -26,15 +26,11 @@ this is totally fine.
 For instance, a custom implementation of `Box` might write `Drop` like this:
 
 ```rust
-#![feature(alloc, heap_api, unique, allocator_api)]
+#![feature(unique, allocator_api)]
 
-extern crate alloc;
-
-use std::ptr::{drop_in_place, Unique};
+use std::heap::{Heap, Alloc, Layout};
 use std::mem;
-
-use alloc::allocator::{Layout, Alloc};
-use alloc::heap::Heap;
+use std::ptr::{drop_in_place, Unique};
 
 struct Box<T>{ ptr: Unique<T> }
 
@@ -56,15 +52,11 @@ use-after-free the `ptr` because when drop exits, it becomes inaccessible.
 However this wouldn't work:
 
 ```rust
-#![feature(alloc, allocator_api, heap_api, unique)]
+#![feature(allocator_api, unique)]
 
-extern crate alloc;
-
+use std::heap::{Heap, Alloc, Layout};
 use std::ptr::{drop_in_place, Unique};
 use std::mem;
-
-use alloc::allocator::{Layout, Alloc};
-use alloc::heap::Heap;
 
 struct Box<T>{ ptr: Unique<T> }
 
@@ -131,15 +123,11 @@ The classic safe solution to overriding recursive drop and allowing moving out
 of Self during `drop` is to use an Option:
 
 ```rust
-#![feature(alloc, allocator_api, heap_api, unique)]
+#![feature(allocator_api, unique)]
 
-extern crate alloc;
-
+use std::heap::{Alloc, Heap, Layout};
 use std::ptr::{drop_in_place, Unique};
 use std::mem;
-
-use alloc::allocator::{Layout, Alloc};
-use alloc::heap::Heap;
 
 struct Box<T>{ ptr: Unique<T> }
 

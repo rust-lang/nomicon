@@ -2,17 +2,13 @@
 
 ```rust
 #![feature(unique)]
-#![feature(alloc, allocator_api, heap_api)]
-
-extern crate alloc;
+#![feature(allocator_api)]
 
 use std::ptr::{Unique, self};
 use std::mem;
 use std::ops::{Deref, DerefMut};
 use std::marker::PhantomData;
-
-use alloc::allocator::{Layout, Alloc};
-use alloc::heap::Heap;
+use std::heap::{Alloc, Layout, Heap};
 
 struct RawVec<T> {
     ptr: Unique<T>,
@@ -64,15 +60,12 @@ impl<T> Drop for RawVec<T> {
         let elem_size = mem::size_of::<T>();
         if self.cap != 0 && elem_size != 0 {
             unsafe {
-                Heap.dealloc(self.ptr.as_ptr() as *mut _, Layout::array::<T>(self.cap).unwrap());
+                Heap.dealloc(self.ptr.as_ptr() as *mut _,
+                             Layout::array::<T>(self.cap).unwrap());
             }
         }
     }
 }
-
-
-
-
 
 pub struct Vec<T> {
     buf: RawVec<T>,
