@@ -53,7 +53,7 @@ compiled as normal.)
 
 
 
-# repr(u8), repr(u16), repr(u32), repr(u64)
+# repr(u*), repr(i*)
 
 These specify the size to make a C-like enum. If the discriminant overflows the
 integer it has to fit in, it will produce a compile-time error. You can manually
