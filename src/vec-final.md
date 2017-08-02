@@ -49,7 +49,7 @@ impl<T> RawVec<T> {
                 Err(err) => Heap.oom(err),
             };
 
-            self.ptr = Unique::new(ptr as *mut _);
+            self.ptr = Unique::new_unchecked(ptr as *mut _);
             self.cap = new_cap;
         }
     }
