@@ -4,14 +4,14 @@
 #![feature(unique)]
 #![feature(allocator_api)]
 
-use std::ptr::{Unique, self};
+use std::ptr::{Shared, self};
 use std::mem;
 use std::ops::{Deref, DerefMut};
 use std::marker::PhantomData;
 use std::heap::{Alloc, Layout, Heap};
 
 struct RawVec<T> {
-    ptr: Unique<T>,
+    ptr: Shared<T>,
     cap: usize,
 }
 
@@ -20,8 +20,8 @@ impl<T> RawVec<T> {
         // !0 is usize::MAX. This branch should be stripped at compile time.
         let cap = if mem::size_of::<T>() == 0 { !0 } else { 0 };
 
-        // Unique::empty() doubles as "unallocated" and "zero-sized allocation"
-        RawVec { ptr: Unique::empty(), cap: cap }
+        // Shared::empty() doubles as "unallocated" and "zero-sized allocation"
+        RawVec { ptr: Shared::empty(), cap: cap }
     }
 
     fn grow(&mut self) {
@@ -49,7 +49,7 @@ impl<T> RawVec<T> {
                 Err(err) => Heap.oom(err),
             };
 
-            self.ptr = Unique::new_unchecked(ptr as *mut _);
+            self.ptr = Shared::new_unchecked(ptr as *mut _);
             self.cap = new_cap;
         }
     }

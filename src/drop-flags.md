@@ -1,7 +1,6 @@
 # Drop Flags
 
-The examples in the previous section introduce an interesting problem for Rust.
-We have seen that it's possible to conditionally initialize, deinitialize, and
+We've seen that it's possible to conditionally initialize, deinitialize, and
 reinitialize locations of memory totally safely. For Copy types, this isn't
 particularly notable since they're just a random pile of bits. However types
 with destructors are a different story: Rust needs to know whether to call a
@@ -79,5 +78,8 @@ if condition {
 }
 ```
 
-The drop flags are tracked on the stack and no longer stashed in types that
-implement drop.
+At Rust 1.0, these flags were stored in the actual values that needed to
+be tracked. This was a big mess and you had to worry about it in unsafe code.
+
+As of Rust 1.13, these flags are stored seperately on the stack, so you no
+longer need to worry about them.

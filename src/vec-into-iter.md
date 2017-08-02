@@ -44,7 +44,7 @@ So we're going to use the following struct:
 
 ```rust,ignore
 struct IntoIter<T> {
-    buf: Unique<T>,
+    buf: Shared<T>,
     cap: usize,
     start: *const T,
     end: *const T,

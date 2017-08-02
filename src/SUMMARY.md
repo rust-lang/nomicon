@@ -19,6 +19,7 @@
 	* [Higher-Rank Trait Bounds](hrtb.md)
 	* [Subtyping and Variance](subtyping.md)
 	* [Drop Check](dropck.md)
+	* [Drop Check Escape Patch](dropck-eyepatch.md)
 	* [PhantomData](phantom-data.md)
 	* [Splitting Borrows](borrow-splitting.md)
 * [Type Conversions](conversions.md)
