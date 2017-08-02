@@ -51,7 +51,7 @@ allocation which is used for multiple arrays of different types:
 ```
 use std::marker;
 
-struct HashMap {
+struct HashMap<K, V> {
     ptr: *mut u8,
     // The pointer actually stores keys and values
     // (and hashes, but those aren't generic)

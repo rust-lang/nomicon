@@ -292,7 +292,7 @@ fn inspect() {
 }
 ```
 
-```
+```text
 error[E0597]: `*data` does not live long enough
   --> src/main.rs:37:1
    |

@@ -1,7 +1,7 @@
 # The Final Code
 
 ```rust
-#![feature(unique)]
+#![feature(shared)]
 #![feature(allocator_api)]
 
 use std::ptr::{Shared, self};

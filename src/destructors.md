@@ -26,7 +26,7 @@ you don't want to drop in a `union`. The standard library provides the
 Consider a custom implementation of `Box`, which might write `Drop` like this:
 
 ```rust
-#![feature(unique, allocator_api)]
+#![feature(allocator_api)]
 
 use std::heap::{Heap, Alloc, Layout};
 use std::mem;
@@ -52,7 +52,7 @@ use-after-free the `ptr` because when drop exits, it becomes inaccessible.
 However this wouldn't work:
 
 ```rust
-#![feature(allocator_api, unique)]
+#![feature(allocator_api)]
 
 use std::heap::{Heap, Alloc, Layout};
 use std::ptr::drop_in_place;
@@ -124,7 +124,7 @@ The classic safe solution to preventing recursive drop and allowing moving out
 of Self during `drop` is to use an Option:
 
 ```rust
-#![feature(allocator_api, unique)]
+#![feature(allocator_api)]
 
 use std::heap::{Alloc, Heap, Layout};
 use std::ptr::drop_in_place;
