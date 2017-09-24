@@ -36,8 +36,6 @@ still consumes a byte of space.
 * Tuple structs are like structs with regards to `repr(C)`, as the only
   difference from a struct is that the fields aren’t named.
 
-* **If the type would have any [drop flags], they will still be added**
-
 * This is equivalent to one of `repr(u*)` (see the next section) for enums. The
 chosen size is the default enum size for the target platform's C ABI. Note that
 enum representation in C is implementation defined, so this is really a "best
