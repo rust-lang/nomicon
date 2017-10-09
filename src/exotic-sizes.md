@@ -39,12 +39,6 @@ struct Foo {
 }
 ```
 
-**NOTE: [As of Rust 1.0 struct DSTs are broken if the last field has
-a variable position based on its alignment][dst-issue].**
-
-
-
-
 
 # Zero Sized Types (ZSTs)
 
