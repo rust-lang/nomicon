@@ -37,10 +37,10 @@ still consumes a byte of space.
   difference from a struct is that the fields aren’t named.
 
 * This is equivalent to one of `repr(u*)` (see the next section) for enums. The
-chosen size is the default enum size for the target platform's C ABI. Note that
-enum representation in C is implementation defined, so this is really a "best
-guess". In particular, this may be incorrect when the C code of interest is
-compiled with certain flags.
+chosen size is the default enum size for the target platform's C application
+binary interface (ABI). Note that enum representation in C is implementation
+defined, so this is really a "best guess". In particular, this may be incorrect
+when the C code of interest is compiled with certain flags.
 
 * "C-like" enums with `repr(C)` or `repr(u*)` still may not be set to an
 integer value without a corresponding variant, even though this is

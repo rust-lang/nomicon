@@ -38,8 +38,8 @@ The standard library has a number of unsafe functions, including:
   type safety in arbitrary ways (see [conversions] for details).
 * Every raw pointer to a sized type has an `offset` method that
   invokes Undefined Behavior if the passed offset is not ["in bounds"][ptr_offset].
-* All FFI functions are `unsafe` to call because the other language can do
-  arbitrary operations that the Rust compiler can't check.
+* All FFI (Foreign Function Interface) functions are `unsafe` to call because the
+  other language can do arbitrary operations that the Rust compiler can't check.
 
 As of Rust 1.0 there are exactly two unsafe traits:
 
