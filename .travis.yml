@@ -6,6 +6,9 @@ rust:
   - nightly
 
 before_script:
-  - (cargo install mdbook --git https://github.com/azerupi/mdBook.git --force || true)
+  - (cargo install mdbook --force || true)
 
-script: /home/travis/.cargo/bin/mdbook test;
+script:
+  - export PATH=$PATH:/home/travis/.cargo/bin;
+  - mdbook test
+
