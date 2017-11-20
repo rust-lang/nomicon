@@ -113,6 +113,8 @@ requires different monomorphizations to have *different field orderings*.
 **Note: this is a hypothetical optimization that is not yet implemented in Rust
 1.0**
 
+**Update: this is already implemented in Rust 1.18**
+
 Enums make this consideration even more complicated. Naively, an enum such as:
 
 ```rust
