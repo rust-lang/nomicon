@@ -740,8 +740,8 @@ void bar(struct Bar *arg);
 To do this in Rust, let’s create our own opaque types:
 
 ```rust
-#[repr(C)] pub struct Foo { private: [u8; 0] }
-#[repr(C)] pub struct Bar { private: [u8; 0] }
+#[repr(C)] pub struct Foo { _private: [u8; 0] }
+#[repr(C)] pub struct Bar { _private: [u8; 0] }
 
 extern "C" {
     pub fn foo(arg: *mut Foo);
