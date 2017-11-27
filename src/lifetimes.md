@@ -1,6 +1,6 @@
 # Lifetimes
 
-Rust enforces these rules through *lifetimes*. Lifetimes are effectively
+Rust ensures memory safety through *lifetimes*. Lifetimes are effectively
 just names for scopes somewhere in the program. Each reference,
 and anything that contains a reference, is tagged with a lifetime specifying
 the scope it's valid for.
@@ -14,7 +14,7 @@ make your code Just Work.
 
 However once you cross the function boundary, you need to start talking about
 lifetimes. Lifetimes are denoted with an apostrophe: `'a`, `'static`. To dip
-our toes with lifetimes, we're going to pretend that we're actually allowed
+our toes into lifetimes, we're going to pretend that we're actually allowed
 to label scopes with lifetimes, and desugar the examples from the start of
 this chapter.
 
@@ -81,7 +81,7 @@ z = y;
 
 
 
-# Example: references that outlive referents
+# Example: References that Outlive Referents
 
 Alright, let's look at some of those examples from before:
 
@@ -165,7 +165,7 @@ our implementation *just a bit*.)
 
 
 
-# Example: aliasing a mutable reference
+# Example: Aliasing a Mutable Reference
 
 How about the other example:
 
@@ -214,9 +214,10 @@ to the compiler. However it does mean that several programs that are totally
 correct with respect to Rust's *true* semantics are rejected because lifetimes
 are too dumb.
 
-# Inter-procedural Borrow Checking of Function Arguments
+# Inter-procedural Borrow Checking
 
-Consider the following program:
+Earlier we discussed lifetime constraints within a single function. Now let's
+talk about the constraints *between* functions. Consider the following program:
 
 ```rust
 fn main() {
@@ -235,22 +236,8 @@ fn print_shortest<'k>(x: &'k str, y: &'k str) {
 ```
 
 `print_shortest` prints the shorter of its two pass-by-reference
-string arguments. In Rust, each let binding has its own scope. Let's make the
-scopes introduced to `main` explicit:
-
-```rust,ignore
-fn main() {
-    's1 {
-        let s1 = String::from("short");
-        's2 {
-            let s2 = String::from("a long long long string");
-            print_shortest(&s1, &s2);
-        }
-    }
-}
-```
-
-And now let's explicitly mark the lifetimes of each reference's referent too:
+string arguments. Let's first de-sugar to make the reference lifetimes of
+`main` explicit:
 
 ```rust,ignore
 fn main() {
@@ -263,6 +250,9 @@ fn main() {
     }
 }
 ```
+
+(for brevity, we don't show the third implicit scope that would be introduced
+to limit to lifetimes of the borrows in the call to `print_shortest`)
 
 Now we see that the references passed as arguments to `print_shortest`
 actually have different lifetimes (and thus a different type!) since the values
@@ -286,23 +276,18 @@ because it actually is safe. Instead the compiler uses some rules for
 converting between lifetimes whilst retaining referential safety. The first
 such rule is as follows:
 
-> A function argument of type `&'p T` can be coerced with an argument of type
-> `&'q T` if the lifetime of `&'p T` is equal or longer than `&'q T`.
+> A reference can always be shrunk to one of a shorter lifetime. In other
+> words, `&'a T` can be implicitly converted to `&'b T` as long as `'a`
+outlives `'b.`
 
 At our call site, the type of the arguments are `&'s1 str` and `&'s2 str`, and
-we know that  a `&'s1 str'` outlives an `&'s2 str`, so we can substitute `&'s1
-s1` with `&'s2 s2`. After this both arguments are of lifetime `&'s2` and the
+we know that a `&'s1 str` outlives an `&'s2 str`, so we can shrink `&'s1
+s1` to `&'s2 s1`. After this both arguments are of lifetime `&'s2` and the
 call-site is consistent with the signature of `print_shortest`.
-
-> More formally, the basis for the above rule is in *type variance*. Under this
-> model, you would consider a longer lifetime a sub-type of a shorter lifetime,
-> and for function arguments to be *co-variant*. However, an understanding of
-> variance isn't strictly required to understand the Rust borrow checker. We've
-> tried here to instead to explain using intuitive terminlolgy.
 
 ## Inter-procedural Borrow Checking of Function Return Values
 
-Now consider a slight variation of this example:
+Now consider a slight variation of the previous example:
 
 ```rust,ignore
 fn main() {
@@ -324,7 +309,7 @@ fn shortest<'k>(x: &'k str, y: &'k str) -> &'k str {
 
 `print_shortest` has been renamed to `shortest`, which instead of printing,
 now returns the shorter of the two strings. It does this using only references
-for efficiency, avoiding the need to re-allocate a new string to pass back to
+for efficiency, avoiding the need to allocate a new string to pass back to
 `main`. The responsibility of printing the result has been shifted to `main`.
 
 Let's again de-sugar `main` by adding explicit scopes and lifetimes:
@@ -345,73 +330,25 @@ fn main() {
 }
 ```
 
-Again, at the call-site of `shortest` the compiler needs to check the
-consistency of the arguments in the caller with the signature of the callee.
-The signature of `shortest` first says that the two reference arguments have
-the same lifetime, which can be prove ok in the same way as before, thus giving
-us:
+Again, at the call-site of `shortest` the compiler needs to check the consistency
+of the arguments in the caller with the signature of the callee. The signature
+of shortest says that all three references must have the same lifetime `'k`, so
+we have to find a lifetime `'k` such that:
 
-```rust,ignore
-res: &'res = shortest(&'s2 s1, &'s2 s2);
-```
+ * `&s1`: `&'s1 str` can be converted to the first argument `&'k str`
+ * `&s2`: `&'s2 str` can be converted to the second argument `&'k str`
+ * The return value `&'k str` can be converted to res: `&'res str`
 
-But we now have the additional reference to check. We must now prove that the
-returned reference can have the same lifetime as the arguments of lifetime
-`&'s2`. This brings us to a second rule:
+This leads to three requirements:
 
-> The return value of a function `&'r T` can be converted to an argument `&'s T`
-> if the lifetime of `&'r T` is equal or shorter than `&'s T`.
+ * `'s1` must outlive `'k`
+ * `'s2` must outlive `'k`
+ * `'k` must outlive `'res`
 
-To make our program compile, we would have to subsitute `res: &'res` for `res:
-&'s2`, but we can't since `&'res` in fact out-lives `&'s2`. This program is
-inconsistent and the compiler rightfully rejects the program because we
-try make a reference (`res`) which outlives one of the values it may refer to
-(`s2`).
+So by transitivity (`'s2` outlives `'k` outlives `'res`), we also require `'s2`
+to outlive `'res`, which is not the case. The borrow checker rightfully
+rejects our program because we are making a reference (`res`) which outlives
+one of the values it may refer to (`s2`).
 
-> Formally, function return values are said to be *contravariant*, the opposite
-> of *covariant*.
-
-How can we fix this porgram? Well if you were to swap the `let s2 = ...` with
-the `res = ...` line, you would have:
-
-```rust,ignore
-fn main() {
-    let s1 = String::from("short");
-    let s2 = String::from("a long long long string");
-    let res;
-    res = shortest(&s1, &s2);
-    println!("{}", res);
-}
-```
-
-Which de-sugars to:
-
-```rust,ignore
-fn main() {
-    's1 {
-        let s1 = String::from("short");
-        's2 {
-            let s2 = String::from("a long long long string");
-            'res {
-                let res: &'res str;
-                res: &'res str = shortest(&'s1 s1, &'s2 s2);
-                println!("{}", res);
-            }
-        }
-    }
-}
-```
-
-Then at the call-site of `shortest`:
- * `&'s1 s1` outlives `&'s2 s2`, so we can replace the first argument with `&'s2 s1`.
- * `&'res str` lives shorter than `'&s2`, so the return value lifetime can become `res: &'s2 str`
-
-Leaving us with:
-
-```rust,ignore
-res: &'s2 str = shortest(&'s2 s1, &'s2 s2);
-```
-
-Which matches the signature of `shortest` and thus this compiles.
-Intuitively, the return reference can't point to a freed value as the values
-live strictly longer than the return reference.
+The program is fixed by swapping the definition order of `res` and `s2`. Then
+`res` lives longer than both `s1` and `s2`.
