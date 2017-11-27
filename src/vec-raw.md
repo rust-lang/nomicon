@@ -1,3 +1,4 @@
+
 # RawVec
 
 We've actually reached an interesting situation here: we've duplicated the logic
@@ -17,9 +18,7 @@ struct RawVec<T> {
 impl<T> RawVec<T> {
     fn new() -> Self {
         assert!(mem::size_of::<T>() != 0, "TODO: implement ZST support");
-        unsafe {
-            RawVec { ptr: Unique::new(heap::EMPTY as *mut T), cap: 0 }
-        }
+        RawVec { ptr: Unique::empty(), cap: 0 }
     }
 
     // unchanged from Vec
@@ -33,7 +32,7 @@ impl<T> RawVec<T> {
                 (1, ptr)
             } else {
                 let new_cap = 2 * self.cap;
-                let ptr = heap::reallocate(*self.ptr as *mut _,
+                let ptr = heap::reallocate(self.ptr.as_ptr() as *mut _,
                                             self.cap * elem_size,
                                             new_cap * elem_size,
                                             align);
@@ -57,7 +56,7 @@ impl<T> Drop for RawVec<T> {
             let elem_size = mem::size_of::<T>();
             let num_bytes = elem_size * self.cap;
             unsafe {
-                heap::deallocate(*self.ptr as *mut _, num_bytes, align);
+                heap::deallocate(self.ptr.as_mut() as *mut _, num_bytes, align);
             }
         }
     }
@@ -73,7 +72,7 @@ pub struct Vec<T> {
 }
 
 impl<T> Vec<T> {
-    fn ptr(&self) -> *mut T { *self.buf.ptr }
+    fn ptr(&self) -> *mut T { self.buf.ptr.as_ptr() }
 
     fn cap(&self) -> usize { self.buf.cap }
 

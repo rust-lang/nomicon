@@ -32,7 +32,6 @@ As a recap, Unique is a wrapper around a raw pointer that declares that:
 * We are variant over `T`
 * We may own a value of type `T` (for drop check)
 * We are Send/Sync if `T` is Send/Sync
-* We deref to `*mut T` (so it largely acts like a `*mut` in our code)
 * Our pointer is never null (so `Option<Vec<T>>` is null-pointer-optimized)
 
 We can implement all of the above requirements except for the last
@@ -57,17 +56,12 @@ impl<T> Unique<T> {
     pub fn new(ptr: *mut T) -> Self {
         Unique { ptr: ptr, _marker: PhantomData }
     }
-}
 
-impl<T> Deref for Unique<T> {
-    type Target = *mut T;
-    fn deref(&self) -> &*mut T {
-        // There's no way to cast the *const to a *mut
-        // while also taking a reference. So we just
-        // transmute it since it's all "just pointers".
-        unsafe { mem::transmute(&self.ptr) }
+    pub fn as_ptr(&self) -> *mut T {
+        self.ptr as *mut T
     }
 }
+
 # fn main() {}
 ```
 
@@ -92,7 +86,7 @@ pub struct Vec<T> {
 
 If you don't care about the null-pointer optimization, then you can use the
 stable code. However we will be designing the rest of the code around enabling
-the optimization. In particular, `Unique::new` is unsafe to call, because
+this optimization. It should be noted that `Unique::new` is unsafe to call, because
 putting `null` inside of it is Undefined Behavior. Our stable Unique doesn't
 need `new` to be unsafe because it doesn't make any interesting guarantees about
 its contents.

@@ -26,24 +26,19 @@ this is totally fine.
 For instance, a custom implementation of `Box` might write `Drop` like this:
 
 ```rust
-#![feature(alloc, heap_api, unique)]
+#![feature(unique, allocator_api)]
 
-extern crate alloc;
-
-use std::ptr::{drop_in_place, Unique};
+use std::heap::{Heap, Alloc, Layout};
 use std::mem;
-
-use alloc::heap;
+use std::ptr::{drop_in_place, Unique};
 
 struct Box<T>{ ptr: Unique<T> }
 
 impl<T> Drop for Box<T> {
     fn drop(&mut self) {
         unsafe {
-            drop_in_place(*self.ptr);
-            heap::deallocate((*self.ptr) as *mut u8,
-                             mem::size_of::<T>(),
-                             mem::align_of::<T>());
+            drop_in_place(self.ptr.as_ptr());
+            Heap.dealloc(self.ptr.as_ptr() as *mut u8, Layout::new::<T>())
         }
     }
 }
@@ -57,24 +52,19 @@ use-after-free the `ptr` because when drop exits, it becomes inaccessible.
 However this wouldn't work:
 
 ```rust
-#![feature(alloc, heap_api, unique)]
+#![feature(allocator_api, unique)]
 
-extern crate alloc;
-
+use std::heap::{Heap, Alloc, Layout};
 use std::ptr::{drop_in_place, Unique};
 use std::mem;
-
-use alloc::heap;
 
 struct Box<T>{ ptr: Unique<T> }
 
 impl<T> Drop for Box<T> {
     fn drop(&mut self) {
         unsafe {
-            drop_in_place(*self.ptr);
-            heap::deallocate((*self.ptr) as *mut u8,
-                             mem::size_of::<T>(),
-                             mem::align_of::<T>());
+            drop_in_place(self.ptr.as_ptr());
+            Heap.dealloc(self.ptr.as_ptr() as *mut u8, Layout::new::<T>());
         }
     }
 }
@@ -86,9 +76,7 @@ impl<T> Drop for SuperBox<T> {
         unsafe {
             // Hyper-optimized: deallocate the box's contents for it
             // without `drop`ing the contents
-            heap::deallocate((*self.my_box.ptr) as *mut u8,
-                             mem::size_of::<T>(),
-                             mem::align_of::<T>());
+            Heap.dealloc(self.my_box.ptr.as_ptr() as *mut u8, Layout::new::<T>());
         }
     }
 }
@@ -135,24 +123,19 @@ The classic safe solution to overriding recursive drop and allowing moving out
 of Self during `drop` is to use an Option:
 
 ```rust
-#![feature(alloc, heap_api, unique)]
+#![feature(allocator_api, unique)]
 
-extern crate alloc;
-
+use std::heap::{Alloc, Heap, Layout};
 use std::ptr::{drop_in_place, Unique};
 use std::mem;
-
-use alloc::heap;
 
 struct Box<T>{ ptr: Unique<T> }
 
 impl<T> Drop for Box<T> {
     fn drop(&mut self) {
         unsafe {
-            drop_in_place(*self.ptr);
-            heap::deallocate((*self.ptr) as *mut u8,
-                             mem::size_of::<T>(),
-                             mem::align_of::<T>());
+            drop_in_place(self.ptr.as_ptr());
+            Heap.dealloc(self.ptr.as_ptr() as *mut u8, Layout::new::<T>());
         }
     }
 }
@@ -166,9 +149,7 @@ impl<T> Drop for SuperBox<T> {
             // without `drop`ing the contents. Need to set the `box`
             // field as `None` to prevent Rust from trying to Drop it.
             let my_box = self.my_box.take().unwrap();
-            heap::deallocate((*my_box.ptr) as *mut u8,
-                             mem::size_of::<T>(),
-                             mem::align_of::<T>());
+            Heap.dealloc(my_box.ptr.as_ptr() as *mut u8, Layout::new::<T>());
             mem::forget(my_box);
         }
     }

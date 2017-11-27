@@ -2,16 +2,13 @@
 
 ```rust
 #![feature(unique)]
-#![feature(alloc, heap_api)]
-
-extern crate alloc;
+#![feature(allocator_api)]
 
 use std::ptr::{Unique, self};
 use std::mem;
 use std::ops::{Deref, DerefMut};
 use std::marker::PhantomData;
-
-use alloc::heap;
+use std::heap::{Alloc, Layout, Heap};
 
 struct RawVec<T> {
     ptr: Unique<T>,
@@ -20,13 +17,11 @@ struct RawVec<T> {
 
 impl<T> RawVec<T> {
     fn new() -> Self {
-        unsafe {
-            // !0 is usize::MAX. This branch should be stripped at compile time.
-            let cap = if mem::size_of::<T>() == 0 { !0 } else { 0 };
+        // !0 is usize::MAX. This branch should be stripped at compile time.
+        let cap = if mem::size_of::<T>() == 0 { !0 } else { 0 };
 
-            // heap::EMPTY doubles as "unallocated" and "zero-sized allocation"
-            RawVec { ptr: Unique::new(heap::EMPTY as *mut T), cap: cap }
-        }
+        // Unique::empty() doubles as "unallocated" and "zero-sized allocation"
+        RawVec { ptr: Unique::empty(), cap: cap }
     }
 
     fn grow(&mut self) {
@@ -37,24 +32,24 @@ impl<T> RawVec<T> {
             // 0, getting to here necessarily means the Vec is overfull.
             assert!(elem_size != 0, "capacity overflow");
 
-            let align = mem::align_of::<T>();
-
             let (new_cap, ptr) = if self.cap == 0 {
-                let ptr = heap::allocate(elem_size, align);
+                let ptr = Heap.alloc(Layout::array::<T>(1).unwrap());
                 (1, ptr)
             } else {
                 let new_cap = 2 * self.cap;
-                let ptr = heap::reallocate(*self.ptr as *mut _,
-                                            self.cap * elem_size,
-                                            new_cap * elem_size,
-                                            align);
+                let ptr = Heap.realloc(self.ptr.as_ptr() as *mut _,
+                                       Layout::array::<T>(self.cap).unwrap(),
+                                       Layout::array::<T>(new_cap).unwrap());
                 (new_cap, ptr)
             };
 
-            // If allocate or reallocate fail, we'll get `null` back
-            if ptr.is_null() { oom() }
+            // If allocate or reallocate fail, oom
+            let ptr = match ptr {
+                Ok(ptr) => ptr,
+                Err(err) => Heap.oom(err),
+            };
 
-            self.ptr = Unique::new(ptr as *mut _);
+            self.ptr = Unique::new_unchecked(ptr as *mut _);
             self.cap = new_cap;
         }
     }
@@ -64,19 +59,13 @@ impl<T> Drop for RawVec<T> {
     fn drop(&mut self) {
         let elem_size = mem::size_of::<T>();
         if self.cap != 0 && elem_size != 0 {
-            let align = mem::align_of::<T>();
-
-            let num_bytes = elem_size * self.cap;
             unsafe {
-                heap::deallocate(*self.ptr as *mut _, num_bytes, align);
+                Heap.dealloc(self.ptr.as_ptr() as *mut _,
+                             Layout::array::<T>(self.cap).unwrap());
             }
         }
     }
 }
-
-
-
-
 
 pub struct Vec<T> {
     buf: RawVec<T>,
@@ -84,7 +73,7 @@ pub struct Vec<T> {
 }
 
 impl<T> Vec<T> {
-    fn ptr(&self) -> *mut T { *self.buf.ptr }
+    fn ptr(&self) -> *mut T { self.buf.ptr.as_ptr() }
 
     fn cap(&self) -> usize { self.buf.cap }
 

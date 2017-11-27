@@ -1,39 +1,51 @@
 # Meet Safe and Unsafe
 
-Programmers in safe "high-level" languages face a fundamental dilemma. On one
-hand, it would be *really* great to just say what you want and not worry about
-how it's done. On the other hand, that can lead to unacceptably poor
-performance. It may be necessary to drop down to less clear or idiomatic
-practices to get the performance characteristics you want. Or maybe you just
-throw up your hands in disgust and decide to shell out to an implementation in
-a less sugary-wonderful *unsafe* language.
+![safe and unsafe](img/safeandunsafe.svg)
 
-Worse, when you want to talk directly to the operating system, you *have* to
-talk to an unsafe language: *C*. C is ever-present and unavoidable. It's the
-lingua-franca of the programming world.
-Even other safe languages generally expose C interfaces for the world at large!
-Regardless of why you're doing it, as soon as your program starts talking to
-C it stops being safe.
+It would be great to not have to worry about low-level implementation details.
+Who could possibly care how much space the empty tuple occupies? Sadly, it
+sometimes matters and we need to worry about it. The most common reason
+developers start to care about implementation details is performance, but more
+importantly, these details can become a matter of correctness when interfacing
+directly with hardware, operating systems, or other languages.
 
-With that said, Rust is *totally* a safe programming language.
+When implementation details start to matter in a safe programming language,
+programmers usually have three options:
 
-Well, Rust *has* a safe programming language. Let's step back a bit.
+* fiddle with the code to encourage the compiler/runtime to perform an optimization
+* adopt a more unidiomatic or cumbersome design to get the desired implementation
+* rewrite the implementation in a language that lets you deal with those details
 
-Rust can be thought of as being composed of two programming languages: *Safe
-Rust* and *Unsafe Rust*. Safe Rust is For Reals  Totally Safe. Unsafe Rust,
-unsurprisingly, is *not* For Reals Totally Safe.  In fact, Unsafe Rust lets you
-do some really, *really* unsafe things.
+For that last option, the language programmers tend to use is *C*. This is often
+necessary to interface with systems that only declare a C interface.
+
+Unfortunately, C is incredibly unsafe to use (sometimes for good reason),
+and this unsafety is magnified when trying to interoperate with another
+language. Care must be taken to ensure C and the other language agree on
+what's happening, and that they don't step on each other's toes.
+
+So what does this have to do with Rust?
+
+Well, unlike C, Rust is a safe programming language.
+
+But, like C, Rust is an unsafe programming language.
+
+More accurately, Rust *contains* both a safe and unsafe programming language.
+
+Rust can be thought of as a combination of two programming languages: *Safe
+Rust* and *Unsafe Rust*. Conveniently, these names mean exactly what they say:
+Safe Rust is Safe. Unsafe Rust is, well, not. In fact, Unsafe Rust lets us
+do some *really* unsafe things. Things the Rust authors will implore you not to
+do, but we'll do anyway.
 
 Safe Rust is the *true* Rust programming language. If all you do is write Safe
 Rust, you will never have to worry about type-safety or memory-safety. You will
-never endure a null or dangling pointer, or any of that Undefined Behavior
-nonsense.
+never endure a dangling pointer, a use-after-free, or any other kind of
+Undefined Behavior.
 
-*That's totally awesome.*
-
-The standard library also gives you enough utilities out-of-the-box that you'll
-be able to write awesome high-performance applications and libraries in pure
-idiomatic Safe Rust.
+The standard library also gives you enough utilities out of the box that you'll
+be able to write high-performance applications and libraries in pure idiomatic
+Safe Rust.
 
 But maybe you want to talk to another language. Maybe you're writing a
 low-level abstraction not exposed by the standard library. Maybe you're
@@ -42,57 +54,15 @@ need to do something the type-system doesn't understand and just *frob some dang
 bits*. Maybe you need Unsafe Rust.
 
 Unsafe Rust is exactly like Safe Rust with all the same rules and semantics.
-However Unsafe Rust lets you do some *extra* things that are Definitely Not Safe.
+It just lets you do some *extra* things that are Definitely Not Safe
+(which we will define in the next section).
 
-The only things that are different in Unsafe Rust are that you can:
+The value of this separation is that we gain the benefits of using an unsafe
+language like C — low level control over implementation details — without most
+of the problems that come with trying to integrate it with a completely
+different safe language.
 
-* Dereference raw pointers
-* Call `unsafe` functions (including C functions, intrinsics, and the raw allocator)
-* Implement `unsafe` traits
-* Mutate statics
-
-That's it. The reason these operations are relegated to Unsafe is that misusing
-any of these things will cause the ever dreaded Undefined Behavior. Invoking
-Undefined Behavior gives the compiler full rights to do arbitrarily bad things
-to your program. You definitely *should not* invoke Undefined Behavior.
-
-Unlike C, Undefined Behavior is pretty limited in scope in Rust. All the core
-language cares about is preventing the following things:
-
-* Dereferencing null or dangling pointers
-* Reading [uninitialized memory]
-* Breaking the [pointer aliasing rules]
-* Producing invalid primitive values:
-    * dangling/null references
-    * a `bool` that isn't 0 or 1
-    * an undefined `enum` discriminant
-    * a `char` outside the ranges [0x0, 0xD7FF] and [0xE000, 0x10FFFF]
-    * A non-utf8 `str`
-* Unwinding into another language
-* Causing a [data race][race]
-
-That's it. That's all the causes of Undefined Behavior baked into Rust. Of
-course, unsafe functions and traits are free to declare arbitrary other
-constraints that a program must maintain to avoid Undefined Behavior. However,
-generally violations of these constraints will just transitively lead to one of
-the above problems. Some additional constraints may also derive from compiler
-intrinsics that make special assumptions about how code can be optimized.
-
-Rust is otherwise quite permissive with respect to other dubious operations.
-Rust considers it "safe" to:
-
-* Deadlock
-* Have a [race condition][race]
-* Leak memory
-* Fail to call destructors
-* Overflow integers
-* Abort the program
-* Delete the production database
-
-However any program that actually manages to do such a thing is *probably*
-incorrect. Rust provides lots of tools to make these things rare, but
-these problems are considered impractical to categorically prevent.
-
-[pointer aliasing rules]: references.html
-[uninitialized memory]: uninitialized.html
-[race]: races.html
+There are still some problems — most notably, we must become aware of properties
+that the type system assumes and audit them in any code that interacts with
+Unsafe Rust. That's the purpose of this book: to teach you about these assumptions
+and how to manage them.

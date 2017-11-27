@@ -1,7 +1,7 @@
 # Send and Sync
 
 Not everything obeys inherited mutability, though. Some types allow you to
-multiply alias a location in memory while mutating it. Unless these types use
+have multiple aliases of a location in memory while mutating it. Unless these types use
 synchronization to manage this access, they are absolutely not thread safe. Rust
 captures this through the `Send` and `Sync` traits.
 

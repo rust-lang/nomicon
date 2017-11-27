@@ -16,7 +16,7 @@ fn index(idx: usize, arr: &[u8]) -> Option<u8> {
 }
 ```
 
-Clearly, this function is safe. We check that the index is in bounds, and if it
+This function is safe and correct. We check that the index is in bounds, and if it
 is, index into the array in an unchecked manner. But even in such a trivial
 function, the scope of the unsafe block is questionable. Consider changing the
 `<` to a `<=`:
@@ -45,13 +45,13 @@ null or containing uninitialized memory. Nothing fundamentally changes. However
 safety *isn't* modular in the sense that programs are inherently stateful and
 your unsafe operations may depend on arbitrary other state.
 
-Trickier than that is when we get into actual statefulness. Consider a simple
-implementation of `Vec`:
+This non-locality gets much worse when we incorporate actual persistent state.
+Consider a simple implementation of `Vec`:
 
 ```rust
 use std::ptr;
 
-// Note this definition is insufficient. See the section on implementing Vec.
+// Note: This definition is naive. See the chapter on implementing Vec.
 pub struct Vec<T> {
     ptr: *mut T,
     len: usize,
@@ -59,8 +59,7 @@ pub struct Vec<T> {
 }
 
 // Note this implementation does not correctly handle zero-sized types.
-// We currently live in a nice imaginary world of only positive fixed-size
-// types.
+// See the chapter on implementing Vec.
 impl<T> Vec<T> {
     pub fn push(&mut self, elem: T) {
         if self.len == self.cap {
@@ -72,14 +71,13 @@ impl<T> Vec<T> {
             self.len += 1;
         }
     }
-
     # fn reallocate(&mut self) { }
 }
 
 # fn main() {}
 ```
 
-This code is simple enough to reasonably audit and verify. Now consider
+This code is simple enough to reasonably audit and informally verify. Now consider
 adding the following method:
 
 ```rust,ignore
@@ -106,14 +104,12 @@ as Vec.
 
 It is therefore possible for us to write a completely safe abstraction that
 relies on complex invariants. This is *critical* to the relationship between
-Safe Rust and Unsafe Rust. We have already seen that Unsafe code must trust
-*some* Safe code, but can't trust *generic* Safe code. It can't trust an
-arbitrary implementor of a trait or any function that was passed to it to be
-well-behaved in a way that safe code doesn't care about.
+Safe Rust and Unsafe Rust.
 
-However if unsafe code couldn't prevent client safe code from messing with its
-state in arbitrary ways, safety would be a lost cause. Thankfully, it *can*
-prevent arbitrary code from messing with critical state due to privacy.
+We have already seen that Unsafe code must trust *some* Safe code, but shouldn't
+trust *generic* Safe code. Privacy is important to unsafe code for similar reasons:
+it prevents us from having to trust all the safe code in the universe from messing
+with our trusted state.
 
 Safety lives!
 

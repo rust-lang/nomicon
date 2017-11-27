@@ -139,7 +139,7 @@ impl<T> Drop for IntoIter<T> {
             let elem_size = mem::size_of::<T>();
             let num_bytes = elem_size * self.cap;
             unsafe {
-                heap::deallocate(*self.buf as *mut _, num_bytes, align);
+                heap::deallocate(self.buf.as_ptr() as *mut _, num_bytes, align);
             }
         }
     }
