@@ -110,9 +110,6 @@ struct Foo<u32, u16> {
 The latter case quite simply wastes space. An optimal use of space therefore
 requires different monomorphizations to have *different field orderings*.
 
-**Note: this is a hypothetical optimization that is not yet implemented in Rust
-1.0**
-
 Enums make this consideration even more complicated. Naively, an enum such as:
 
 ```rust
