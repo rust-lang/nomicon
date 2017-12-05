@@ -23,8 +23,8 @@ passed through the FFI boundary.
 C, and is explicitly contrary to the behavior of an empty type in C++, which
 still consumes a byte of space.
 
-* DST pointers (fat pointers), tuples, and enums with data (that is, non-C-like
-  enums) are not a concept in C, and as such are never FFI-safe.
+* DST pointers (fat pointers), tuples, and enums with fields are not a concept
+  in C, and as such are never FFI-safe.
 
 * As an exception to the rule on enum with data, `Option<&T>` is
   FFI-safe if `*const T` is FFI-safe, and they have the same
@@ -42,7 +42,7 @@ binary interface (ABI). Note that enum representation in C is implementation
 defined, so this is really a "best guess". In particular, this may be incorrect
 when the C code of interest is compiled with certain flags.
 
-* "C-like" enums with `repr(C)` or `repr(u*)` still may not be set to an
+* Field-less enums with `repr(C)` or `repr(u*)` still may not be set to an
 integer value without a corresponding variant, even though this is
 permitted behavior in C or C++. It is undefined behavior to (unsafely)
 construct an instance of an enum that does not match one of its
@@ -53,19 +53,19 @@ compiled as normal.)
 
 # repr(u*), repr(i*)
 
-These specify the size to make a C-like enum. If the discriminant overflows the
-integer it has to fit in, it will produce a compile-time error. You can manually
-ask Rust to allow this by setting the overflowing element to explicitly be 0.
-However Rust will not allow you to create an enum where two variants have the
-same discriminant.
+These specify the size to make a field-less enum. If the discriminant overflows
+the integer it has to fit in, it will produce a compile-time error. You can
+manually ask Rust to allow this by setting the overflowing element to explicitly
+be 0. However Rust will not allow you to create an enum where two variants have
+the same discriminant.
 
-The term "C-like enum" only means that the enum doesn't have data in any
-of its variants. A C-like enum without a `repr(u*)` or `repr(C)` is
+The term "field-less enum" only means that the enum doesn't have data in any
+of its variants. A field-less enum without a `repr(u*)` or `repr(C)` is
 still a Rust native type, and does not have a stable ABI representation.
 Adding a `repr` causes it to be treated exactly like the specified
 integer size for ABI purposes.
 
-A non-C-like enum is a Rust type with no guaranteed ABI (even if the
+Any enum with fields is a Rust type with no guaranteed ABI (even if the
 only data is `PhantomData` or something else with zero size).
 
 Adding an explicit `repr` to an enum suppresses the null-pointer

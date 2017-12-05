@@ -21,7 +21,7 @@ Rust gives you the following ways to lay out composite data:
 * arrays (homogeneous product types)
 * enums (named sum types -- tagged unions)
 
-An enum is said to be *C-like* if none of its variants have associated data.
+An enum is said to be *field-less* if none of its variants have associated data.
 
 Composite structures will have an alignment equal to the maximum
 of their fields' alignment. Rust will consequently insert padding where
