@@ -28,7 +28,7 @@ primitive:
  * `*T as integer`
  * `integer as *T`
  * `number as number`
- * `C-like-enum as integer`
+ * `field-less enum as integer`
  * `bool as integer`
  * `char as integer`
  * `u8 as char`
