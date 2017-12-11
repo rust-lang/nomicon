@@ -94,7 +94,7 @@ error: `days` does not live long enough
 error: aborting due to previous error
 ```
 
-Implementing Drop lets the Inspector execute some arbitrary code during its
+Implementing `Drop` lets the `Inspector` execute some arbitrary code during its
 death. This means it can potentially observe that types that are supposed to
 live as long as it does actually were destroyed first.
 
@@ -168,7 +168,7 @@ checker during the analysis of `fn main`, saying that `days` does not
 live long enough.
 
 The reason is that the borrow checking analysis of `main` does not
-know about the internals of each Inspector's Drop implementation.  As
+know about the internals of each `Inspector`'s `Drop` implementation.  As
 far as the borrow checker knows while it is analyzing `main`, the body
 of an inspector's destructor might access that borrowed data.
 
@@ -185,7 +185,7 @@ borrowed data in a value to outlive that value, which is certainly sound.
 
 Future versions of the language may make the analysis more precise, to
 reduce the number of cases where sound code is rejected as unsafe.
-This would help address cases such as the two Inspectors above that
+This would help address cases such as the two `Inspector`s above that
 know not to inspect during destruction.
 
 In the meantime, there is an unstable attribute that one can use to
@@ -193,9 +193,8 @@ assert (unsafely) that a generic type's destructor is *guaranteed* to
 not access any expired data, even if its type gives it the capability
 to do so.
 
-That attribute is called `may_dangle` and was introduced in [RFC 1327]
-(https://github.com/rust-lang/rfcs/blob/master/text/1327-dropck-param-eyepatch.md).
-To deploy it on the Inspector example from above, we would write:
+That attribute is called `may_dangle` and was introduced in [RFC 1327][rfc1327].
+To deploy it on the `Inspector` example from above, we would write:
 
 ```rust,ignore
 struct Inspector<'a>(&'a u8, &'static str);
@@ -287,3 +286,4 @@ worry at all about doing the right thing for the drop checker. However there
 is one special case that you need to worry about, which we will look at in
 the next section.
 
+[rfc1327]: https://github.com/rust-lang/rfcs/blob/master/text/1327-dropck-param-eyepatch.md
