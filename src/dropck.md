@@ -1,12 +1,8 @@
 # Drop Check
 
-We have seen how lifetimes provide us some fairly simple rules for ensuring
-that we never read dangling references. However up to this point we have only ever
-interacted with the *outlives* relationship in an inclusive manner. That is,
-when we talked about `'a: 'b`, it was ok for `'a` to live *exactly* as long as
-`'b`. At first glance, this seems to be a meaningless distinction. Nothing ever
-gets dropped at the same time as another, right? This is why we used the
-following desugaring of `let` statements:
+When looking at the *outlives* relationship in previous sections, we never
+considered the case where two values have the *exact* same lifetime. We made
+this clear by desugarring each let statement into its own scope:
 
 ```rust,ignore
 let x;
@@ -22,44 +18,74 @@ let y;
 }
 ```
 
-Each creates its own scope, clearly establishing that one drops before the
-other. However, what if we do the following?
+But what if we write the following let statement?
 
 ```rust,ignore
 let (x, y) = (vec![], vec![]);
 ```
 
 Does either value strictly outlive the other? The answer is in fact *no*,
-neither value strictly outlives the other. Of course, one of x or y will be
-dropped before the other, but the actual order is not specified. Tuples aren't
-special in this regard; composite structures just don't guarantee their
-destruction order as of Rust 1.0.
+neither value strictly outlives the other. At least, as far as the type system
+is concerned.
 
-We *could* specify this for the fields of built-in composites like tuples and
-structs. However, what about something like Vec? Vec has to manually drop its
-elements via pure-library code. In general, anything that implements Drop has
-a chance to fiddle with its innards during its final death knell. Therefore
-the compiler can't sufficiently reason about the actual destruction order
-of the contents of any type that implements Drop.
+In actual execution, Rust guarantees that `x` will be dropped before `y`.
+This is because they are stored in a composite value (a tuple), and composite
+values have their fields destroyed [in declaration order][drop-order].
 
-So why do we care? We care because if the type system isn't careful, it could
-accidentally make dangling pointers. Consider the following simple program:
+So why do we care if the compiler considers `x` and `y` to live for the same
+amount of time? Well, there's a special trick the compiler can do with equal
+lifetimes: it can let us hold onto dangling pointers during destruction! But
+we must be careful where we allow this, because any mistake can lead to a
+use-after-free.
+
+Consider the following simple program:
 
 ```rust
 struct Inspector<'a>(&'a u8);
 
 fn main() {
-    let (inspector, days);
+    let (days, inspector);
     days = Box::new(1);
     inspector = Inspector(&days);
 }
 ```
 
-This program is totally sound and compiles today. The fact that `days` does
-not *strictly* outlive `inspector` doesn't matter. As long as the `inspector`
-is alive, so is days.
+This program is perfectly sound, and even compiles today! The fact that `days`
+is dropped, and therefore freed, while `inspector` holds a pointer into it doesn't
+matter because `inspector` will *also* be destroyed before any code gets a chance
+to dereference that dangling pointer.
 
-However if we add a destructor, the program will no longer compile!
+Just to make it clear that something special is happening here, this code
+(which should behave identically at runtime) *doesn't* compile:
+
+```rust,ignore
+struct Inspector<'a>(&'a u8);
+
+fn main() {
+    let inspector;
+    let days;
+    days = Box::new(1);
+    inspector = Inspector(&days);
+}
+```
+
+```text
+error: `days` does not live long enough
+ --> src/main.rs:8:1
+  |
+7 |     inspector = Inspector(&days);
+  |                            ---- borrow occurs here
+8 | }
+  | ^ `days` dropped here while still borrowed
+  |
+  = note: values in a scope are dropped in the opposite order they are created
+```
+
+The fact that `inspector` and `days` are stored in the same composite is letting
+the compiler apply this special trick.
+
+Now the *really* interesting part is that if we add a destructor to Inspector,
+the program will *also* stop compiling!
 
 ```rust,ignore
 struct Inspector<'a>(&'a u8);
@@ -71,11 +97,10 @@ impl<'a> Drop for Inspector<'a> {
 }
 
 fn main() {
-    let (inspector, days);
+    let (days, inspector);
     days = Box::new(1);
     inspector = Inspector(&days);
-    // Let's say `days` happens to get dropped first.
-    // Then when Inspector is dropped, it will try to read free'd memory!
+    // When Inspector is dropped here, it will try to read free'd memory!
 }
 ```
 
@@ -94,196 +119,51 @@ error: `days` does not live long enough
 error: aborting due to previous error
 ```
 
-Implementing Drop lets the Inspector execute some arbitrary code during its
-death. This means it can potentially observe that types that are supposed to
-live as long as it does actually were destroyed first.
+Implementing Drop lets the Inspector execute arbitrary code during its
+death, which means it can dereference any dangling pointer that it contains.
+If we allowed this program to compile, it would perform a use-after-free.
 
-Interestingly, only generic types need to worry about this. If they aren't
-generic, then the only lifetimes they can harbor are `'static`, which will truly
-live *forever*. This is why this problem is referred to as *sound generic drop*.
-Sound generic drop is enforced by the *drop checker*. As of this writing, some
-of the finer details of how the drop checker validates types is totally up in
-the air. However The Big Rule is the subtlety that we have focused on this whole
-section:
+This is the *sound generic drop* issue. We call it that because it only applies
+to destructors of generic types. That is, if `Inspector` weren't generic, it
+couldn't store any lifetime other than `'static', and dangling pointers would
+never be a concern. The enforcement of sound generic drop is handled by the
+*drop check*, which is more commonly known as *dropck*.
 
-**For a generic type to soundly implement drop, its generics arguments must
-strictly outlive it.**
+It turns out that getting dropck's design exactly right has been very difficult.
+This is because, as we'll see, we don't want it to give up completely on generic
+destructors. In particular: what if we knew `Inspector` *didn't* or even *couldn't*
+dereference the pointer in its destructor? Wouldn't it be nice if that meant our
+code compiled again?
 
-Obeying this rule is (usually) necessary to satisfy the borrow
-checker; obeying it is sufficient but not necessary to be
-sound. That is, if your type obeys this rule then it's definitely
-sound to drop.
+Since Rust 1.0, and as of Rust 1.18, there have been two changes to how dropck
+works due to soundness issues. At least one more is planned, as the latest
+version was intended to be a temporary hack.
 
-The reason that it is not always necessary to satisfy the above rule
-is that some Drop implementations will not access borrowed data even
-though their type gives them the capability for such access.
+* [non-parametric dropck](https://github.com/rust-lang/rfcs/blob/master/text/1238-nonparametric-dropck.md)
+* [dropck eyepatch](https://github.com/rust-lang/rfcs/blob/master/text/1327-dropck-param-eyepatch.md)
 
-For example, this variant of the above `Inspector` example will never
-access borrowed data:
+Old versions of this document were based on the original 1.0 design, which
+was unsafe by default, and therefore expected unsafe Rust programmers to manually
+opt out of it.
 
-```rust,ignore
-struct Inspector<'a>(&'a u8, &'static str);
+The good news is that, unlike the 1.0 design, the 1.18 design is *safe by default*:
+you can completely ignore that dropck exists, and nothing bad can be done with
+your types. But sometimes you will be able to leverage your knowledge of dropck
+to make transiently dangling references work, and that's nice.
 
-impl<'a> Drop for Inspector<'a> {
-    fn drop(&mut self) {
-        println!("Inspector(_, {}) knows when *not* to inspect.", self.1);
-    }
-}
+So here's all you should need to know about dropck these days:
 
-fn main() {
-    let (inspector, days);
-    days = Box::new(1);
-    inspector = Inspector(&days, "gadget");
-    // Let's say `days` happens to get dropped first.
-    // Even when Inspector is dropped, its destructor will not access the
-    // borrowed `days`.
-}
-```
+* If a type isn't generic, then it cannot contain borrows that expire, and
+  is therefore uninteresting.
+* If a type is generic, and doesn't have a destructor, its generic arguments
+  must must live *at least* as long as it.
+* If a type is generic, and *does* have a destructor, its generic arguments
+  must live *strictly* longer than it.
 
-Likewise, this variant will also never access borrowed data:
+Or to put it another way: if you want to be able to store references to things
+that live **exactly** as long as yourself, you can't have a destructor.
 
-```rust,ignore
-use std::fmt;
 
-struct Inspector<T: fmt::Display>(T, &'static str);
 
-impl<T: fmt::Display> Drop for Inspector<T> {
-    fn drop(&mut self) {
-        println!("Inspector(_, {}) knows when *not* to inspect.", self.1);
-    }
-}
 
-fn main() {
-    let (inspector, days): (Inspector<&u8>, Box<u8>);
-    days = Box::new(1);
-    inspector = Inspector(&days, "gadget");
-    // Let's say `days` happens to get dropped first.
-    // Even when Inspector is dropped, its destructor will not access the
-    // borrowed `days`.
-}
-```
-
-However, *both* of the above variants are rejected by the borrow
-checker during the analysis of `fn main`, saying that `days` does not
-live long enough.
-
-The reason is that the borrow checking analysis of `main` does not
-know about the internals of each Inspector's Drop implementation.  As
-far as the borrow checker knows while it is analyzing `main`, the body
-of an inspector's destructor might access that borrowed data.
-
-Therefore, the drop checker forces all borrowed data in a value to
-strictly outlive that value.
-
-# An Escape Hatch
-
-The precise rules that govern drop checking may be less restrictive in
-the future.
-
-The current analysis is deliberately conservative and trivial; it forces all
-borrowed data in a value to outlive that value, which is certainly sound.
-
-Future versions of the language may make the analysis more precise, to
-reduce the number of cases where sound code is rejected as unsafe.
-This would help address cases such as the two Inspectors above that
-know not to inspect during destruction.
-
-In the meantime, there is an unstable attribute that one can use to
-assert (unsafely) that a generic type's destructor is *guaranteed* to
-not access any expired data, even if its type gives it the capability
-to do so.
-
-That attribute is called `may_dangle` and was introduced in [RFC 1327]
-(https://github.com/rust-lang/rfcs/blob/master/text/1327-dropck-param-eyepatch.md).
-To deploy it on the Inspector example from above, we would write:
-
-```rust,ignore
-struct Inspector<'a>(&'a u8, &'static str);
-
-unsafe impl<#[may_dangle] 'a> Drop for Inspector<'a> {
-    fn drop(&mut self) {
-        println!("Inspector(_, {}) knows when *not* to inspect.", self.1);
-    }
-}
-```
-
-Use of this attribute requires the `Drop` impl to be marked `unsafe` because the
-compiler is not checking the implicit assertion that no potentially expired data
-(e.g. `self.0` above) is accessed.
-
-The attribute can be applied to any number of lifetime and type parameters. In
-the following example, we assert that we access no data behind a reference of
-lifetime `'b` and that the only uses of `T` will be moves or drops, but omit
-the attribute from `'a` and `U`, because we do access data with that lifetime
-and that type:
-
-```rust,ignore
-use std::fmt::Display;
-
-struct Inspector<'a, 'b, T, U: Display>(&'a u8, &'b u8, T, U);
-
-unsafe impl<'a, #[may_dangle] 'b, #[may_dangle] T, U: Display> Drop for Inspector<'a, 'b, T, U> {
-    fn drop(&mut self) {
-        println!("Inspector({}, _, _, {})", self.0, self.3);
-    }
-}
-```
-
-It is sometimes obvious that no such access can occur, like the case above.
-However, when dealing with a generic type parameter, such access can
-occur indirectly. Examples of such indirect access are:
-
- * invoking a callback,
- * via a trait method call.
-
-(Future changes to the language, such as impl specialization, may add
-other avenues for such indirect access.)
-
-Here is an example of invoking a callback:
-
-```rust,ignore
-struct Inspector<T>(T, &'static str, Box<for <'r> fn(&'r T) -> String>);
-
-impl<T> Drop for Inspector<T> {
-    fn drop(&mut self) {
-        // The `self.2` call could access a borrow e.g. if `T` is `&'a _`.
-        println!("Inspector({}, {}) unwittingly inspects expired data.",
-                 (self.2)(&self.0), self.1);
-    }
-}
-```
-
-Here is an example of a trait method call:
-
-```rust,ignore
-use std::fmt;
-
-struct Inspector<T: fmt::Display>(T, &'static str);
-
-impl<T: fmt::Display> Drop for Inspector<T> {
-    fn drop(&mut self) {
-        // There is a hidden call to `<T as Display>::fmt` below, which
-        // could access a borrow e.g. if `T` is `&'a _`
-        println!("Inspector({}, {}) unwittingly inspects expired data.",
-                 self.0, self.1);
-    }
-}
-```
-
-And of course, all of these accesses could be further hidden within
-some other method invoked by the destructor, rather than being written
-directly within it.
-
-In all of the above cases where the `&'a u8` is accessed in the
-destructor, adding the `#[may_dangle]`
-attribute makes the type vulnerable to misuse that the borrower
-checker will not catch, inviting havoc. It is better to avoid adding
-the attribute.
-
-# Is that all about drop checker?
-
-It turns out that when writing unsafe code, we generally don't need to
-worry at all about doing the right thing for the drop checker. However there
-is one special case that you need to worry about, which we will look at in
-the next section.
-
+[drop-order]: https://github.com/rust-lang/rfcs/blob/master/text/1857-stabilize-drop-order.md

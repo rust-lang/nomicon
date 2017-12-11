@@ -17,54 +17,54 @@ boilerplate" to drop children. If a struct has no special logic for being
 dropped other than dropping its children, then it means `Drop` doesn't need to
 be implemented at all!
 
-**There is no stable way to prevent this behavior in Rust 1.0.**
+If this behaviour is unacceptable, it can be supressed by placing each field
+you don't want to drop in a `union`. The standard library provides the
+[`mem::ManuallyDrop`][ManuallyDrop] wrapper type as a convience for doing this.
 
-Note that taking `&mut self` means that even if you could suppress recursive
-Drop, Rust will prevent you from e.g. moving fields out of self. For most types,
-this is totally fine.
 
-For instance, a custom implementation of `Box` might write `Drop` like this:
+
+Consider a custom implementation of `Box`, which might write `Drop` like this:
 
 ```rust
-#![feature(unique, allocator_api)]
+#![feature(allocator_api)]
 
 use std::heap::{Heap, Alloc, Layout};
 use std::mem;
-use std::ptr::{drop_in_place, Unique};
+use std::ptr::drop_in_place;
 
-struct Box<T>{ ptr: Unique<T> }
+struct Box<T>{ ptr: *mut T }
 
 impl<T> Drop for Box<T> {
     fn drop(&mut self) {
         unsafe {
-            drop_in_place(self.ptr.as_ptr());
-            Heap.dealloc(self.ptr.as_ptr() as *mut u8, Layout::new::<T>())
+            drop_in_place(self.ptr);
+            Heap.dealloc(self.ptr as *mut u8, Layout::new::<T>())
         }
     }
 }
 # fn main() {}
 ```
 
-and this works fine because when Rust goes to drop the `ptr` field it just sees
-a [Unique] that has no actual `Drop` implementation. Similarly nothing can
+This works fine because when Rust goes to drop the `ptr` field it just sees
+a `*mut T` that has no actual `Drop` implementation. Similarly nothing can
 use-after-free the `ptr` because when drop exits, it becomes inaccessible.
 
 However this wouldn't work:
 
 ```rust
-#![feature(allocator_api, unique)]
+#![feature(allocator_api)]
 
 use std::heap::{Heap, Alloc, Layout};
-use std::ptr::{drop_in_place, Unique};
+use std::ptr::drop_in_place;
 use std::mem;
 
-struct Box<T>{ ptr: Unique<T> }
+struct Box<T>{ ptr: *mut T }
 
 impl<T> Drop for Box<T> {
     fn drop(&mut self) {
         unsafe {
-            drop_in_place(self.ptr.as_ptr());
-            Heap.dealloc(self.ptr.as_ptr() as *mut u8, Layout::new::<T>());
+            drop_in_place(self.ptr);
+            Heap.dealloc(self.ptr as *mut u8, Layout::new::<T>());
         }
     }
 }
@@ -74,17 +74,17 @@ struct SuperBox<T> { my_box: Box<T> }
 impl<T> Drop for SuperBox<T> {
     fn drop(&mut self) {
         unsafe {
-            // Hyper-optimized: deallocate the box's contents for it
+            // """Hyper-optimized""": deallocate the box's contents for it
             // without `drop`ing the contents
-            Heap.dealloc(self.my_box.ptr.as_ptr() as *mut u8, Layout::new::<T>());
+            Heap.dealloc(self.my_box.ptr as *mut u8, Layout::new::<T>());
         }
     }
 }
 # fn main() {}
 ```
 
-After we deallocate the `box`'s ptr in SuperBox's destructor, Rust will
-happily proceed to tell the box to Drop itself and everything will blow up with
+After we deallocate `my_box`'s ptr in SuperBox's destructor, Rust will
+happily proceed to tell `my_box` to Drop itself and everything will blow up with
 use-after-frees and double-frees.
 
 Note that the recursive drop behavior applies to all structs and enums
@@ -98,9 +98,10 @@ struct Boxy<T> {
 }
 ```
 
-will have its data1 and data2's fields destructors whenever it "would" be
+will have its `data1` and `data2` fields' destructors run whenever it "would" be
 dropped, even though it itself doesn't implement Drop. We say that such a type
-*needs Drop*, even though it is not itself Drop.
+*needs Drop*, even though it is not itself Drop. This property can be checked
+for with the [`mem::needs_drop()`][needs_drop] function.
 
 Similarly,
 
@@ -115,27 +116,27 @@ will have its inner Box field dropped if and only if an instance stores the
 Next variant.
 
 In general this works really nicely because you don't need to worry about
-adding/removing drops when you refactor your data layout. Still there's
+adding/removing drops when you refactor your data layout. But there's
 certainly many valid usecases for needing to do trickier things with
 destructors.
 
-The classic safe solution to overriding recursive drop and allowing moving out
+The classic safe solution to preventing recursive drop and allowing moving out
 of Self during `drop` is to use an Option:
 
 ```rust
-#![feature(allocator_api, unique)]
+#![feature(allocator_api)]
 
 use std::heap::{Alloc, Heap, Layout};
-use std::ptr::{drop_in_place, Unique};
+use std::ptr::drop_in_place;
 use std::mem;
 
-struct Box<T>{ ptr: Unique<T> }
+struct Box<T>{ ptr: *mut T }
 
 impl<T> Drop for Box<T> {
     fn drop(&mut self) {
         unsafe {
-            drop_in_place(self.ptr.as_ptr());
-            Heap.dealloc(self.ptr.as_ptr() as *mut u8, Layout::new::<T>());
+            drop_in_place(self.ptr);
+            Heap.dealloc(self.ptr as *mut u8, Layout::new::<T>());
         }
     }
 }
@@ -149,7 +150,7 @@ impl<T> Drop for SuperBox<T> {
             // without `drop`ing the contents. Need to set the `box`
             // field as `None` to prevent Rust from trying to Drop it.
             let my_box = self.my_box.take().unwrap();
-            Heap.dealloc(my_box.ptr.as_ptr() as *mut u8, Layout::new::<T>());
+            Heap.dealloc(my_box.ptr as *mut u8, Layout::new::<T>());
             mem::forget(my_box);
         }
     }
@@ -165,7 +166,10 @@ deinitializing the field. Not that it will prevent you from producing any other
 arbitrarily invalid state in there.
 
 On balance this is an ok choice. Certainly what you should reach for by default.
-However, in the future we expect there to be a first-class way to announce that
-a field shouldn't be automatically dropped.
 
-[Unique]: phantom-data.html
+Should using Option be unacceptable, [`ManuallyDrop`][ManuallyDrop] is always
+available.
+
+
+[ManuallyDrop]: https://doc.rust-lang.org/std/mem/union.ManuallyDrop.html
+[needs_drop]: https://doc.rust-lang.org/nightly/std/mem/fn.needs_drop.html

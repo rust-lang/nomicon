@@ -21,8 +21,13 @@ correct variance and drop checking.
 We do this using `PhantomData`, which is a special marker type. `PhantomData`
 consumes no space, but simulates a field of the given type for the purpose of
 static analysis. This was deemed to be less error-prone than explicitly telling
-the type-system the kind of variance that you want, while also providing other
-useful such as the information needed by drop check.
+the type system the kind of variance that you want, while also being useful
+for secondary concerns like deriving Send and Sync.
+
+When using the *drop check eyepatch*, PhantomData also becomes important for
+telling the compiler about all types that you drop that it can't see. See the
+[the previous section][dropck-eyepatch] for details. This can be ignored if you
+don't know what the eyepatch is.
 
 Iter logically contains a bunch of `&'a T`s, so this is exactly what we tell
 the PhantomData to simulate:
@@ -40,65 +45,39 @@ struct Iter<'a, T: 'a> {
 and that's it. The lifetime will be bounded, and your iterator will be variant
 over `'a` and `T`. Everything Just Works.
 
-Another important example is Vec, which is (approximately) defined as follows:
-
-```
-struct Vec<T> {
-    data: *const T, // *const for variance!
-    len: usize,
-    cap: usize,
-}
-```
-
-Unlike the previous example, it *appears* that everything is exactly as we
-want. Every generic argument to Vec shows up in at least one field.
-Good to go!
-
-Nope.
-
-The drop checker will generously determine that `Vec<T>` does not own any values
-of type T. This will in turn make it conclude that it doesn't need to worry
-about Vec dropping any T's in its destructor for determining drop check
-soundness. This will in turn allow people to create unsoundness using
-Vec's destructor.
-
-In order to tell dropck that we *do* own values of type T, and therefore may
-drop some T's when *we* drop, we must add an extra PhantomData saying exactly
-that:
+Here's a more extreme example based on HashMap which stores a single opaque
+allocation which is used for multiple arrays of different types:
 
 ```
 use std::marker;
 
-struct Vec<T> {
-    data: *const T, // *const for covariance!
-    len: usize,
-    cap: usize,
-    _marker: marker::PhantomData<T>,
+struct HashMap<K, V> {
+    ptr: *mut u8,
+    // The pointer actually stores keys and values
+    // (and hashes, but those aren't generic)
+    _marker: marker::PhantomData<(K, V)>,
 }
 ```
 
-Raw pointers that own an allocation is such a pervasive pattern that the
-standard library made a utility for itself called `Unique<T>` which:
-
-* wraps a `*const T` for variance
-* includes a `PhantomData<T>`
-* auto-derives `Send`/`Sync` as if T was contained
-* marks the pointer as `NonZero` for the null-pointer optimization
 
 ## Table of `PhantomData` patterns
 
-Here’s a table of all the wonderful ways `PhantomData` could be used:
+Here’s a table of all the most common ways `PhantomData` is used:
 
 | Phantom type                | `'a`      | `T`                       |
 |-----------------------------|-----------|---------------------------|
-| `PhantomData<T>`            | -         | variant (with drop check) |
+| `PhantomData<T>`            | -         | variant (and drop check T)|
 | `PhantomData<&'a T>`        | variant   | variant                   |
 | `PhantomData<&'a mut T>`    | variant   | invariant                 |
 | `PhantomData<*const T>`     | -         | variant                   |
 | `PhantomData<*mut T>`       | -         | invariant                 |
-| `PhantomData<fn(T)>`        | -         | contravariant (*)         |
+| `PhantomData<fn(T)>`        | -         | contravariant             |
 | `PhantomData<fn() -> T>`    | -         | variant                   |
 | `PhantomData<fn(T) -> T>`   | -         | invariant                 |
 | `PhantomData<Cell<&'a ()>>` | invariant | -                         |
 
-(*) If contravariance gets scrapped, this would be invariant.
+
+
+
+
+[dropck-eyepatch]: dropck-eyepatch.html

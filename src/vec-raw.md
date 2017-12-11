@@ -11,14 +11,14 @@ allocating, growing, and freeing:
 
 ```rust,ignore
 struct RawVec<T> {
-    ptr: Unique<T>,
+    ptr: Shared<T>,
     cap: usize,
 }
 
 impl<T> RawVec<T> {
     fn new() -> Self {
         assert!(mem::size_of::<T>() != 0, "TODO: implement ZST support");
-        RawVec { ptr: Unique::empty(), cap: 0 }
+        RawVec { ptr: Shared::empty(), cap: 0 }
     }
 
     // unchanged from Vec
@@ -42,7 +42,7 @@ impl<T> RawVec<T> {
             // If allocate or reallocate fail, we'll get `null` back
             if ptr.is_null() { oom() }
 
-            self.ptr = Unique::new(ptr as *mut _);
+            self.ptr = Shared::new(ptr as *mut _);
             self.cap = new_cap;
         }
     }
