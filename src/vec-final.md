@@ -1,7 +1,7 @@
 # The Final Code
 
 ```rust
-#![feature(unique)]
+#![feature(ptr_internals)]
 #![feature(allocator_api)]
 
 use std::ptr::{Unique, self};
