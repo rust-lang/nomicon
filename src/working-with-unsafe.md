@@ -92,7 +92,8 @@ capacity violates the invariants of Vec (that `cap` reflects the allocated space
 in the Vec). This is not something the rest of Vec can guard against. It *has*
 to trust the capacity field because there's no way to verify it.
 
-`unsafe` does more than pollute a whole function: it pollutes a whole *module*.
+Because it relies on invariants of a struct field, this `unsafe` code
+does more than pollute a whole function: it pollutes a whole *module*.
 Generally, the only bullet-proof way to limit the scope of unsafe code is at the
 module boundary with privacy.
 
