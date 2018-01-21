@@ -26,7 +26,7 @@ this is totally fine.
 For instance, a custom implementation of `Box` might write `Drop` like this:
 
 ```rust
-#![feature(unique, allocator_api)]
+#![feature(ptr_internals, allocator_api)]
 
 use std::heap::{Heap, Alloc, Layout};
 use std::mem;
@@ -52,7 +52,7 @@ use-after-free the `ptr` because when drop exits, it becomes inaccessible.
 However this wouldn't work:
 
 ```rust
-#![feature(allocator_api, unique)]
+#![feature(allocator_api, ptr_internals)]
 
 use std::heap::{Heap, Alloc, Layout};
 use std::ptr::{drop_in_place, Unique};
@@ -123,7 +123,7 @@ The classic safe solution to overriding recursive drop and allowing moving out
 of Self during `drop` is to use an Option:
 
 ```rust
-#![feature(allocator_api, unique)]
+#![feature(allocator_api, ptr_internals)]
 
 use std::heap::{Alloc, Heap, Layout};
 use std::ptr::{drop_in_place, Unique};
