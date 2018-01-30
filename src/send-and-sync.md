@@ -2,7 +2,7 @@
 
 Not everything obeys inherited mutability, though. Some types allow you to
 have multiple aliases of a location in memory while mutating it. Unless these types use
-synchronization to manage this access, they are absolutely not thread safe. Rust
+synchronization to manage this access, they are absolutely not thread-safe. Rust
 captures this through the `Send` and `Sync` traits.
 
 * A type is Send if it is safe to send it to another thread.
@@ -35,11 +35,11 @@ with a raw pointer requires dereferencing it, which is already unsafe. In that
 sense, one could argue that it would be "fine" for them to be marked as thread
 safe.
 
-However it's important that they aren't thread safe to prevent types that
-contain them from being automatically marked as thread safe. These types have
+However it's important that they aren't thread-safe to prevent types that
+contain them from being automatically marked as thread-safe. These types have
 non-trivial untracked ownership, and it's unlikely that their author was
-necessarily thinking hard about thread safety. In the case of Rc, we have a nice
-example of a type that contains a `*mut` that is definitely not thread safe.
+necessarily thinking hard about thread safety. In the case of `Rc`, we have a nice
+example of a type that contains a `*mut` that is definitely not thread-safe.
 
 Types that aren't automatically derived can simply implement them if desired:
 
