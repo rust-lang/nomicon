@@ -3,6 +3,7 @@
 ```rust
 #![feature(ptr_internals)]
 #![feature(allocator_api)]
+#![feature(unique)]
 
 use std::ptr::{Unique, self};
 use std::mem;
