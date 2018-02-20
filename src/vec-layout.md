@@ -71,7 +71,7 @@ take the hit and use std's Unique:
 
 
 ```rust
-#![feature(ptr_internals)]
+#![feature(ptr_internals, unique)]
 
 use std::ptr::{Unique, self};
 
