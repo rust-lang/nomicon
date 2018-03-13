@@ -26,12 +26,11 @@ still consumes a byte of space.
 * DST pointers (fat pointers), tuples, and enums with fields are not a concept
   in C, and as such are never FFI-safe.
 
-* As an exception to the rule on enum with data, `Option<&T>` is
-  FFI-safe if `*const T` is FFI-safe, and they have the same
-  representation, using the null-pointer optimization: `Some<&T>` is
-  represented as the pointer, and `None` is represented as a null
-  pointer.  (This rule applies to any enum defined the same way as
-  libcore's `Option` type, and using the default repr.)
+* If `T` is an [FFI-safe non-nullable pointer
+  type](ffi.html#the-nullable-pointer-optimization),
+  `Option<T>` is guaranteed to have the same layout and ABI as `T` and is
+  therefore also FFI-safe. As of this writing, this covers `&`, `&mut`,
+  `Box`, and function pointers, all of which can never be null.
 
 * Tuple structs are like structs with regards to `repr(C)`, as the only
   difference from a struct is that the fields aren’t named.
