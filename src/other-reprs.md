@@ -30,7 +30,7 @@ still consumes a byte of space.
   type](ffi.html#the-nullable-pointer-optimization),
   `Option<T>` is guaranteed to have the same layout and ABI as `T` and is
   therefore also FFI-safe. As of this writing, this covers `&`, `&mut`,
-  `Box`, and function pointers, all of which can never be null.
+  and function pointers, all of which can never be null.
 
 * Tuple structs are like structs with regards to `repr(C)`, as the only
   difference from a struct is that the fields aren’t named.
