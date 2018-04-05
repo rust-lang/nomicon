@@ -28,7 +28,7 @@ For instance, a custom implementation of `Box` might write `Drop` like this:
 ```rust
 #![feature(ptr_internals, allocator_api, unique)]
 
-use std::alloc::{Global, GlobalAlloc, Layout, Void};
+use std::alloc::{Global, GlobalAlloc, Layout, Opaque};
 use std::mem;
 use std::ptr::{drop_in_place, Unique};
 
@@ -38,7 +38,7 @@ impl<T> Drop for Box<T> {
     fn drop(&mut self) {
         unsafe {
             drop_in_place(self.ptr.as_ptr());
-            Global.dealloc(self.ptr.as_ptr() as *mut Void, Layout::new::<T>())
+            Global.dealloc(self.ptr.as_ptr() as *mut Opaque, Layout::new::<T>())
         }
     }
 }
@@ -54,7 +54,7 @@ However this wouldn't work:
 ```rust
 #![feature(allocator_api, ptr_internals, unique)]
 
-use std::alloc::{Global, GlobalAlloc, Layout, Void};
+use std::alloc::{Global, GlobalAlloc, Layout, Opaque};
 use std::ptr::{drop_in_place, Unique};
 use std::mem;
 
@@ -64,7 +64,7 @@ impl<T> Drop for Box<T> {
     fn drop(&mut self) {
         unsafe {
             drop_in_place(self.ptr.as_ptr());
-            Global.dealloc(self.ptr.as_ptr() as *mut Void, Layout::new::<T>());
+            Global.dealloc(self.ptr.as_ptr() as *mut Opaque, Layout::new::<T>());
         }
     }
 }
@@ -76,7 +76,7 @@ impl<T> Drop for SuperBox<T> {
         unsafe {
             // Hyper-optimized: deallocate the box's contents for it
             // without `drop`ing the contents
-            Global.dealloc(self.my_box.ptr.as_ptr() as *mut Void, Layout::new::<T>());
+            Global.dealloc(self.my_box.ptr.as_ptr() as *mut Opaque, Layout::new::<T>());
         }
     }
 }
@@ -125,7 +125,7 @@ of Self during `drop` is to use an Option:
 ```rust
 #![feature(allocator_api, ptr_internals, unique)]
 
-use std::alloc::{GlobalAlloc, Global, Layout, Void};
+use std::alloc::{GlobalAlloc, Global, Layout, Opaque};
 use std::ptr::{drop_in_place, Unique};
 use std::mem;
 
@@ -135,7 +135,7 @@ impl<T> Drop for Box<T> {
     fn drop(&mut self) {
         unsafe {
             drop_in_place(self.ptr.as_ptr());
-            Global.dealloc(self.ptr.as_ptr() as *mut Void, Layout::new::<T>());
+            Global.dealloc(self.ptr.as_ptr() as *mut Opaque, Layout::new::<T>());
         }
     }
 }
@@ -149,7 +149,7 @@ impl<T> Drop for SuperBox<T> {
             // without `drop`ing the contents. Need to set the `box`
             // field as `None` to prevent Rust from trying to Drop it.
             let my_box = self.my_box.take().unwrap();
-            Global.dealloc(my_box.ptr.as_ptr() as *mut Void, Layout::new::<T>());
+            Global.dealloc(my_box.ptr.as_ptr() as *mut Opaque, Layout::new::<T>());
             mem::forget(my_box);
         }
     }
