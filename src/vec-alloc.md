@@ -37,10 +37,11 @@ that, we'll need to use the rest of the heap APIs. These basically allow us to
 talk directly to Rust's allocator (jemalloc by default).
 
 We'll also need a way to handle out-of-memory (OOM) conditions. The standard
-library calls the `abort` intrinsic, which just calls an illegal instruction to
-crash the whole program. The reason we abort and don't panic is because
-unwinding can cause allocations to happen, and that seems like a bad thing to do
-when your allocator just came back with "hey I don't have any more memory".
+library calls `std::alloc::oom()`, which in turn calls the the `oom` langitem.
+By default this just aborts the program by executing an illegal cpu instruction.
+The reason we abort and don't panic is because unwinding can cause allocations
+to happen, and that seems like a bad thing to do when your allocator just came
+back with "hey I don't have any more memory".
 
 Of course, this is a bit silly since most platforms don't actually run out of
 memory in a conventional way. Your operating system will probably kill the
@@ -50,15 +51,6 @@ of memory at once (e.g. half the theoretical address space). As such it's
 *probably* fine to panic and nothing bad will happen. Still, we're trying to be
 like the standard library as much as possible, so we'll just kill the whole
 program.
-
-We said we don't want to use intrinsics, so doing exactly what `std` does is
-out. Instead, we'll call `std::process::exit` with some random number.
-
-```rust
-fn oom() {
-    ::std::process::exit(-9999);
-}
-```
 
 Okay, now we can write growing. Roughly, we want to have this logic:
 
@@ -165,6 +157,8 @@ such we will guard against this case explicitly.
 Ok with all the nonsense out of the way, let's actually allocate some memory:
 
 ```rust,ignore
+use std::alloc::oom;
+
 fn grow(&mut self) {
     // this is all pretty delicate, so let's say it's all unsafe
     unsafe {
