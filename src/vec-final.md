@@ -9,7 +9,7 @@ use std::ptr::{Unique, self};
 use std::mem;
 use std::ops::{Deref, DerefMut};
 use std::marker::PhantomData;
-use std::alloc::{GlobalAlloc, Layout, Global};
+use std::alloc::{GlobalAlloc, Layout, Global, oom};
 
 struct RawVec<T> {
     ptr: Unique<T>,
@@ -46,7 +46,7 @@ impl<T> RawVec<T> {
 
             // If allocate or reallocate fail, oom
             if ptr.is_null() {
-                Global.oom()
+                oom()
             }
 
             self.ptr = Unique::new_unchecked(ptr as *mut _);
@@ -297,13 +297,6 @@ impl<'a, T> Drop for Drain<'a, T> {
         // pre-drain the iter
         for _ in &mut self.iter {}
     }
-}
-
-/// Abort the process, we're out of memory!
-///
-/// In practice this is probably dead code on most OSes
-fn oom() {
-    ::std::process::exit(-9999);
 }
 
 # fn main() {}
