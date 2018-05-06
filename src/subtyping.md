@@ -46,8 +46,7 @@ subtyping of its outputs. There are two kinds of variance in Rust:
 
 (For those of you who are familiar with variance from other languages, what we
 refer to as "just" variance is in fact *covariance*. Rust has *contravariance*
-for functions. The future of contravariance is uncertain and it may be
-scrapped. For now, `fn(T)` is contravariant in `T`, which is used in matching
+for functions. `fn(T)` is contravariant in `T`, which is used in matching
 methods in trait implementations to the trait definition. Traits don't have
 inferred variance, so `Fn(T)` is invariant in `T`).
 
