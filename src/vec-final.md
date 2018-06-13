@@ -5,11 +5,11 @@
 #![feature(allocator_api)]
 #![feature(unique)]
 
-use std::ptr::{Unique, self};
+use std::alloc::{oom, Global, GlobalAlloc, Layout};
+use std::marker::PhantomData;
 use std::mem;
 use std::ops::{Deref, DerefMut};
-use std::marker::PhantomData;
-use std::alloc::{GlobalAlloc, Layout, Global, oom};
+use std::ptr::{self, Unique};
 
 struct RawVec<T> {
     ptr: Unique<T>,
@@ -22,7 +22,10 @@ impl<T> RawVec<T> {
         let cap = if mem::size_of::<T>() == 0 { !0 } else { 0 };
 
         // Unique::empty() doubles as "unallocated" and "zero-sized allocation"
-        RawVec { ptr: Unique::empty(), cap: cap }
+        RawVec {
+            ptr: Unique::empty(),
+            cap: cap,
+        }
     }
 
     fn grow(&mut self) {
@@ -38,15 +41,17 @@ impl<T> RawVec<T> {
                 (1, ptr)
             } else {
                 let new_cap = 2 * self.cap;
-                let ptr = Global.realloc(self.ptr.as_ptr() as *mut _,
-                                         Layout::array::<T>(self.cap).unwrap(),
-                                         Layout::array::<T>(new_cap).unwrap().size());
+                let ptr = Global.realloc(
+                    self.ptr.as_ptr() as *mut _,
+                    Layout::array::<T>(self.cap).unwrap(),
+                    Layout::array::<T>(new_cap).unwrap().size(),
+                );
                 (new_cap, ptr)
             };
 
             // If allocate or reallocate fail, oom
             if ptr.is_null() {
-                oom()
+                oom(Layout::array::<T>(self.cap).unwrap())
             }
 
             self.ptr = Unique::new_unchecked(ptr as *mut _);
@@ -60,8 +65,10 @@ impl<T> Drop for RawVec<T> {
         let elem_size = mem::size_of::<T>();
         if self.cap != 0 && elem_size != 0 {
             unsafe {
-                Global.dealloc(self.ptr.as_ptr() as *mut _,
-                               Layout::array::<T>(self.cap).unwrap());
+                Global.dealloc(
+                    self.ptr.as_ptr() as *mut _,
+                    Layout::array::<T>(self.cap).unwrap(),
+                );
             }
         }
     }
@@ -73,15 +80,24 @@ pub struct Vec<T> {
 }
 
 impl<T> Vec<T> {
-    fn ptr(&self) -> *mut T { self.buf.ptr.as_ptr() }
+    fn ptr(&self) -> *mut T {
+        self.buf.ptr.as_ptr()
+    }
 
-    fn cap(&self) -> usize { self.buf.cap }
+    fn cap(&self) -> usize {
+        self.buf.cap
+    }
 
     pub fn new() -> Self {
-        Vec { buf: RawVec::new(), len: 0 }
+        Vec {
+            buf: RawVec::new(),
+            len: 0,
+        }
     }
     pub fn push(&mut self, elem: T) {
-        if self.len == self.cap() { self.buf.grow(); }
+        if self.len == self.cap() {
+            self.buf.grow();
+        }
 
         unsafe {
             ptr::write(self.ptr().offset(self.len as isize), elem);
@@ -96,21 +112,23 @@ impl<T> Vec<T> {
             None
         } else {
             self.len -= 1;
-            unsafe {
-                Some(ptr::read(self.ptr().offset(self.len as isize)))
-            }
+            unsafe { Some(ptr::read(self.ptr().offset(self.len as isize))) }
         }
     }
 
     pub fn insert(&mut self, index: usize, elem: T) {
         assert!(index <= self.len, "index out of bounds");
-        if self.cap() == self.len { self.buf.grow(); }
+        if self.cap() == self.len {
+            self.buf.grow();
+        }
 
         unsafe {
             if index < self.len {
-                ptr::copy(self.ptr().offset(index as isize),
-                          self.ptr().offset(index as isize + 1),
-                          self.len - index);
+                ptr::copy(
+                    self.ptr().offset(index as isize),
+                    self.ptr().offset(index as isize + 1),
+                    self.len - index,
+                );
             }
             ptr::write(self.ptr().offset(index as isize), elem);
             self.len += 1;
@@ -122,9 +140,11 @@ impl<T> Vec<T> {
         unsafe {
             self.len -= 1;
             let result = ptr::read(self.ptr().offset(index as isize));
-            ptr::copy(self.ptr().offset(index as isize + 1),
-                      self.ptr().offset(index as isize),
-                      self.len - index);
+            ptr::copy(
+                self.ptr().offset(index as isize + 1),
+                self.ptr().offset(index as isize),
+                self.len - index,
+            );
             result
         }
     }
@@ -169,23 +189,15 @@ impl<T> Drop for Vec<T> {
 impl<T> Deref for Vec<T> {
     type Target = [T];
     fn deref(&self) -> &[T] {
-        unsafe {
-            ::std::slice::from_raw_parts(self.ptr(), self.len)
-        }
+        unsafe { ::std::slice::from_raw_parts(self.ptr(), self.len) }
     }
 }
 
 impl<T> DerefMut for Vec<T> {
     fn deref_mut(&mut self) -> &mut [T] {
-        unsafe {
-            ::std::slice::from_raw_parts_mut(self.ptr(), self.len)
-        }
+        unsafe { ::std::slice::from_raw_parts_mut(self.ptr(), self.len) }
     }
 }
-
-
-
-
 
 struct RawValIter<T> {
     start: *const T,
@@ -202,7 +214,7 @@ impl<T> RawValIter<T> {
                 slice.as_ptr()
             } else {
                 slice.as_ptr().offset(slice.len() as isize)
-            }
+            },
         }
     }
 }
@@ -227,8 +239,8 @@ impl<T> Iterator for RawValIter<T> {
 
     fn size_hint(&self) -> (usize, Option<usize>) {
         let elem_size = mem::size_of::<T>();
-        let len = (self.end as usize - self.start as usize)
-                  / if elem_size == 0 { 1 } else { elem_size };
+        let len =
+            (self.end as usize - self.start as usize) / if elem_size == 0 { 1 } else { elem_size };
         (len, Some(len))
     }
 }
@@ -250,9 +262,6 @@ impl<T> DoubleEndedIterator for RawValIter<T> {
     }
 }
 
-
-
-
 pub struct IntoIter<T> {
     _buf: RawVec<T>, // we don't actually care about this. Just need it to live.
     iter: RawValIter<T>,
@@ -260,12 +269,18 @@ pub struct IntoIter<T> {
 
 impl<T> Iterator for IntoIter<T> {
     type Item = T;
-    fn next(&mut self) -> Option<T> { self.iter.next() }
-    fn size_hint(&self) -> (usize, Option<usize>) { self.iter.size_hint() }
+    fn next(&mut self) -> Option<T> {
+        self.iter.next()
+    }
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        self.iter.size_hint()
+    }
 }
 
 impl<T> DoubleEndedIterator for IntoIter<T> {
-    fn next_back(&mut self) -> Option<T> { self.iter.next_back() }
+    fn next_back(&mut self) -> Option<T> {
+        self.iter.next_back()
+    }
 }
 
 impl<T> Drop for IntoIter<T> {
@@ -274,9 +289,6 @@ impl<T> Drop for IntoIter<T> {
     }
 }
 
-
-
-
 pub struct Drain<'a, T: 'a> {
     vec: PhantomData<&'a mut Vec<T>>,
     iter: RawValIter<T>,
@@ -284,12 +296,18 @@ pub struct Drain<'a, T: 'a> {
 
 impl<'a, T> Iterator for Drain<'a, T> {
     type Item = T;
-    fn next(&mut self) -> Option<T> { self.iter.next_back() }
-    fn size_hint(&self) -> (usize, Option<usize>) { self.iter.size_hint() }
+    fn next(&mut self) -> Option<T> {
+        self.iter.next()
+    }
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        self.iter.size_hint()
+    }
 }
 
 impl<'a, T> DoubleEndedIterator for Drain<'a, T> {
-    fn next_back(&mut self) -> Option<T> { self.iter.next_back() }
+    fn next_back(&mut self) -> Option<T> {
+        self.iter.next_back()
+    }
 }
 
 impl<'a, T> Drop for Drain<'a, T> {
@@ -299,5 +317,77 @@ impl<'a, T> Drop for Drain<'a, T> {
     }
 }
 
-# fn main() {}
+#[cfg(test)]
+mod tests {
+    use super::*;
+    #[test]
+    fn create_push_pop() {
+        let mut v = Vec::new();
+        v.push(1);
+        assert_eq!(1, v.len());
+        assert_eq!(1, v[0]);
+        for i in v.iter_mut() {
+            *i += 1;
+        }
+        v.insert(0, 1);
+        let x = v.pop();
+        assert_eq!(Some(2), x);
+        assert_eq!(1, v.len());
+        v.push(10);
+        let x = v.remove(0);
+        assert_eq!(1, x);
+        assert_eq!(1, v.len());
+    }
+
+    #[test]
+    fn iter_test() {
+        let mut v = Vec::new();
+        for i in 0..10 {
+            v.push(Box::new(i))
+        }
+        let mut iter = v.into_iter();
+        let first = iter.next().unwrap();
+        let last = iter.next_back().unwrap();
+        drop(iter);
+        assert_eq!(0, *first);
+        assert_eq!(9, *last);
+    }
+
+    #[test]
+    fn test_drain() {
+        let mut v = Vec::new();
+        for i in 0..10 {
+            v.push(Box::new(i))
+        }
+        {
+            let mut drain = v.drain();
+            let first = drain.next().unwrap();
+            let last = drain.next_back().unwrap();
+            assert_eq!(0, *first);
+            assert_eq!(9, *last);
+        }
+        assert_eq!(0, v.len());
+        v.push(Box::new(1));
+        assert_eq!(1, *v.pop().unwrap());
+    }
+
+    #[test]
+    fn test_zst() {
+        let mut v = Vec::new();
+        for _i in 0..10 {
+            v.push(())
+        }
+
+        let mut count = 0;
+
+        for _ in v.into_iter() {
+            count += 1
+        }
+
+        assert_eq!(10, count);
+    }
+}
+
+#[allow(dead_code)]
+fn main() {}
 ```
