@@ -5,7 +5,7 @@
 #![feature(allocator_api)]
 #![feature(unique)]
 
-use std::alloc::{oom, Global, GlobalAlloc, Layout};
+use std::alloc::{oom, System, GlobalAlloc, Layout};
 use std::marker::PhantomData;
 use std::mem;
 use std::ops::{Deref, DerefMut};
@@ -37,11 +37,11 @@ impl<T> RawVec<T> {
             assert!(elem_size != 0, "capacity overflow");
 
             let (new_cap, ptr) = if self.cap == 0 {
-                let ptr = Global.alloc(Layout::array::<T>(1).unwrap());
+                let ptr = System.alloc(Layout::array::<T>(1).unwrap());
                 (1, ptr)
             } else {
                 let new_cap = 2 * self.cap;
-                let ptr = Global.realloc(
+                let ptr = System.realloc(
                     self.ptr.as_ptr() as *mut _,
                     Layout::array::<T>(self.cap).unwrap(),
                     Layout::array::<T>(new_cap).unwrap().size(),
@@ -65,7 +65,7 @@ impl<T> Drop for RawVec<T> {
         let elem_size = mem::size_of::<T>();
         if self.cap != 0 && elem_size != 0 {
             unsafe {
-                Global.dealloc(
+                System.dealloc(
                     self.ptr.as_ptr() as *mut _,
                     Layout::array::<T>(self.cap).unwrap(),
                 );
