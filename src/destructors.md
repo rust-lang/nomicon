@@ -28,9 +28,9 @@ For instance, a custom implementation of `Box` might write `Drop` like this:
 ```rust
 #![feature(ptr_internals, allocator_api, unique)]
 
-use std::alloc::{Global, GlobalAlloc, Layout};
+use std::alloc::{Alloc, Global, GlobalAlloc, Layout};
 use std::mem;
-use std::ptr::{drop_in_place, Unique};
+use std::ptr::{drop_in_place, NonNull, Unique};
 
 struct Box<T>{ ptr: Unique<T> }
 
@@ -38,7 +38,8 @@ impl<T> Drop for Box<T> {
     fn drop(&mut self) {
         unsafe {
             drop_in_place(self.ptr.as_ptr());
-            Global.dealloc(self.ptr.as_ptr() as *mut _, Layout::new::<T>())
+            let c: NonNull<T> = self.ptr.into();
+            Global.dealloc(c.cast(), Layout::new::<T>())
         }
     }
 }
@@ -54,8 +55,8 @@ However this wouldn't work:
 ```rust
 #![feature(allocator_api, ptr_internals, unique)]
 
-use std::alloc::{Global, GlobalAlloc, Layout};
-use std::ptr::{drop_in_place, Unique};
+use std::alloc::{Alloc, Global, GlobalAlloc, Layout};
+use std::ptr::{drop_in_place, Unique, NonNull};
 use std::mem;
 
 struct Box<T>{ ptr: Unique<T> }
@@ -64,7 +65,8 @@ impl<T> Drop for Box<T> {
     fn drop(&mut self) {
         unsafe {
             drop_in_place(self.ptr.as_ptr());
-            Global.dealloc(self.ptr.as_ptr() as *mut _, Layout::new::<T>());
+            let c: NonNull<T> = self.ptr.into();
+            Global.dealloc(c.cast(), Layout::new::<T>());
         }
     }
 }
@@ -76,7 +78,8 @@ impl<T> Drop for SuperBox<T> {
         unsafe {
             // Hyper-optimized: deallocate the box's contents for it
             // without `drop`ing the contents
-            Global.dealloc(self.my_box.ptr.as_ptr() as *mut _, Layout::new::<T>());
+            let c: NonNull<T> = self.my_box.ptr.into();
+            Global.dealloc(c.cast::<u8>(), Layout::new::<T>());
         }
     }
 }
@@ -125,8 +128,8 @@ of Self during `drop` is to use an Option:
 ```rust
 #![feature(allocator_api, ptr_internals, unique)]
 
-use std::alloc::{GlobalAlloc, Global, Layout};
-use std::ptr::{drop_in_place, Unique};
+use std::alloc::{Alloc, GlobalAlloc, Global, Layout};
+use std::ptr::{drop_in_place, Unique, NonNull};
 use std::mem;
 
 struct Box<T>{ ptr: Unique<T> }
@@ -135,7 +138,8 @@ impl<T> Drop for Box<T> {
     fn drop(&mut self) {
         unsafe {
             drop_in_place(self.ptr.as_ptr());
-            Global.dealloc(self.ptr.as_ptr() as *mut _, Layout::new::<T>());
+            let c: NonNull<T> = self.ptr.into();
+            Global.dealloc(c.cast(), Layout::new::<T>());
         }
     }
 }
@@ -149,7 +153,8 @@ impl<T> Drop for SuperBox<T> {
             // without `drop`ing the contents. Need to set the `box`
             // field as `None` to prevent Rust from trying to Drop it.
             let my_box = self.my_box.take().unwrap();
-            Global.dealloc(my_box.ptr.as_ptr() as *mut _, Layout::new::<T>());
+            let c: NonNull<T> = my_box.ptr.into();
+            Global.dealloc(c.cast(), Layout::new::<T>());
             mem::forget(my_box);
         }
     }
