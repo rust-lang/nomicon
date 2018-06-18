@@ -5,11 +5,11 @@
 #![feature(allocator_api)]
 #![feature(unique)]
 
-use std::ptr::{Unique, self};
+use std::ptr::{Unique, NonNull, self};
 use std::mem;
 use std::ops::{Deref, DerefMut};
 use std::marker::PhantomData;
-use std::alloc::{GlobalAlloc, Layout, Global, oom};
+use std::alloc::{Alloc, GlobalAlloc, Layout, Global, oom};
 
 struct RawVec<T> {
     ptr: Unique<T>,
@@ -38,18 +38,23 @@ impl<T> RawVec<T> {
                 (1, ptr)
             } else {
                 let new_cap = 2 * self.cap;
-                let ptr = Global.realloc(self.ptr.as_ptr() as *mut _,
+                let c: NonNull<T> = self.ptr.into();
+                let ptr = Global.realloc(c.cast(),
                                          Layout::array::<T>(self.cap).unwrap(),
                                          Layout::array::<T>(new_cap).unwrap().size());
                 (new_cap, ptr)
             };
 
             // If allocate or reallocate fail, oom
-            if ptr.is_null() {
-                oom()
+            if ptr.is_err() {
+                oom(Layout::from_size_align_unchecked(
+                    new_cap * elem_size,
+                    mem::align_of::<T>(),
+                ))
             }
+            let ptr = ptr.unwrap();
 
-            self.ptr = Unique::new_unchecked(ptr as *mut _);
+            self.ptr = Unique::new_unchecked(ptr.as_ptr() as *mut _);
             self.cap = new_cap;
         }
     }
@@ -60,7 +65,8 @@ impl<T> Drop for RawVec<T> {
         let elem_size = mem::size_of::<T>();
         if self.cap != 0 && elem_size != 0 {
             unsafe {
-                Global.dealloc(self.ptr.as_ptr() as *mut _,
+                let c: NonNull<T> = self.ptr.into();
+                Global.dealloc(c.cast(),
                                Layout::array::<T>(self.cap).unwrap());
             }
         }
