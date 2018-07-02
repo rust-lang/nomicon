@@ -64,13 +64,13 @@ For instance `Vec` is a type constructor that takes a `T` and returns a
 `Vec<T>`. `&` and `&mut` are type constructors that take two inputs: a
 lifetime, and a type to point to.
 
-A type constructor's *variance* is how the subtyping of its inputs affects the
+A type constructor F's *variance* is how the subtyping of its inputs affects the
 subtyping of its outputs. There are three kinds of variance in Rust:
 
 * F is *covariant* over `T` if `T` being a subtype of `U` implies
   `F<T>` is a subtype of `F<U>` (subtyping "passes through")
 * F is *contravariant* over `T` if `T` being a subtype of `U` implies
-  `F<U>` is a subtype of `F<U>` (subtyping is "inverted")
+  `F<U>` is a subtype of `F<T>` (subtyping is "inverted")
 * F is *invariant* over `T` otherwise (no subtyping relation can be derived)
 
 It should be noted that covariance is *far* more common and important than
