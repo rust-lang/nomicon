@@ -45,7 +45,7 @@ impl<T> RawVec<T> {
                 (new_cap, ptr)
             };
 
-            // If allocate or reallocate fail, oom
+            // If allocate or reallocate fail, handle it
             if ptr.is_err() {
                 handle_alloc_error(Layout::from_size_align_unchecked(
                     new_cap * elem_size,
