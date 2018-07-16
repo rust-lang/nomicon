@@ -9,7 +9,7 @@ use std::ptr::{Unique, NonNull, self};
 use std::mem;
 use std::ops::{Deref, DerefMut};
 use std::marker::PhantomData;
-use std::alloc::{Alloc, GlobalAlloc, Layout, Global, oom};
+use std::alloc::{Alloc, GlobalAlloc, Layout, Global, handle_alloc_error};
 
 struct RawVec<T> {
     ptr: Unique<T>,
@@ -47,7 +47,7 @@ impl<T> RawVec<T> {
 
             // If allocate or reallocate fail, oom
             if ptr.is_err() {
-                oom(Layout::from_size_align_unchecked(
+                handle_alloc_error(Layout::from_size_align_unchecked(
                     new_cap * elem_size,
                     mem::align_of::<T>(),
                 ))
