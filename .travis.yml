@@ -6,7 +6,7 @@ rust:
   - nightly
 
 before_script:
-  - (cargo install mdbook --force --vers "0.1.7" || true)
+  - (cargo install mdbook --force || true)
 
 script:
   - export PATH=$PATH:/home/travis/.cargo/bin;
