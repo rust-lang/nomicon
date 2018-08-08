@@ -751,8 +751,17 @@ extern "C" {
 ```
 
 By including a private field and no constructor, 
-we create an opaque type that we can’t instantiate outside of this module.
-An empty array is both zero-size and compatible with `#[repr(C)]`.
+we create an opaque type that we can't instantiate outside of this module.
+(A struct with no field could be instantiated by anyone.)
+We also want to use this type in FFI, so we have to add `#[repr(C)]`.
+And to avoid warning around using `()` in FFI, we instead use an empty array,
+which works just as well as an empty type but is FFI-compatible.
+
 But because our `Foo` and `Bar` types are
 different, we’ll get type safety between the two of them, so we cannot
 accidentally pass a pointer to `Foo` to `bar()`.
+
+Notice that it is a really bad idea to use an empty enum as FFI type.
+The compiler relies on empty enums being uninhabited, so handling values of type
+`&Empty` is a huge footgun and can lead to buggy program behavior (by triggering
+undefined behavior).
