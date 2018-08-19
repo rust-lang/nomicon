@@ -304,76 +304,76 @@ impl<'a, T> Drop for Drain<'a, T> {
     }
 }
 
-# fn main() {}
+# fn main() {
+#     tests::create_push_pop();
+#     tests::iter_test();
+#     tests::test_drain();
+#     tests::test_zst();
+# }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-    #[test]
-    fn create_push_pop() {
-        let mut v = Vec::new();
-        v.push(1);
-        assert_eq!(1, v.len());
-        assert_eq!(1, v[0]);
-        for i in v.iter_mut() {
-            *i += 1;
-        }
-        v.insert(0, 1);
-        let x = v.pop();
-        assert_eq!(Some(2), x);
-        assert_eq!(1, v.len());
-        v.push(10);
-        let x = v.remove(0);
-        assert_eq!(1, x);
-        assert_eq!(1, v.len());
-    }
-
-    #[test]
-    fn iter_test() {
-        let mut v = Vec::new();
-        for i in 0..10 {
-            v.push(Box::new(i))
-        }
-        let mut iter = v.into_iter();
-        let first = iter.next().unwrap();
-        let last = iter.next_back().unwrap();
-        drop(iter);
-        assert_eq!(0, *first);
-        assert_eq!(9, *last);
-    }
-
-    #[test]
-    fn test_drain() {
-        let mut v = Vec::new();
-        for i in 0..10 {
-            v.push(Box::new(i))
-        }
-        {
-            let mut drain = v.drain();
-            let first = drain.next().unwrap();
-            let last = drain.next_back().unwrap();
-            assert_eq!(0, *first);
-            assert_eq!(9, *last);
-        }
-        assert_eq!(0, v.len());
-        v.push(Box::new(1));
-        assert_eq!(1, *v.pop().unwrap());
-    }
-
-    #[test]
-    fn test_zst() {
-        let mut v = Vec::new();
-        for _i in 0..10 {
-            v.push(())
-        }
-
-        let mut count = 0;
-
-        for _ in v.into_iter() {
-            count += 1
-        }
-
-        assert_eq!(10, count);
-    }
-}
+# mod tests {
+#     use super::*;
+#     pub fn create_push_pop() {
+#         let mut v = Vec::new();
+#         v.push(1);
+#         assert_eq!(1, v.len());
+#         assert_eq!(1, v[0]);
+#         for i in v.iter_mut() {
+#             *i += 1;
+#         }
+#         v.insert(0, 1);
+#         let x = v.pop();
+#         assert_eq!(Some(2), x);
+#         assert_eq!(1, v.len());
+#         v.push(10);
+#         let x = v.remove(0);
+#         assert_eq!(1, x);
+#         assert_eq!(1, v.len());
+#     }
+# 
+#     pub fn iter_test() {
+#         let mut v = Vec::new();
+#         for i in 0..10 {
+#             v.push(Box::new(i))
+#         }
+#         let mut iter = v.into_iter();
+#         let first = iter.next().unwrap();
+#         let last = iter.next_back().unwrap();
+#         drop(iter);
+#         assert_eq!(0, *first);
+#         assert_eq!(9, *last);
+#     }
+# 
+#     pub fn test_drain() {
+#         let mut v = Vec::new();
+#         for i in 0..10 {
+#             v.push(Box::new(i))
+#         }
+#         {
+#             let mut drain = v.drain();
+#             let first = drain.next().unwrap();
+#             let last = drain.next_back().unwrap();
+#             assert_eq!(0, *first);
+#             assert_eq!(9, *last);
+#         }
+#         assert_eq!(0, v.len());
+#         v.push(Box::new(1));
+#         assert_eq!(1, *v.pop().unwrap());
+#     }
+# 
+#     pub fn test_zst() {
+#         let mut v = Vec::new();
+#         for _i in 0..10 {
+#             v.push(())
+#         }
+# 
+#         let mut count = 0;
+# 
+#         for _ in v.into_iter() {
+#             count += 1
+#         }
+# 
+#         assert_eq!(10, count);
+#     }
+# }
 ```
