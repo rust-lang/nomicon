@@ -309,6 +309,7 @@ impl<'a, T> Drop for Drain<'a, T> {
 #     tests::iter_test();
 #     tests::test_drain();
 #     tests::test_zst();
+#     println!("All tests finished OK");
 # }
 
 # mod tests {
