@@ -20,6 +20,7 @@ language cares about is preventing the following things:
 * Breaking the [pointer aliasing rules][]
 * Producing invalid primitive values:
     * dangling/null references
+    * null `fn` pointers
     * a `bool` that isn't 0 or 1
     * an undefined `enum` discriminant
     * a `char` outside the ranges [0x0, 0xD7FF] and [0xE000, 0x10FFFF]
