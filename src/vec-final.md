@@ -322,13 +322,13 @@ impl<'a, T> Drop for Drain<'a, T> {
 #         for i in v.iter_mut() {
 #             *i += 1;
 #         }
-#         v.insert(0, 1);
+#         v.insert(0, 5);
 #         let x = v.pop();
 #         assert_eq!(Some(2), x);
 #         assert_eq!(1, v.len());
 #         v.push(10);
 #         let x = v.remove(0);
-#         assert_eq!(1, x);
+#         assert_eq!(5, x);
 #         assert_eq!(1, v.len());
 #     }
 # 
