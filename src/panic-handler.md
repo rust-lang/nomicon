@@ -1,7 +1,7 @@
-## #[panic_implementation]
+## #[panic_handler]
 
-`#[panic_implementation]` is used to define the behavior of `panic!` in `#![no_std]` applications.
-The `#[panic_implementation]` attribute must be applied to a function with signature `fn(&PanicInfo)
+`#[panic_handler]` is used to define the behavior of `panic!` in `#![no_std]` applications.
+The `#[panic_handler]` attribute must be applied to a function with signature `fn(&PanicInfo)
 -> !` and such function must appear *once* in the dependency graph of a binary / dylib / cdylib
 crate. The API of `PanicInfo` can be found in the [API docs].
 
@@ -9,7 +9,7 @@ crate. The API of `PanicInfo` can be found in the [API docs].
 
 Given that `#![no_std]` applications have no *standard* output and that some `#![no_std]`
 applications, e.g. embedded applications, need different panicking behaviors for development and for
-release it can be helpful to have panic crates, crate that only contain a `#[panic_implementation]`.
+release it can be helpful to have panic crates, crate that only contain a `#[panic_handler]`.
 This way applications can easily swap the panicking behavior by simply linking to a different panic
 crate.
 
@@ -20,32 +20,27 @@ whether is compiled using the dev profile (`cargo build`) or using the release p
 ``` rust
 // crate: panic-semihosting -- log panic message to the host stderr using semihosting
 
-#![feature(core_intrinsics)]
-#![feature(panic_implementation)]
 #![no_std]
 
-#[panic_implementation]
+#[panic_handler]
 fn panic(info: &PanicInfo) -> ! {
     let host_stderr = /* .. */;
 
+    // logs "panicked at '$reason', src/main.rs:27:4" to the host stderr
     writeln!(host_stderr, "{}", info).ok();
-
-    core::intrinsics::breakpoint();
 
     loop {}
 }
 ```
 
 ``` rust
-// crate: panic-abort -- abort on panic!
+// crate: panic-halt -- halt the thread on panic; messages are discarded
 
-#![feature(core_intrinsics)]
-#![feature(panic_implementation)]
 #![no_std]
 
-#[panic_implementation]
+#[panic_handler]
 fn panic(info: &PanicInfo) -> ! {
-    unsafe { core::intrinsics::abort() }
+    loop {}
 }
 ```
 
@@ -60,7 +55,7 @@ extern crate panic_semihosting;
 
 // release profile
 #[cfg(not(debug_assertions))]
-extern crate panic_abort;
+extern crate panic_halt;
 
 // omitted: other `extern crate`s
 

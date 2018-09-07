@@ -57,4 +57,4 @@
 * [Implementing Arc and Mutex](arc-and-mutex.md)
 * [FFI](ffi.md)
 * [Beneath `std`](beneath-std.md)
-	* [#[panic_implementation]](panic-implementation.md)
+	* [#[panic_handler]](panic-handler.md)
