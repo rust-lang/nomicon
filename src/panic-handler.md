@@ -17,14 +17,30 @@ Below is shown an example where an application has a different panicking behavio
 whether is compiled using the dev profile (`cargo build`) or using the release profile (`cargo build
 --release`).
 
-``` rust
-// crate: panic-semihosting -- log panic message to the host stderr using semihosting
+``` rust, ignore
+// crate: panic-semihosting -- log panic messages to the host stderr using semihosting
 
 #![no_std]
 
+use core::fmt::{Write, self};
+use core::panic::PanicInfo;
+
+struct HStderr {
+    // ..
+#     _0: (),
+}
+#
+# impl HStderr {
+#     fn new() -> HStderr { HStderr { _0: () } }
+# }
+#
+# impl fmt::Write for HStderr {
+#     fn write_str(&mut self, _: &str) -> fmt::Result { Ok(()) }
+# }
+
 #[panic_handler]
 fn panic(info: &PanicInfo) -> ! {
-    let host_stderr = /* .. */;
+    let mut host_stderr = HStderr::new();
 
     // logs "panicked at '$reason', src/main.rs:27:4" to the host stderr
     writeln!(host_stderr, "{}", info).ok();
@@ -33,18 +49,20 @@ fn panic(info: &PanicInfo) -> ! {
 }
 ```
 
-``` rust
+``` rust, ignore
 // crate: panic-halt -- halt the thread on panic; messages are discarded
 
 #![no_std]
 
+use core::panic::PanicInfo;
+
 #[panic_handler]
-fn panic(info: &PanicInfo) -> ! {
+fn panic(_info: &PanicInfo) -> ! {
     loop {}
 }
 ```
 
-``` rust
+``` rust, ignore
 // crate: app
 
 #![no_std]
