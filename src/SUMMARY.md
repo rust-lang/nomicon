@@ -56,3 +56,5 @@
 	* [Final Code](vec-final.md)
 * [Implementing Arc and Mutex](arc-and-mutex.md)
 * [FFI](ffi.md)
+* [Beneath `std`](beneath-std.md)
+	* [#[panic_handler]](panic-handler.md)
