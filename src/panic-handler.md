@@ -5,7 +5,7 @@ The `#[panic_handler]` attribute must be applied to a function with signature `f
 -> !` and such function must appear *once* in the dependency graph of a binary / dylib / cdylib
 crate. The API of `PanicInfo` can be found in the [API docs].
 
-[API docs]: https://doc.rust-lang.org/nightly/core/panic/struct.PanicInfo.html
+[API docs]: ../core/panic/struct.PanicInfo.html
 
 Given that `#![no_std]` applications have no *standard* output and that some `#![no_std]`
 applications, e.g. embedded applications, need different panicking behaviors for development and for
