@@ -80,14 +80,14 @@ fn main() {
 ```
 
 ```text
-error: `days` does not live long enough
-  --> <anon>:15:1
+error[E0597]: `days` does not live long enough
+  --> src/main.rs:12:28
    |
 12 |     inspector = Inspector(&days);
-   |                            ---- borrow occurs here
+   |                            ^^^^ borrowed value does not live long enough
 ...
 15 | }
-   | ^ `days` dropped here while still borrowed
+   | - `days` dropped here while still borrowed
    |
    = note: values in a scope are dropped in the opposite order they are created
 

@@ -24,19 +24,15 @@ would expect `foo.share()` to succeed as `foo` shouldn't be mutably borrowed.
 However when we try to compile it:
 
 ```text
-<anon>:11:5: 11:8 error: cannot borrow `foo` as immutable because it is also borrowed as mutable
-<anon>:11     foo.share();
-              ^~~
-<anon>:10:16: 10:19 note: previous borrow of `foo` occurs here; the mutable borrow prevents subsequent moves, borrows, or modification of `foo` until the borrow ends
-<anon>:10     let loan = foo.mutate_and_share();
-                         ^~~
-<anon>:12:2: 12:2 note: previous borrow ends here
-<anon>:8 fn main() {
-<anon>:9     let mut foo = Foo;
-<anon>:10     let loan = foo.mutate_and_share();
-<anon>:11     foo.share();
-<anon>:12 }
-          ^
+error[E0502]: cannot borrow `foo` as immutable because it is also borrowed as mutable
+  --> src/lib.rs:11:5
+   |
+10 |     let loan = foo.mutate_and_share();
+   |                --- mutable borrow occurs here
+11 |     foo.share();
+   |     ^^^ immutable borrow occurs here
+12 | }
+   | - mutable borrow ends here
 ```
 
 What happened? Well, we got the exact same reasoning as we did for

@@ -12,9 +12,9 @@ fn main() {
 ```
 
 ```text
-src/main.rs:3:20: 3:21 error: use of possibly uninitialized variable: `x`
-src/main.rs:3     println!("{}", x);
-                                 ^
+  |
+3 |     println!("{}", x);
+  |                    ^ use of possibly uninitialized `x`
 ```
 
 This is based off of a basic branch analysis: every branch must assign a value
@@ -50,8 +50,9 @@ fn main() {
 ```
 
 ```text
-src/main.rs:6:17: 6:18 error: use of possibly uninitialized variable: `x`
-src/main.rs:6   println!("{}", x);
+  |
+6 |     println!("{}", x);
+  |                    ^ use of possibly uninitialized `x`
 ```
 
 while this does:
