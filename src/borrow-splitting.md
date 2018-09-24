@@ -34,21 +34,18 @@ println!("{} {}", a, b);
 ```
 
 ```text
-<anon>:4:14: 4:18 error: cannot borrow `x[..]` as mutable more than once at a time
-<anon>:4 let b = &mut x[1];
-                      ^~~~
-<anon>:3:14: 3:18 note: previous borrow of `x[..]` occurs here; the mutable borrow prevents subsequent moves, borrows, or modification of `x[..]` until the borrow ends
-<anon>:3 let a = &mut x[0];
-                      ^~~~
-<anon>:6:2: 6:2 note: previous borrow ends here
-<anon>:1 fn main() {
-<anon>:2 let mut x = [1, 2, 3];
-<anon>:3 let a = &mut x[0];
-<anon>:4 let b = &mut x[1];
-<anon>:5 println!("{} {}", a, b);
-<anon>:6 }
-         ^
-error: aborting due to 2 previous errors
+error[E0499]: cannot borrow `x[..]` as mutable more than once at a time
+ --> src/lib.rs:4:18
+  |
+3 |     let a = &mut x[0];
+  |                  ---- first mutable borrow occurs here
+4 |     let b = &mut x[1];
+  |                  ^^^^ second mutable borrow occurs here
+5 |     println!("{} {}", a, b);
+6 | }
+  | - first borrow ends here
+
+error: aborting due to previous error
 ```
 
 While it was plausible that borrowck could understand this simple case, it's

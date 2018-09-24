@@ -58,7 +58,6 @@ fn foo<X: Trait>(t: X) {}
 
 impl<'a> Trait for &'a i32 {}
 
-
 fn main() {
     let t: &mut i32 = &mut 0;
     foo(t);
@@ -66,7 +65,19 @@ fn main() {
 ```
 
 ```text
-<anon>:10:5: 10:8 error: the trait bound `&mut i32 : Trait` is not satisfied [E0277]
-<anon>:10     foo(t);
-              ^~~
+error[E0277]: the trait bound `&mut i32: Trait` is not satisfied
+ --> src/main.rs:9:5
+  |
+9 |     foo(t);
+  |     ^^^ the trait `Trait` is not implemented for `&mut i32`
+  |
+  = help: the following implementations were found:
+            <&'a i32 as Trait>
+note: required by `foo`
+ --> src/main.rs:3:1
+  |
+3 | fn foo<X: Trait>(t: X) {}
+  | ^^^^^^^^^^^^^^^^^^^^^^
+
+error: aborting due to previous error
 ```
