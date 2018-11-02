@@ -38,17 +38,19 @@ for *at least* `'small`. They don't actually care if the lifetimes match
 exactly. For this reason `'static`, the forever lifetime, is a subtype
 of every lifetime.
 
-Higher-ranked lifetimes are also subtypes of every concrete lifetime. This is
-because taking an arbitrary lifetime is strictly more general than taking a
-specific one.
+Higher-ranked lifetimes (`for<'a>`) are also subtypes of every concrete 
+lifetime. This is because something which can handle "any lifetime" can
+certainly handle "some lifetime".
 
-(The typed-ness of lifetimes is a fairly arbitrary construct that some
+> NOTE: The typed-ness of lifetimes is a fairly arbitrary construct that some
 disagree with. However it simplifies our analysis to treat lifetimes
-and types uniformly.)
+and types uniformly.
 
-However you can't write a function that takes a value of type `'a`! Lifetimes
-are always just part of another type, so we need a way of handling that.
-To handle it, we need to talk about *variance*.
+With all that said, we still don't know much of anything about how subtyping
+works in Rust. In Java you can write a function that takes an Animal, but in
+Rust you can't actually write a function that takes a value of type `'a`! 
+Lifetimes are always just part of another type, so we need some way to reason
+about how subtyping composes to ever use it in Rust. What we need is *variance*.
 
 
 
@@ -110,8 +112,10 @@ fn overwrite<T: Copy>(input: &mut T, new: &mut T) {
 fn main() {
     let mut forever_str: &'static str = "hello";
     {
-        let string = String::from("world");
-        overwrite(&mut forever_str, &mut &*string);
+        let temp_string = String::from("world");
+        // !!! Dirty Trick !!! 
+        // Convince forever_str to point to temp_string!
+        overwrite(&mut forever_str, &mut &*temp_string);
     }
     // Oops, printing free'd memory
     println!("{}", forever_str);
@@ -124,9 +128,9 @@ two values of the same type, and overwrites one with the other.
 But, if `&mut T` was covariant over T, then `&mut &'static str` would be a
 subtype of `&mut &'a str`, since `&'static str` is a subtype of `&'a str`.
 Therefore the lifetime of `forever_str` would successfully be "shrunk" down
-to the shorter lifetime of `string`, and `overwrite` would be called successfully.
-`string` would subsequently be dropped, and `forever_str` would point to
-freed memory when we print it! Therefore `&mut` should be invariant.
+to the shorter lifetime of `temp_string`, to satisfy `overwrite`'s signature.
+`temp_string` would subsequently be dropped, and `forever_str` would point to
+freed memory when we print it! Therefore `&mut T` must be invariant over `T`.
 
 This is the general theme of variance vs invariance: if variance would allow you
 to store a short-lived value in a longer-lived slot, then invariance must be used.
@@ -137,7 +141,26 @@ value being referenced) that remembers the forgotten details and will assume
 that those details haven't changed. If we do something to invalidate those details,
 the original location can behave unsoundly.
 
-However it *is* sound for `&'a mut T` to be covariant over `'a`. The key difference
+> In case it helps, here's this problem related back to our original Java example. In Java,
+> the `Vector<T>` type (similar to Rust's `Vec<T>`) is invariant over `T` because multiple
+> people can have shared mutable access to it at once. Let's consider what would happen
+> if it were covariant instead. 
+>
+> We could take a `Vector<Cat>` and pass it to code expecting a `Vector<Animal>`. That code
+> would believe that it's ok to put *any* Animal inside of the Vector, and could therefore
+> insert a Dog. Then when control returns to the code that still remembers that the Vector
+> should contains Cats, it may try to make the newly inserted Dog `meow()`! Oops! 
+>
+> Forgetting details isn't ok here, because someone still exists who remembers those details
+> and will assume that they haven't changed. Namely, we tried to forget that our Vector
+> contains Cats, but the original owner still remembered.
+>
+> Funnily enough, Java arrays are actually covariant even though they have this exact same
+> problem. This is why [every store to a java array actually does a dynamic check][java-array] 
+> for the "real" array type to make sure that a Dog can't be smuggled into an array of Cats!
+
+Although it's unsound for `&'a mut T` to be covariant over `T`, it *is* sound
+for it to be covariant over `'a`. The key difference
 between `'a` and T is that `'a` is a property of the reference itself,
 while T is something the reference is borrowing. If you change T's type, then
 the source still remembers the original type. However if you change the
@@ -148,36 +171,69 @@ Put another way: `&'a mut T` owns `'a`, but only *borrows* T.
 definitely store values in them! This is where Rust's typesystem allows it to
 be a bit more clever than others. To understand why it's sound for owning
 containers to be covariant over their contents, we must consider
-the two ways in which a mutation may occur: by-value or by-reference.
+the two ways in which something may gain mutable access to a value:
+by-value or by-reference.
 
-If mutation is by-value, then the old location that remembers extra details is
-moved out of, meaning it can't use the value anymore. So we simply don't need to
-worry about anyone remembering dangerous details. Put another way, applying
-subtyping when passing by-value *destroys details forever*. For example, this
+If something is given mutable access by-value, then the old location that
+could have remembered extra details has been moved out of, meaning it can't
+use the value anymore. So we simply don't need to worry about anyone
+remembering any dangerous details. Put another way, applying subtyping when 
+passing by-value *destroys details forever*. For example, this
 compiles and is fine:
 
 ```rust
 fn get_box<'a>(str: &'a str) -> Box<&'a str> {
     // String literals are `&'static str`s, but it's fine for us to
-    // "forget" this and let the caller think the string won't live that long.
+    // "forget" this and let the caller think it won't live that long.
     Box::new("hello")
+}
+
+fn main() {
+  let temp_string = String::from("welcome");
+  let mut boxed_str = get_box(&temp_string);
+  // Thinks that the boxed_str only lives as long as temp_string
+  // even though it really could live forever. (what a chump!)
+  // But that's fine, because no one exists who remembers that!
+  *boxed_str = &temp_string;
 }
 ```
 
-If mutation is by-reference, then our container is passed as `&mut Vec<T>`. But
-`&mut` is invariant over its value, so `&mut Vec<T>` is actually invariant over `T`.
-So the fact that `Vec<T>` is covariant over `T` doesn't matter at all when
-mutating by-reference.
+On the other hand, if mutation is by-reference, then our container is 
+passed as `&mut Box<T>`. But we have already seen that `&mut` is invariant 
+over its referent, so `&mut Box<T>` is actually invariant over `T`.
+So the fact that `Box<T>` is covariant over `T` doesn't matter at all when
+mutating by-reference. So as before, this won't compile:
+
+```rust,ignore
+// This is still ok on its own
+fn overwrite(input: &mut Box<T>, new: T) {
+    **input = new;
+}
+
+fn main() {
+    let forever_str: &'static str = "hello";
+    let mut forever_box: Box<&'static str> = Box::new(forever_str);
+    {
+        let temp_string = String::from("world");
+        // Doesn't compile because to match the types, we must shrink
+        // forever_box's 'static down to the same lifetime as temp_string, 
+        // but &mut Box<&'static str> is invariant over 'static!
+        overwrite(&mut forever_box, &*temp_string);
+    }
+    // Oops, printing free'd memory
+    println!("{}", *forever_box);
+}
+```
 
 But being covariant still allows `Box` and `Vec` to be weakened when shared
-immutably. So you can pass a `&Vec<&'static str>` where a `&Vec<&'a str>` is
+immutably. So you can pass a `&Box<&'static str>` where a `&Box<&'a str>` is
 expected.
 
 The invariance of the cell types can be seen as follows: `&` is like an `&mut`
 for a cell, because you can still store values in them through an `&`. Therefore
 cells must be invariant to avoid lifetime smuggling.
 
-`fn` is the most subtle case because they have mixed variance, and in fact are
+`fn` is the most subtle case because they have mixed variance and are
 the only source of **contra**variance. To see why `fn(T) -> U` should be contravariant
 over T, consider the following function signature:
 
@@ -241,18 +297,18 @@ as invariant just like cells.
 
 This is all well and good for the types the standard library provides, but
 how is variance determined for type that *you* define? A struct, informally
-speaking, inherits the variance of its fields. If a struct `Foo`
-has a generic argument `A` that is used in a field `a`, then Foo's variance
+speaking, inherits the variance of its fields. If a struct `MyType`
+has a generic argument `A` that is used in a field `a`, then MyType's variance
 over `A` is exactly `a`'s variance. However if `A` is used in multiple fields:
 
-* If all uses of A are covariant, then Foo is covariant over A
-* If all uses of A are contravariant, then Foo is contravariant over A
-* Otherwise, Foo is invariant over A
+* If all uses of A are covariant, then MyType is covariant over A
+* If all uses of A are contravariant, then MyType is contravariant over A
+* Otherwise, MyType is invariant over A
 
 ```rust
 use std::cell::Cell;
 
-struct Foo<'a, 'b, A: 'a, B: 'b, C, D, E, F, G, H, In, Out, Mixed> {
+struct MyType<'a, 'b, A: 'a, B: 'b, C, D, E, F, G, H, In, Out, Mixed> {
     a: &'a A,     // covariant over 'a and A
     b: &'b mut B, // covariant over 'b and invariant over B
 
@@ -272,3 +328,7 @@ struct Foo<'a, 'b, A: 'a, B: 'b, C, D, E, F, G, H, In, Out, Mixed> {
     k2: Mixed,              // invariant over Mixed, because invariance wins all conflicts
 }
 ```
+
+
+
+[java-array]: https://docs.oracle.com/javase/7/docs/api/java/lang/ArrayStoreException.html
