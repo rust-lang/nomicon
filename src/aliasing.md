@@ -1,6 +1,6 @@
 # Aliasing
 
-First off, let's get some important caveats out of this way:
+First off, let's get some important caveats out of the way:
 
 * We will be using the broadest possible definition of aliasing for the sake
 of discussion. Rust's definition will probably be more restricted to factor
