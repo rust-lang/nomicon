@@ -182,7 +182,7 @@ horribly degenerate. Also *oh my gosh* it's such a ridiculous corner case.
 
 ## thread::scoped::JoinGuard
 
-The thread::scoped API intends to allow threads to be spawned that reference
+The thread::scoped API intended to allow threads to be spawned that reference
 data on their parent's stack without any synchronization over that data by
 ensuring the parent joins the thread before any of the shared data goes out
 of scope.
