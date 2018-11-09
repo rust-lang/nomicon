@@ -3,6 +3,7 @@
 ```rust
 #![feature(ptr_internals)]
 #![feature(allocator_api)]
+#![feature(alloc_layout_extra)]
 
 use std::ptr::{Unique, NonNull, self};
 use std::mem;
@@ -331,7 +332,7 @@ impl<'a, T> Drop for Drain<'a, T> {
 #         assert_eq!(5, x);
 #         assert_eq!(1, v.len());
 #     }
-# 
+#
 #     pub fn iter_test() {
 #         let mut v = Vec::new();
 #         for i in 0..10 {
@@ -344,7 +345,7 @@ impl<'a, T> Drop for Drain<'a, T> {
 #         assert_eq!(0, *first);
 #         assert_eq!(9, *last);
 #     }
-# 
+#
 #     pub fn test_drain() {
 #         let mut v = Vec::new();
 #         for i in 0..10 {
@@ -361,19 +362,19 @@ impl<'a, T> Drop for Drain<'a, T> {
 #         v.push(Box::new(1));
 #         assert_eq!(1, *v.pop().unwrap());
 #     }
-# 
+#
 #     pub fn test_zst() {
 #         let mut v = Vec::new();
 #         for _i in 0..10 {
 #             v.push(())
 #         }
-# 
+#
 #         let mut count = 0;
-# 
+#
 #         for _ in v.into_iter() {
 #             count += 1
 #         }
-# 
+#
 #         assert_eq!(10, count);
 #     }
 # }
