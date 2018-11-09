@@ -168,17 +168,17 @@ in Rust, though it does in fact exist.
 Here is a table of important variances which the rest of this section will be devoted
 to trying to explain:
 
-|   |               |     'a    |         T         |     U     |
-|---|---------------|:---------:|:-----------------:|:---------:|
-| * | &'a T         | covariant | covariant         |           |
-| * | &'a mut T     | covariant | invariant         |           |
-| * | Box<T>        |           | covariant         |           |
-|   | Vec<T>        |           | covariant         |           |
-| * | UnsafeCell<T> |           | invariant         |           |
-|   | Cell<T>       |           | invariant         |           |
-| * | fn(T) -> U    |           | **contra**variant | covariant |
-|   | *const T      |           | covariant         |           |
-|   | *mut T        |           | invariant         |           |
+|   |                 |     'a    |         T         |     U     |
+|---|-----------------|:---------:|:-----------------:|:---------:|
+| * | `&'a T `        | covariant | covariant         |           |
+| * | `&'a mut T`     | covariant | invariant         |           |
+| * | `Box<T>`        |           | covariant         |           |
+|   | `Vec<T>`        |           | covariant         |           |
+| * | `UnsafeCell<T>` |           | invariant         |           |
+|   | `Cell<T>`       |           | invariant         |           |
+| * | `fn(T) -> U`    |           | **contra**variant | covariant |
+|   | `*const T`      |           | covariant         |           |
+|   | `*mut T`        |           | invariant         |           |
 
 The types with \*'s are the ones we will be focusing on, as they are in
 some sense "fundamental". All the others can be understood by analogy to the others:
