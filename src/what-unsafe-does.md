@@ -6,6 +6,7 @@ The only things that are different in Unsafe Rust are that you can:
 * Call `unsafe` functions (including C functions, compiler intrinsics, and the raw allocator)
 * Implement `unsafe` traits
 * Mutate statics
+* Access fields of `union`s
 
 That's it. The reason these operations are relegated to Unsafe is that misusing
 any of these things will cause the ever dreaded Undefined Behavior. Invoking

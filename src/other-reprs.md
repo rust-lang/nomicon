@@ -1,6 +1,7 @@
 # Alternative representations
 
 Rust allows you to specify alternative data layout strategies from the default.
+There's also the [reference].
 
 
 
@@ -50,6 +51,24 @@ compiled as normal.)
 
 
 
+# repr(transparent)
+
+This can only be used on structs with a single non-zero-sized field (there may
+be additional zero-sized fields). The effect is that the layout and ABI of the
+whole struct is guaranteed to be the same as that one field.
+
+The goal is to make it possible to transmute between the single field and the
+struct. An example of that is the [`UnsafeCell`], which can be transmuted into
+the type it wraps.
+
+Also, passing the struct through FFI where the inner field type is expected on
+the other side is allowed. In particular, this is necessary for `struct
+Foo(f32)` to have the same ABI as `f32`.
+
+More details are in the [RFC][rfc-transparent].
+
+
+
 # repr(u*), repr(i*)
 
 These specify the size to make a field-less enum. If the discriminant overflows
@@ -88,12 +107,27 @@ compiler might be able to paper over alignment issues with shifts and masks.
 However if you take a reference to a packed field, it's unlikely that the
 compiler will be able to emit code to avoid an unaligned load.
 
-**[As of Rust 1.0 this can cause undefined behavior.][ub loads]**
+**[As of Rust 1.30.0 this still can cause undefined behavior.][ub loads]**
 
 `repr(packed)` is not to be used lightly. Unless you have extreme requirements,
 this should not be used.
 
 This repr is a modifier on `repr(C)` and `repr(rust)`.
 
+# repr(align(n))
+
+`repr(align(n))` (where `n` is a power of two) forces the type to have an
+alignment of *at least* n.
+
+This enables several tricks, like making sure neighboring elements of an array
+never share the same cache line with each other (which may speed up certain
+kinds of concurrent code).
+
+This is a modifier on `repr(C)` and `repr(rust)`. It is incompatible with
+`repr(packed)`.
+
+[reference]: https://github.com/rust-rfcs/unsafe-code-guidelines/tree/master/reference/src/representation
 [drop flags]: drop-flags.html
 [ub loads]: https://github.com/rust-lang/rust/issues/27060
+[`UnsafeCell`]: ../std/cell/struct.UnsafeCell.html
+[rfc-transparent]: https://github.com/rust-lang/rfcs/blob/master/text/1758-repr-transparent.md

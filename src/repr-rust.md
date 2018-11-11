@@ -20,6 +20,7 @@ Rust gives you the following ways to lay out composite data:
 * tuples (anonymous product types)
 * arrays (homogeneous product types)
 * enums (named sum types -- tagged unions)
+* unions (untagged)
 
 An enum is said to be *field-less* if none of its variants have associated data.
 
@@ -38,7 +39,7 @@ struct A {
 
 will be 32-bit aligned on an architecture that aligns these primitives to their
 respective sizes. The whole struct will therefore have a size that is a multiple
-of 32-bits. It will potentially become:
+of 32-bits. It may become:
 
 ```rust
 struct A {
@@ -47,6 +48,17 @@ struct A {
     b: u32,
     c: u16,
     _pad2: [u8; 2], // to make overall size multiple of 4
+}
+```
+
+or maybe:
+
+```rust
+struct A {
+    b: u32,
+    c: u16,
+    a: u8,
+    _pad: u8,
 }
 ```
 
