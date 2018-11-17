@@ -71,3 +71,6 @@ trait)
 *infinite list* of trait bounds that F must satisfy. Intense. There aren't many
 places outside of the `Fn` traits where we encounter HRTBs, and even for
 those we have a nice magic sugar for the common cases.
+
+Of course, you *can* use HRTBs for type parameters too, not just for lifetimes -
+but that's even rarer.
