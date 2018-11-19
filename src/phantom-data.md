@@ -27,7 +27,7 @@ useful such as the information needed by drop check.
 Iter logically contains a bunch of `&'a T`s, so this is exactly what we tell
 the PhantomData to simulate:
 
-```
+```rust
 use std::marker;
 
 struct Iter<'a, T: 'a> {
@@ -42,7 +42,7 @@ over `'a` and `T`. Everything Just Works.
 
 Another important example is Vec, which is (approximately) defined as follows:
 
-```
+```rust
 struct Vec<T> {
     data: *const T, // *const for variance!
     len: usize,
@@ -66,7 +66,7 @@ In order to tell dropck that we *do* own values of type T, and therefore may
 drop some T's when *we* drop, we must add an extra PhantomData saying exactly
 that:
 
-```
+```rust
 use std::marker;
 
 struct Vec<T> {
