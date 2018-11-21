@@ -2,20 +2,20 @@
 
 #### The Dark Arts of Advanced and Unsafe Rust Programming
 
-# NOTE: This is a draft document that discusses several unstable aspects of Rust, and may contain serious errors or outdated information.
-
 > Instead of the programs I had hoped for, there came only a shuddering blackness
 and ineffable loneliness; and I saw at last a fearful truth which no one had
 ever dared to breathe before — the unwhisperable secret of secrets — The fact
 that this language of stone and stridor is not a sentient perpetuation of Rust
 as London is of Old London and Paris of Old Paris, but that it is in fact
-quite unsafe, its sprawling body imperfectly embalmed and infested with queer
+quite `unsafe`, its sprawling body imperfectly embalmed and infested with queer
 animate things which have nothing to do with it as it was in compilation.
 
-This book digs into all the awful details that are necessary to understand in
-order to write correct Unsafe Rust programs. Due to the nature of this problem,
-it may lead to unleashing untold horrors that shatter your psyche into a billion
-infinitesimal fragments of despair.
+This book digs into all the awful details that you need to understand when
+writing Unsafe Rust programs.
+
+> THE KNOWLEDGE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
+INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF UNLEASHING INDESCRIBABLE HORRORS THAT
+SHATTER YOUR PSYCHE AND SET YOUR MIND ADRIFT IN THE UNKNOWABLY INFINITE COSMOS.
 
 Should you wish a long and happy career of writing Rust programs, you should
 turn back now and forget you ever saw this book. It is not necessary. However

@@ -15,17 +15,25 @@ or C++. Any type you expect to pass through an FFI boundary should have
 necessary to soundly do more elaborate tricks with data layout such as
 reinterpreting values as a different type.
 
-However, the interaction with Rust's more exotic data layout features must be
+We strongly recommend using [rust-bindgen][] and/or [cbdingen][] to manage your FFI
+boundaries for you. The Rust team works closely with those projects to ensure
+that they work robustly and are compatible with current and future guarantees
+about type layouts and reprs.
+
+The interaction of `repr(C)` with Rust's more exotic data layout features must be
 kept in mind. Due to its dual purpose as "for FFI" and "for layout control",
 `repr(C)` can be applied to types that will be nonsensical or problematic if
 passed through the FFI boundary.
 
 * ZSTs are still zero-sized, even though this is not a standard behavior in
 C, and is explicitly contrary to the behavior of an empty type in C++, which
-still consumes a byte of space.
+says they should still consume a byte of space.
 
-* DST pointers (fat pointers), tuples, and enums with fields are not a concept
+* DST pointers (fat pointers) and tuples are not a concept
   in C, and as such are never FFI-safe.
+
+* Enums with fields also aren't a concept in C or C++, but a valid bridging
+  of the types [is defined][really-tagged].
 
 * If `T` is an [FFI-safe non-nullable pointer
   type](ffi.html#the-nullable-pointer-optimization),
@@ -36,13 +44,13 @@ still consumes a byte of space.
 * Tuple structs are like structs with regards to `repr(C)`, as the only
   difference from a struct is that the fields aren’t named.
 
-* This is equivalent to one of `repr(u*)` (see the next section) for enums. The
-chosen size is the default enum size for the target platform's C application
-binary interface (ABI). Note that enum representation in C is implementation
+* `repr(C)` is equivalent to one of `repr(u*)` (see the next section) for
+fieldless enums. The chosen size is the default enum size for the target platform's C
+application binary interface (ABI). Note that enum representation in C is implementation
 defined, so this is really a "best guess". In particular, this may be incorrect
 when the C code of interest is compiled with certain flags.
 
-* Field-less enums with `repr(C)` or `repr(u*)` still may not be set to an
+* Fieldless enums with `repr(C)` or `repr(u*)` still may not be set to an
 integer value without a corresponding variant, even though this is
 permitted behavior in C or C++. It is undefined behavior to (unsafely)
 construct an instance of an enum that does not match one of its
@@ -58,12 +66,12 @@ be additional zero-sized fields). The effect is that the layout and ABI of the
 whole struct is guaranteed to be the same as that one field.
 
 The goal is to make it possible to transmute between the single field and the
-struct. An example of that is the [`UnsafeCell`], which can be transmuted into
+struct. An example of that is [`UnsafeCell`], which can be transmuted into
 the type it wraps.
 
 Also, passing the struct through FFI where the inner field type is expected on
-the other side is allowed. In particular, this is necessary for `struct
-Foo(f32)` to have the same ABI as `f32`.
+the other side is guaranteed to work. In particular, this is necessary for `struct
+Foo(f32)` to always have the same ABI as `f32`.
 
 More details are in the [RFC][rfc-transparent].
 
@@ -71,20 +79,22 @@ More details are in the [RFC][rfc-transparent].
 
 # repr(u*), repr(i*)
 
-These specify the size to make a field-less enum. If the discriminant overflows
+These specify the size to make a fieldless enum. If the discriminant overflows
 the integer it has to fit in, it will produce a compile-time error. You can
 manually ask Rust to allow this by setting the overflowing element to explicitly
 be 0. However Rust will not allow you to create an enum where two variants have
 the same discriminant.
 
-The term "field-less enum" only means that the enum doesn't have data in any
-of its variants. A field-less enum without a `repr(u*)` or `repr(C)` is
+The term "fieldless enum" only means that the enum doesn't have data in any
+of its variants. A fieldless enum without a `repr(u*)` or `repr(C)` is
 still a Rust native type, and does not have a stable ABI representation.
 Adding a `repr` causes it to be treated exactly like the specified
 integer size for ABI purposes.
 
-Any enum with fields is a Rust type with no guaranteed ABI (even if the
-only data is `PhantomData` or something else with zero size).
+If the enum has fields, the effect is similar to the effect of `repr(C)`
+in that there is a defined layout of the type. This makes it possible to
+pass the enum to C code, or access the type's raw representation and directly
+manipulate its tag and fields. See [the RFC][really-tagged] for details.
 
 Adding an explicit `repr` to an enum suppresses the null-pointer
 optimization.
@@ -107,12 +117,15 @@ compiler might be able to paper over alignment issues with shifts and masks.
 However if you take a reference to a packed field, it's unlikely that the
 compiler will be able to emit code to avoid an unaligned load.
 
-**[As of Rust 1.30.0 this still can cause undefined behavior.][ub loads]**
+**[As of Rust 2018, this still can cause undefined behavior.][ub loads]**
 
 `repr(packed)` is not to be used lightly. Unless you have extreme requirements,
 this should not be used.
 
 This repr is a modifier on `repr(C)` and `repr(rust)`.
+
+
+
 
 # repr(align(n))
 
@@ -126,8 +139,15 @@ kinds of concurrent code).
 This is a modifier on `repr(C)` and `repr(rust)`. It is incompatible with
 `repr(packed)`.
 
+
+
+
+
 [reference]: https://github.com/rust-rfcs/unsafe-code-guidelines/tree/master/reference/src/representation
 [drop flags]: drop-flags.html
 [ub loads]: https://github.com/rust-lang/rust/issues/27060
 [`UnsafeCell`]: ../std/cell/struct.UnsafeCell.html
 [rfc-transparent]: https://github.com/rust-lang/rfcs/blob/master/text/1758-repr-transparent.md
+[really-tagged]: https://github.com/rust-lang/rfcs/blob/master/text/2195-really-tagged-unions.md
+[rust-bindgen]: https://rust-lang-nursery.github.io/rust-bindgen/
+[cbindgen]: https://github.com/eqrion/cbindgen
