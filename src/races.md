@@ -7,7 +7,7 @@ Safe Rust guarantees an absence of data races, which are defined as:
 * one of them is unsynchronized
 
 A data race has Undefined Behavior, and is therefore impossible to perform
-in Safe Rust. Data races are *mostly* prevented through rust's ownership system:
+in Safe Rust. Data races are *mostly* prevented through Rust's ownership system:
 it's impossible to alias a mutable reference, so it's impossible to perform a
 data race. Interior mutability makes this more complicated, which is largely why
 we have the Send and Sync traits (see below).
