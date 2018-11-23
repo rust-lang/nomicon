@@ -14,7 +14,7 @@ known size or alignment. On the surface, this is a bit nonsensical: Rust *must*
 know the size and alignment of something in order to correctly work with it! In
 this regard, DSTs are not normal types. Because they lack a statically known
 size, these types can only exist behind a pointer. Any pointer to a
-DST consequently becomes a *fat* pointer consisting of the pointer and the
+DST consequently becomes a *wide* pointer consisting of the pointer and the
 information that "completes" them (more on this below).
 
 There are two major DSTs exposed by the language:
@@ -66,6 +66,10 @@ fn main() {
     println!("{} {:?}", dynamic.info, &dynamic.data);
 }
 ```
+
+(Yes, custom DSTs are a largely half-baked feature for now.)
+
+
 
 
 
@@ -157,11 +161,16 @@ because that wouldn't make sense.
 
 We recommend against modelling C's `void*` type with `*const Void`.
 A lot of people started doing that but quickly ran into trouble because
-people want to convert raw pointers to references when doing FFI, and making an
-`&Void` is Undefined Behaviour. `*const ()` (or equivalent) works just as well,
-and can be made into a reference without any safety problems. The only downside
-of modeling `void*` with `*const ()` is that attempts to read or write values
-will silently succeed (doing nothing), instead of producing a compiler error.
+Rust doesn't really have any safety guards against trying to instantiate
+empty types with unsafe code, and if you do it, it's Undefined Behaviour.
+This was especially problematic because developers had a habit of converting
+raw pointers to references and `&Void` is *also* Undefined Behaviour to
+construct.
+
+`*const ()` (or equivalent) works reasonably well for `void*`, and can be made
+into a reference without any safety problems. It still doesn't prevent you from
+trying to read or write values, but at least it compiles to a no-op instead
+of UB.
 
 
 

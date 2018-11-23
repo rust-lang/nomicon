@@ -29,7 +29,7 @@ passed through the FFI boundary.
 C, and is explicitly contrary to the behavior of an empty type in C++, which
 says they should still consume a byte of space.
 
-* DST pointers (fat pointers) and tuples are not a concept
+* DST pointers (wide pointers) and tuples are not a concept
   in C, and as such are never FFI-safe.
 
 * Enums with fields also aren't a concept in C or C++, but a valid bridging
