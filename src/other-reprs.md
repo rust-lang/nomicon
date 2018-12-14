@@ -15,7 +15,7 @@ or C++. Any type you expect to pass through an FFI boundary should have
 necessary to soundly do more elaborate tricks with data layout such as
 reinterpreting values as a different type.
 
-We strongly recommend using [rust-bindgen][] and/or [cbdingen][] to manage your FFI
+We strongly recommend using [rust-bindgen][] and/or [cbindgen][] to manage your FFI
 boundaries for you. The Rust team works closely with those projects to ensure
 that they work robustly and are compatible with current and future guarantees
 about type layouts and reprs.
