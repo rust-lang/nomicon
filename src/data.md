@@ -16,4 +16,4 @@ contributing any new facts or improvements to the Reference instead.
 
 
 
-ref-type-layout: ../reference/type-layout.html
+[ref-type-layout]: ../reference/type-layout.html
