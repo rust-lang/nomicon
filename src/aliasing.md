@@ -89,7 +89,7 @@ In the previous example, we used the fact that `&mut u32` can't be aliased to pr
 that writes to `*output` can't possibly affect `*input`. This let us cache `*input`
 in a register, eliminating a read.
 
-By caching this read, we knew that the the write in the `> 10` branch couldn't
+By caching this read, we knew that the write in the `> 10` branch couldn't
 affect whether we take the `> 5` branch, allowing us to also eliminate a
 read-modify-write (doubling `*output`) when `*input > 10`.
 
