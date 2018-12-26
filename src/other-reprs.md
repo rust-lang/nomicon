@@ -15,7 +15,7 @@ or C++. Any type you expect to pass through an FFI boundary should have
 necessary to soundly do more elaborate tricks with data layout such as
 reinterpreting values as a different type.
 
-We strongly recommend using [rust-bindgen][] and/or [cbdingen][] to manage your FFI
+We strongly recommend using [rust-bindgen] and/or [cbindgen] to manage your FFI
 boundaries for you. The Rust team works closely with those projects to ensure
 that they work robustly and are compatible with current and future guarantees
 about type layouts and reprs.
@@ -149,5 +149,5 @@ This is a modifier on `repr(C)` and `repr(rust)`. It is incompatible with
 [`UnsafeCell`]: ../std/cell/struct.UnsafeCell.html
 [rfc-transparent]: https://github.com/rust-lang/rfcs/blob/master/text/1758-repr-transparent.md
 [really-tagged]: https://github.com/rust-lang/rfcs/blob/master/text/2195-really-tagged-unions.md
-[rust-bindgen]: https://rust-lang-nursery.github.io/rust-bindgen/
+[rust-bindgen]: https://github.com/rust-lang/rust-bindgen
 [cbindgen]: https://github.com/eqrion/cbindgen
