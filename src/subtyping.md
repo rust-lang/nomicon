@@ -306,7 +306,7 @@ fn evil_feeder<T>(input: &mut T, val: T) {
 }
 ```
 
-All it does it take a mutable reference and a value and overwrite the referent with it.
+All it does is take a mutable reference and a value and overwrite the referent with it.
 What's important about this function is that it creates a type equality constraint. It
 clearly says in its signature the referent and the value must be the *exact same* type.
 
