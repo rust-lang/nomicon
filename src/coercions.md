@@ -24,7 +24,7 @@ for all pointer types (including smart pointers like Box and Rc). Unsize is
 only implemented automatically, and enables the following transformations:
 
 * `[T; n]` => `[T]`
-* `T` => `Trait` where `T: Trait`
+* `T` => `dyn Trait` where `T: Trait`
 * `Foo<..., T, ...>` => `Foo<..., U, ...>` where:
     * `T: Unsize<U>`
     * `Foo` is a struct
@@ -51,7 +51,7 @@ receivers, see below). If there is an impl for some type `U` and `T` coerces to
 following will not type check, even though it is OK to coerce `t` to `&T` and
 there is an impl for `&T`:
 
-```rust,ignore
+```rust,compile_fail
 trait Trait {}
 
 fn foo<X: Trait>(t: X) {}
