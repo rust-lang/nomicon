@@ -143,7 +143,7 @@ This is a modifier on `repr(C)` and `repr(rust)`. It is incompatible with
 
 
 
-[reference]: https://github.com/rust-rfcs/unsafe-code-guidelines/tree/master/reference/src/representation
+[reference]: https://github.com/rust-rfcs/unsafe-code-guidelines/tree/master/reference/src/representation.md
 [drop flags]: drop-flags.html
 [ub loads]: https://github.com/rust-lang/rust/issues/27060
 [`UnsafeCell`]: ../std/cell/struct.UnsafeCell.html
