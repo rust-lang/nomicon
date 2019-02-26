@@ -143,11 +143,11 @@ This is a modifier on `repr(C)` and `repr(rust)`. It is incompatible with
 
 
 
-[reference]: https://github.com/rust-rfcs/unsafe-code-guidelines/tree/master/reference/src/representation
+[reference]: https://github.com/rust-rfcs/unsafe-code-guidelines/tree/master/reference/src/representation.md
 [drop flags]: drop-flags.html
 [ub loads]: https://github.com/rust-lang/rust/issues/27060
 [`UnsafeCell`]: ../std/cell/struct.UnsafeCell.html
 [rfc-transparent]: https://github.com/rust-lang/rfcs/blob/master/text/1758-repr-transparent.md
 [really-tagged]: https://github.com/rust-lang/rfcs/blob/master/text/2195-really-tagged-unions.md
-[rust-bindgen]: https://rust-lang-nursery.github.io/rust-bindgen/
+[rust-bindgen]: https://rust-lang.github.io/rust-bindgen/
 [cbindgen]: https://github.com/eqrion/cbindgen
