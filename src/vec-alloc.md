@@ -16,12 +16,10 @@ want to use `empty` because there's no real allocation to talk about but
 So:
 
 ```rust,ignore
-#![feature(alloc, heap_api)]
-
 use std::mem;
 
 impl<T> Vec<T> {
-    fn new() -> Self {
+    pub fn new() -> Self {
         assert!(mem::size_of::<T>() != 0, "We're not ready to handle ZSTs");
         Vec { ptr: Unique::empty(), len: 0, cap: 0 }
     }
@@ -37,11 +35,11 @@ that, we'll need to use the rest of the heap APIs. These basically allow us to
 talk directly to Rust's allocator (jemalloc by default).
 
 We'll also need a way to handle out-of-memory (OOM) conditions. The standard
-library calls `std::alloc::oom()`, which in turn calls the the `oom` langitem.
-By default this just aborts the program by executing an illegal cpu instruction.
-The reason we abort and don't panic is because unwinding can cause allocations
-to happen, and that seems like a bad thing to do when your allocator just came
-back with "hey I don't have any more memory".
+library calls `std::alloc::handle_alloc_error()`, which in turn calls the the
+`oom` langitem. By default this just aborts the program by executing an illegal
+cpu instruction. The reason we abort and don't panic is because unwinding can
+cause allocations to happen, and that seems like a bad thing to do when your
+allocator just came back with "hey I don't have any more memory".
 
 Of course, this is a bit silly since most platforms don't actually run out of
 memory in a conventional way. Your operating system will probably kill the
@@ -157,7 +155,11 @@ such we will guard against this case explicitly.
 Ok with all the nonsense out of the way, let's actually allocate some memory:
 
 ```rust,ignore
-use std::alloc::oom;
+#![feature(allocator_api, ptr_internals)]
+
+use std::alloc::{Alloc, Global, Layout, handle_alloc_error};
+use std::mem;
+use std::ptr::{NonNull, Unique};
 
 fn grow(&mut self) {
     // this is all pretty delicate, so let's say it's all unsafe
@@ -167,8 +169,11 @@ fn grow(&mut self) {
         let elem_size = mem::size_of::<T>();
 
         let (new_cap, ptr) = if self.cap == 0 {
-            let ptr = heap::allocate(elem_size, align);
-            (1, ptr)
+            let layout = Layout::from_size_align_unchecked(elem_size, align);
+            match Global.alloc(layout) {
+                Ok(ptr) => (1, ptr),
+                Err(_) => handle_alloc_error(layout),
+            }
         } else {
             // as an invariant, we can assume that `self.cap < isize::MAX`,
             // so this doesn't need to be checked.
@@ -182,26 +187,24 @@ fn grow(&mut self) {
             // we need to make. We lose the ability to allocate e.g. 2/3rds of
             // the address space with a single Vec of i16's on 32-bit though.
             // Alas, poor Yorick -- I knew him, Horatio.
-            assert!(old_num_bytes <= (::std::isize::MAX as usize) / 2,
+            assert!(old_num_bytes <= (std::isize::MAX as usize) / 2,
                     "capacity overflow");
 
+            let layout = Layout::from_size_align_unchecked(old_num_bytes, align);
             let new_num_bytes = old_num_bytes * 2;
-            let ptr = heap::reallocate(self.ptr.as_ptr() as *mut _,
-                                        old_num_bytes,
-                                        new_num_bytes,
-                                        align);
-            (new_cap, ptr)
+            match Global.realloc(NonNull::from(self.ptr).cast(), layout, new_num_bytes) {
+                Ok(ptr) => (new_cap, ptr),
+                Err(_) => handle_alloc_error(layout),
+            }
         };
 
-        // If allocate or reallocate fail, we'll get `null` back
-        if ptr.is_null() { oom(); }
-
-        self.ptr = Unique::new(ptr as *mut _);
+        self.ptr = ptr.cast().into();
         self.cap = new_cap;
     }
 }
 ```
 
 Nothing particularly tricky here. Just computing sizes and alignments and doing
-some careful multiplication checks.
-
+some careful multiplication checks. An instance of `std::alloc::Layout` that describes
+memory layout is required for the new Alloc API. The pointer types in `Global.alloc` and
+`Global.realloc` are `NonNull<u8>`, so conversions and casts are needed.
