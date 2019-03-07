@@ -17,16 +17,21 @@ pub fn insert(&mut self, index: usize, elem: T) {
     // Note: `<=` because it's valid to insert after everything
     // which would be equivalent to push.
     assert!(index <= self.len, "index out of bounds");
-    if self.cap == self.len { self.grow(); }
+    if self.cap == self.len {
+        self.grow();
+    }
 
     unsafe {
+        let raw_ptr = self.ptr.as_ptr();
         if index < self.len {
             // ptr::copy(src, dest, len): "copy from source to dest len elems"
-            ptr::copy(self.ptr.offset(index as isize),
-                      self.ptr.offset(index as isize + 1),
-                      self.len - index);
+            ptr::copy(
+                raw_ptr.offset(index as isize),
+                raw_ptr.offset(index as isize + 1),
+                self.len - index,
+            );
         }
-        ptr::write(self.ptr.offset(index as isize), elem);
+        ptr::write(raw_ptr.offset(index as isize), elem);
         self.len += 1;
     }
 }
@@ -41,10 +46,13 @@ pub fn remove(&mut self, index: usize) -> T {
     assert!(index < self.len, "index out of bounds");
     unsafe {
         self.len -= 1;
-        let result = ptr::read(self.ptr.offset(index as isize));
-        ptr::copy(self.ptr.offset(index as isize + 1),
-                  self.ptr.offset(index as isize),
-                  self.len - index);
+        let raw_ptr = self.ptr.as_ptr();
+        let result = ptr::read(raw_ptr.offset(index as isize));
+        ptr::copy(
+            raw_ptr.offset(index as isize + 1),
+            raw_ptr.offset(index as isize),
+            self.len - index,
+        );
         result
     }
 }

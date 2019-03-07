@@ -16,9 +16,12 @@ struct RawVec<T> {
 }
 
 impl<T> RawVec<T> {
-    fn new() -> Self {
+    pub fn new() -> Self {
         assert!(mem::size_of::<T>() != 0, "TODO: implement ZST support");
-        RawVec { ptr: Unique::empty(), cap: 0 }
+        RawVec {
+            ptr: Unique::empty(),
+            cap: 0,
+        }
     }
 
     // unchanged from Vec
@@ -28,26 +31,25 @@ impl<T> RawVec<T> {
             let elem_size = mem::size_of::<T>();
 
             let (new_cap, ptr) = if self.cap == 0 {
-                let ptr = heap::allocate(elem_size, align);
-                (1, ptr)
+                let layout = Layout::from_size_align_unchecked(elem_size, align);
+                match Global.alloc(layout) {
+                    Ok(ptr) => (1, ptr),
+                    Err(_) => handle_alloc_error(layout),
+                }
             } else {
-                let new_cap = 2 * self.cap;
-                let ptr = heap::reallocate(self.ptr.as_ptr() as *mut _,
-                                            self.cap * elem_size,
-                                            new_cap * elem_size,
-                                            align);
-                (new_cap, ptr)
+                let new_cap = self.cap * 2;
+                let layout = Layout::from_size_align_unchecked(self.cap * elem_size, align);
+                match Global.realloc(NonNull::from(self.ptr).cast(), layout, new_cap * elem_size) {
+                    Ok(ptr) => (new_cap, ptr),
+                    Err(_) => handle_alloc_error(layout),
+                }
             };
 
-            // If allocate or reallocate fail, we'll get `null` back
-            if ptr.is_null() { oom() }
-
-            self.ptr = Unique::new(ptr as *mut _);
+            self.ptr = ptr.cast().into();
             self.cap = new_cap;
         }
     }
 }
-
 
 impl<T> Drop for RawVec<T> {
     fn drop(&mut self) {
@@ -56,7 +58,10 @@ impl<T> Drop for RawVec<T> {
             let elem_size = mem::size_of::<T>();
             let num_bytes = elem_size * self.cap;
             unsafe {
-                heap::deallocate(self.ptr.as_mut() as *mut _, num_bytes, align);
+                Global.dealloc(
+                    NonNull::from(self.ptr).cast(),
+                    Layout::from_size_align_unchecked(num_bytes, align),
+                );
             }
         }
     }
@@ -72,12 +77,19 @@ pub struct Vec<T> {
 }
 
 impl<T> Vec<T> {
-    fn ptr(&self) -> *mut T { self.buf.ptr.as_ptr() }
+    fn ptr(&self) -> *mut T {
+        self.buf.ptr.as_ptr()
+    }
 
-    fn cap(&self) -> usize { self.buf.cap }
+    fn cap(&self) -> usize {
+        self.buf.cap
+    }
 
     pub fn new() -> Self {
-        Vec { buf: RawVec::new(), len: 0 }
+        Vec {
+            buf: RawVec::new(),
+            len: 0,
+        }
     }
 
     // push/pop/insert/remove largely unchanged:
@@ -123,8 +135,8 @@ impl<T> Vec<T> {
             mem::forget(self);
 
             IntoIter {
-                start: *buf.ptr,
-                end: buf.ptr.offset(len as isize),
+                start: buf.ptr.as_ptr(),
+                end: buf.ptr.as_ptr().offset(len as isize),
                 _buf: buf,
             }
         }

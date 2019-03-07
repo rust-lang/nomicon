@@ -1,15 +1,13 @@
 # The Final Code
 
 ```rust
-#![feature(ptr_internals)]
-#![feature(allocator_api)]
-#![feature(alloc_layout_extra)]
+#![feature(allocator_api, ptr_internals)]
 
-use std::ptr::{Unique, NonNull, self};
+use std::alloc::{handle_alloc_error, Alloc, Global, Layout};
+use std::marker::PhantomData;
 use std::mem;
 use std::ops::{Deref, DerefMut};
-use std::marker::PhantomData;
-use std::alloc::{Alloc, GlobalAlloc, Layout, Global, handle_alloc_error};
+use std::ptr::{self, NonNull, Unique};
 
 struct RawVec<T> {
     ptr: Unique<T>,
@@ -33,28 +31,24 @@ impl<T> RawVec<T> {
             // 0, getting to here necessarily means the Vec is overfull.
             assert!(elem_size != 0, "capacity overflow");
 
+            let align = mem::align_of::<T>();
+
             let (new_cap, ptr) = if self.cap == 0 {
-                let ptr = Global.alloc(Layout::array::<T>(1).unwrap());
-                (1, ptr)
+                let layout = Layout::from_size_align_unchecked(elem_size, align);
+                match Global.alloc(layout) {
+                    Ok(ptr) => (1, ptr),
+                    Err(_) => handle_alloc_error(layout),
+                }
             } else {
-                let new_cap = 2 * self.cap;
-                let c: NonNull<T> = self.ptr.into();
-                let ptr = Global.realloc(c.cast(),
-                                         Layout::array::<T>(self.cap).unwrap(),
-                                         Layout::array::<T>(new_cap).unwrap().size());
-                (new_cap, ptr)
+                let new_cap = self.cap * 2;
+                let layout = Layout::from_size_align_unchecked(self.cap * elem_size, align);
+                match Global.realloc(NonNull::from(self.ptr).cast(), layout, new_cap * elem_size) {
+                    Ok(ptr) => (new_cap, ptr),
+                    Err(_) => handle_alloc_error(layout),
+                }
             };
 
-            // If allocate or reallocate fail, oom
-            if ptr.is_err() {
-                handle_alloc_error(Layout::from_size_align_unchecked(
-                    new_cap * elem_size,
-                    mem::align_of::<T>(),
-                ))
-            }
-            let ptr = ptr.unwrap();
-
-            self.ptr = Unique::new_unchecked(ptr.as_ptr() as *mut _);
+            self.ptr = ptr.cast().into();
             self.cap = new_cap;
         }
     }
@@ -64,10 +58,14 @@ impl<T> Drop for RawVec<T> {
     fn drop(&mut self) {
         let elem_size = mem::size_of::<T>();
         if self.cap != 0 && elem_size != 0 {
+            let align = mem::align_of::<T>();
+
+            let num_bytes = elem_size * self.cap;
             unsafe {
-                let c: NonNull<T> = self.ptr.into();
-                Global.dealloc(c.cast(),
-                               Layout::array::<T>(self.cap).unwrap());
+                Global.dealloc(
+                    NonNull::from(self.ptr).cast(),
+                    Layout::from_size_align_unchecked(num_bytes, align),
+                );
             }
         }
     }
@@ -176,7 +174,7 @@ impl<T> Deref for Vec<T> {
     type Target = [T];
     fn deref(&self) -> &[T] {
         unsafe {
-            ::std::slice::from_raw_parts(self.ptr(), self.len)
+            std::slice::from_raw_parts(self.ptr(), self.len)
         }
     }
 }
@@ -184,7 +182,7 @@ impl<T> Deref for Vec<T> {
 impl<T> DerefMut for Vec<T> {
     fn deref_mut(&mut self) -> &mut [T] {
         unsafe {
-            ::std::slice::from_raw_parts_mut(self.ptr(), self.len)
+            std::slice::from_raw_parts_mut(self.ptr(), self.len)
         }
     }
 }
