@@ -22,25 +22,23 @@ let y;
 }
 ```
 
-Each creates its own scope, clearly establishing that one drops before the
-other. However, what if we do the following?
+There are some more complex situations which are not possible to desugar using
+scopes, but the order is still defined ‒ variables are dropped in the reverse
+order of their definition, fields of structs and tuples in order of their
+definition. There are some more details about order of drop in [rfc1875].
+
+Let's do this:
 
 ```rust,ignore
-let (x, y) = (vec![], vec![]);
+let tuple = (vec![], vec![]);
 ```
 
-Does either value strictly outlive the other? The answer is in fact *no*,
-neither value strictly outlives the other. Of course, one of x or y will be
-dropped before the other, but the actual order is not specified. Tuples aren't
-special in this regard; composite structures just don't guarantee their
-destruction order as of Rust 1.0.
-
-We *could* specify this for the fields of built-in composites like tuples and
-structs. However, what about something like Vec? Vec has to manually drop its
-elements via pure-library code. In general, anything that implements Drop has
-a chance to fiddle with its innards during its final death knell. Therefore
-the compiler can't sufficiently reason about the actual destruction order
-of the contents of any type that implements Drop.
+The left vector is dropped first. But does it mean the right one strictly
+outlives it in the eyes of the borrow checker? The answer to this question is
+*no*. The borrow checker could track fields of tuples separately, but it would
+still be unable to decide what outlives what in case of vector elements, which
+are dropped manually via pure-library code the borrow checker doesn't
+understand.
 
 So why do we care? We care because if the type system isn't careful, it could
 accidentally make dangling pointers. Consider the following simple program:
@@ -48,20 +46,27 @@ accidentally make dangling pointers. Consider the following simple program:
 ```rust
 struct Inspector<'a>(&'a u8);
 
+struct World<'a> {
+    inspector: Option<Inspector<'a>>,
+    days: Box<u8>,
+}
+
 fn main() {
-    let (inspector, days);
-    days = Box::new(1);
-    inspector = Inspector(&days);
+    let mut world = World {
+        inspector: None,
+        days: Box::new(1),
+    };
+    world.inspector = Some(Inspector(&world.days));
 }
 ```
 
-This program is totally sound and compiles today. The fact that `days` does
-not *strictly* outlive `inspector` doesn't matter. As long as the `inspector`
-is alive, so is days.
+This program is totally sound and compiles today. The fact that `days` does not
+strictly outlive `inspector` doesn't matter. As long as the `inspector` is
+alive, so is `days`.
 
 However if we add a destructor, the program will no longer compile!
 
-```rust,ignore
+```rust,compile_fail
 struct Inspector<'a>(&'a u8);
 
 impl<'a> Drop for Inspector<'a> {
@@ -70,29 +75,37 @@ impl<'a> Drop for Inspector<'a> {
     }
 }
 
+struct World<'a> {
+    inspector: Option<Inspector<'a>>,
+    days: Box<u8>,
+}
+
 fn main() {
-    let (inspector, days);
-    days = Box::new(1);
-    inspector = Inspector(&days);
+    let mut world = World {
+        inspector: None,
+        days: Box::new(1),
+    };
+    world.inspector = Some(Inspector(&world.days));
     // Let's say `days` happens to get dropped first.
     // Then when Inspector is dropped, it will try to read free'd memory!
 }
 ```
 
 ```text
-error[E0597]: `days` does not live long enough
-  --> src/main.rs:12:28
+error[E0597]: `world.days` does not live long enough
+  --> src/main.rs:20:39
    |
-12 |     inspector = Inspector(&days);
-   |                            ^^^^ borrowed value does not live long enough
+20 |     world.inspector = Some(Inspector(&world.days));
+   |                                       ^^^^^^^^^^ borrowed value does not live long enough
 ...
-15 | }
-   | - `days` dropped here while still borrowed
+23 | }
+   | - `world.days` dropped here while still borrowed
    |
    = note: values in a scope are dropped in the opposite order they are created
-
-error: aborting due to previous error
 ```
+
+You can try changing the order of fields or use a tuple instead of the struct,
+it'll still not compile.
 
 Implementing `Drop` lets the `Inspector` execute some arbitrary code during its
 death. This means it can potentially observe that types that are supposed to
@@ -116,12 +129,14 @@ sound to drop.
 
 The reason that it is not always necessary to satisfy the above rule
 is that some Drop implementations will not access borrowed data even
-though their type gives them the capability for such access.
+though their type gives them the capability for such access, or because we know
+the specific drop order and the borrowed data is still fine even if the borrow
+checker doesn't know that.
 
 For example, this variant of the above `Inspector` example will never
 access borrowed data:
 
-```rust,ignore
+```rust,compile_fail
 struct Inspector<'a>(&'a u8, &'static str);
 
 impl<'a> Drop for Inspector<'a> {
@@ -130,10 +145,17 @@ impl<'a> Drop for Inspector<'a> {
     }
 }
 
+struct World<'a> {
+    inspector: Option<Inspector<'a>>,
+    days: Box<u8>,
+}
+
 fn main() {
-    let (inspector, days);
-    days = Box::new(1);
-    inspector = Inspector(&days, "gadget");
+    let mut world = World {
+        inspector: None,
+        days: Box::new(1),
+    };
+    world.inspector = Some(Inspector(&world.days, "gadget"));
     // Let's say `days` happens to get dropped first.
     // Even when Inspector is dropped, its destructor will not access the
     // borrowed `days`.
@@ -142,21 +164,26 @@ fn main() {
 
 Likewise, this variant will also never access borrowed data:
 
-```rust,ignore
-use std::fmt;
+```rust,compile_fail
+struct Inspector<T>(T, &'static str);
 
-struct Inspector<T: fmt::Display>(T, &'static str);
-
-impl<T: fmt::Display> Drop for Inspector<T> {
+impl<T> Drop for Inspector<T> {
     fn drop(&mut self) {
         println!("Inspector(_, {}) knows when *not* to inspect.", self.1);
     }
 }
 
+struct World<T> {
+    inspector: Option<Inspector<T>>,
+    days: Box<u8>,
+}
+
 fn main() {
-    let (inspector, days): (Inspector<&u8>, Box<u8>);
-    days = Box::new(1);
-    inspector = Inspector(&days, "gadget");
+    let mut world = World {
+        inspector: None,
+        days: Box::new(1),
+    };
+    world.inspector = Some(Inspector(&world.days, "gadget"));
     // Let's say `days` happens to get dropped first.
     // Even when Inspector is dropped, its destructor will not access the
     // borrowed `days`.
@@ -194,15 +221,30 @@ not access any expired data, even if its type gives it the capability
 to do so.
 
 That attribute is called `may_dangle` and was introduced in [RFC 1327][rfc1327].
-To deploy it on the `Inspector` example from above, we would write:
+To deploy it on the `Inspector` from above, we would write:
 
-```rust,ignore
+```rust
+#![feature(dropck_eyepatch)]
+
 struct Inspector<'a>(&'a u8, &'static str);
 
 unsafe impl<#[may_dangle] 'a> Drop for Inspector<'a> {
     fn drop(&mut self) {
         println!("Inspector(_, {}) knows when *not* to inspect.", self.1);
     }
+}
+
+struct World<'a> {
+    days: Box<u8>,
+    inspector: Option<Inspector<'a>>,
+}
+
+fn main() {
+    let mut world = World {
+        inspector: None,
+        days: Box::new(1),
+    };
+    world.inspector = Some(Inspector(&world.days, "gatget"));
 }
 ```
 
@@ -279,6 +321,12 @@ attribute makes the type vulnerable to misuse that the borrower
 checker will not catch, inviting havoc. It is better to avoid adding
 the attribute.
 
+# A related side note about drop order
+
+While the drop order of fields inside a struct is defined, relying on it is
+fragile and subtle. When the order matters, it is better to use the
+[`ManuallyDrop`] wrapper.
+
 # Is that all about drop checker?
 
 It turns out that when writing unsafe code, we generally don't need to
@@ -286,4 +334,7 @@ worry at all about doing the right thing for the drop checker. However there
 is one special case that you need to worry about, which we will look at in
 the next section.
 
+
 [rfc1327]: https://github.com/rust-lang/rfcs/blob/master/text/1327-dropck-param-eyepatch.md
+[rfc1857]: https://github.com/rust-lang/rfcs/blob/master/text/1857-stabilize-drop-order.md
+[`ManuallyDrop`]: ../std/mem/struct.ManuallyDrop.html
