@@ -13,4 +13,4 @@ This is no longer the case, so this whole chapter can ideally be deleted.
 We'll keep this chapter around for a bit longer, but ideally you should be
 contributing any new facts or improvements to the Reference instead.
 
-[ref-type-layout]: ../reference/type-layout.html
+[ref-type-layout]: reference/type-layout.html
