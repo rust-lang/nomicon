@@ -22,7 +22,7 @@ We do this using `PhantomData`, which is a special marker type. `PhantomData`
 consumes no space, but simulates a field of the given type for the purpose of
 static analysis. This was deemed to be less error-prone than explicitly telling
 the type-system the kind of variance that you want, while also providing other
-useful such as the information needed by drop check.
+useful things such as the information needed by drop check.
 
 Iter logically contains a bunch of `&'a T`s, so this is exactly what we tell
 the PhantomData to simulate:
