@@ -5,7 +5,7 @@ languages to be a bit more flexible and permissive.
 
 Subtyping in Rust is a bit different from subtyping in other languages. This
 makes it harder to give simple examples, which is a problem since subtyping,
-and especially variance, are already hard to understand properly. As in,
+and especially variance, is already hard to understand properly. As in,
 even compiler writers mess it up all the time.
 
 To keep things simple, this section will consider a small extension to the
