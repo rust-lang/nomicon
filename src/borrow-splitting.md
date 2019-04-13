@@ -26,7 +26,7 @@ println!("{} {} {} {}", a, b, c, c2);
 However borrowck doesn't understand arrays or slices in any way, so this doesn't
 work:
 
-```rust,ignore
+```rust,compile_fail
 let mut x = [1, 2, 3];
 let a = &mut x[0];
 let b = &mut x[1];
@@ -60,7 +60,12 @@ the left of the index, and one for everything to the right. Intuitively we know
 this is safe because the slices don't overlap, and therefore alias. However
 the implementation requires some unsafety:
 
-```rust,ignore
+```rust
+# use std::slice::from_raw_parts_mut;
+# struct FakeSlice<T>(T);
+# impl<T> FakeSlice<T> {
+# fn len(&self) -> usize { unimplemented!() }
+# fn as_mut_ptr(&mut self) -> *mut T { unimplemented!() }
 fn split_at_mut(&mut self, mid: usize) -> (&mut [T], &mut [T]) {
     let len = self.len();
     let ptr = self.as_mut_ptr();
@@ -70,6 +75,7 @@ fn split_at_mut(&mut self, mid: usize) -> (&mut [T], &mut [T]) {
          from_raw_parts_mut(ptr.offset(mid as isize), len - mid))
     }
 }
+# }
 ```
 
 This is actually a bit subtle. So as to avoid ever making two `&mut`'s to the

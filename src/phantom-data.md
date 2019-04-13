@@ -5,7 +5,7 @@ types or lifetimes are logically associated with a struct, but not actually
 part of a field. This most commonly occurs with lifetimes. For instance, the
 `Iter` for `&'a [T]` is (approximately) defined as follows:
 
-```rust,ignore
+```rust,compile_fail
 struct Iter<'a, T: 'a> {
     ptr: *const T,
     end: *const T,
