@@ -8,10 +8,10 @@ Unfortunately this is pretty rigid, especially if you need to initialize your
 array in a more incremental or dynamic way.
 
 Unsafe Rust gives us a powerful tool to handle this problem:
-`mem::uninitialized`. This function pretends to return a value when really
-it does nothing at all. Using it, we can convince Rust that we have initialized
-a variable, allowing us to do trickier things with conditional and incremental
-initialization.
+[`mem::uninitialized`][uninitialized]. This function pretends to return a value
+when really it does nothing at all. Using it, we can convince Rust that we have
+initialized a variable, allowing us to do trickier things with conditional and
+incremental initialization.
 
 Unfortunately, this opens us up to all kinds of problems. Assignment has a
 different meaning to Rust based on whether it believes that a variable is
@@ -24,9 +24,9 @@ longer safely use normal assignment.
 This is also a problem if you're working with a raw system allocator, which
 returns a pointer to uninitialized memory.
 
-To handle this, we must use the `ptr` module. In particular, it provides
+To handle this, we must use the [`ptr`] module. In particular, it provides
 three functions that allow us to assign bytes to a location in memory without
-dropping the old value: `write`, `copy`, and `copy_nonoverlapping`.
+dropping the old value: [`write`], [`copy`], and [`copy_nonoverlapping`].
 
 * `ptr::write(ptr, val)` takes a `val` and moves it into the address pointed
   to by `ptr`.
@@ -56,13 +56,13 @@ const SIZE: usize = 10;
 let mut x: [Box<u32>; SIZE];
 
 unsafe {
-	// convince Rust that x is Totally Initialized
-	x = mem::uninitialized();
-	for i in 0..SIZE {
-		// very carefully overwrite each index without reading it
-		// NOTE: exception safety is not a concern; Box can't panic
-		ptr::write(&mut x[i], Box::new(i as u32));
-	}
+    // convince Rust that x is Totally Initialized
+    x = mem::uninitialized();
+    for i in 0..SIZE {
+        // very carefully overwrite each index without reading it
+        // NOTE: exception safety is not a concern; Box can't panic
+        ptr::write(&mut x[i], Box::new(i as u32));
+    }
 }
 
 println!("{:?}", x);
@@ -80,6 +80,19 @@ Every control path through that variable's scope must initialize the value
 before it ends, if it has a destructor.
 *[This includes code panicking](unwinding.html)*.
 
+Not being careful about uninitialized memory often leads to bugs and it has been
+decided the [`mem::uninitialized`][uninitialized] function should be deprecated.
+The [`MaybeUninit`] type is supposed to replace it as its API wraps many common
+operations needed to be done around initialized memory. This is nightly only for
+now.
+
 And that's about it for working with uninitialized memory! Basically nothing
 anywhere expects to be handed uninitialized memory, so if you're going to pass
 it around at all, be sure to be *really* careful.
+
+[uninitialized]: ../std/mem/fn.uninitialized.html
+[`ptr`]: ../std/ptr/index.html
+[`write`]: ../std/ptr/fn.write.html
+[`copy`]: ../std/ptr/fn.copy.html
+[`copy_nonoverlapping`]: ../std/ptr/fn/copy_nonoverlapping.html
+[`MaybeUninit`]: ../std/mem/union.MaybeUninit.html
