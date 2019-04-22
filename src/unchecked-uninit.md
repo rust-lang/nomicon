@@ -94,5 +94,5 @@ it around at all, be sure to be *really* careful.
 [`ptr`]: ../std/ptr/index.html
 [`write`]: ../std/ptr/fn.write.html
 [`copy`]: ../std/ptr/fn.copy.html
-[`copy_nonoverlapping`]: ../std/ptr/fn/copy_nonoverlapping.html
+[`copy_nonoverlapping`]: ../std/ptr/fn.copy_nonoverlapping.html
 [`MaybeUninit`]: ../std/mem/union.MaybeUninit.html
