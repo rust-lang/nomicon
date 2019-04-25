@@ -1,9 +1,17 @@
 # Lifetimes
 
-Rust enforces these rules through *lifetimes*. Lifetimes are effectively
-just names for scopes somewhere in the program. Each reference,
-and anything that contains a reference, is tagged with a lifetime specifying
-the scope it's valid for.
+Rust enforces these rules through *lifetimes*. Lifetimes are named
+regions of code that a reference must be valid for. Those regions
+may be fairly complex, as they correspond to paths of execution
+in the program. There may even be holes in these paths of execution,
+as it's possible to invalidate a reference as long as it's reinitialized
+before it's used again. Types which contain references (or pretend to)
+may also be tagged with lifetimes so that Rust can prevent them from
+being invalidated as well.
+
+In most of our examples, the lifetimes will coincide with scopes. This is
+because our examples are simple. The more complex cases where they don't
+coincide are described below.
 
 Within a function body, Rust generally doesn't let you explicitly name the
 lifetimes involved. This is because it's generally not really necessary
@@ -23,10 +31,10 @@ syrup even -- around scopes and lifetimes, because writing everything out
 explicitly is *extremely noisy*. All Rust code relies on aggressive inference
 and elision of "obvious" things.
 
-One particularly interesting piece of sugar is that each `let` statement implicitly
-introduces a scope. For the most part, this doesn't really matter. However it
-does matter for variables that refer to each other. As a simple example, let's
-completely desugar this simple piece of Rust code:
+One particularly interesting piece of sugar is that each `let` statement
+implicitly introduces a scope. For the most part, this doesn't really matter.
+However it does matter for variables that refer to each other. As a simple
+example, let's completely desugar this simple piece of Rust code:
 
 ```rust
 let x = 0;
@@ -85,7 +93,7 @@ z = y;
 
 Alright, let's look at some of those examples from before:
 
-```rust,ignore
+```rust,compile_fail
 fn as_str(data: &u32) -> &str {
     let s = format!("{}", data);
     &s
@@ -169,7 +177,7 @@ our implementation *just a bit*.)
 
 How about the other example:
 
-```rust,ignore
+```rust,compile_fail
 let mut data = vec![1, 2, 3];
 let x = &data[0];
 data.push(4);
@@ -201,7 +209,7 @@ violate the *second* rule of references.
 
 However this is *not at all* how Rust reasons that this program is bad. Rust
 doesn't understand that `x` is a reference to a subpath of `data`. It doesn't
-understand Vec at all. What it *does* see is that `x` has to live for `'b` to
+understand `Vec` at all. What it *does* see is that `x` has to live for `'b` to
 be printed. The signature of `Index::index` subsequently demands that the
 reference we take to `data` has to survive for `'b`. When we try to call `push`,
 it then sees us try to make an `&'c mut data`. Rust knows that `'c` is contained
@@ -213,3 +221,82 @@ totally ok*, because it keeps us from spending all day explaining our program
 to the compiler. However it does mean that several programs that are totally
 correct with respect to Rust's *true* semantics are rejected because lifetimes
 are too dumb.
+
+
+
+# The area covered by a lifetime
+
+The lifetime (sometimes called a *borrow*) is *alive* from the place it is
+created to its last use. The borrowed thing needs to outlive only borrows that
+are alive. This looks simple, but there are few subtleties.
+
+The following snippet compiles, because after printing `x`, it is no longer
+needed, so it doesn't matter if it is dangling or aliased (even though the
+variable `x` *technically* exists to the very end of the scope).
+
+```rust,edition2018
+let mut data = vec![1, 2, 3];
+let x = &data[0];
+println!("{}", x);
+// This is OK, x is no longer needed
+data.push(4);
+```
+
+However, if the value has a destructor, the destructor is run at the end of the
+scope. And running the destructor is considered a use ‒ obviously the last one.
+So, this will *not* compile.
+
+```rust,edition2018,compile_fail
+#[derive(Debug)]
+struct X<'a>(&'a i32);
+
+impl Drop for X<'_> {
+    fn drop(&mut self) {}
+}
+
+let mut data = vec![1, 2, 3];
+let x = X(&data[0]);
+println!("{:?}", x);
+data.push(4);
+// Here, the destructor is run and therefore this'll fail to compile.
+```
+
+Furthermore, there might be multiple possible last uses of the borrow, for
+example in each branch of a condition.
+
+```rust,edition2018
+# fn some_condition() -> bool { true }
+let mut data = vec![1, 2, 3];
+let x = &data[0];
+
+if some_condition() {
+    println!("{}", x); // This is the last use of `x` in this branch
+    data.push(4);      // So we can push here
+} else {
+    // There's no use of `x` in here, so effectively the last use is the
+    // creation of x at the top of the example.
+    data.push(5);
+}
+```
+
+And a lifetime can have a pause in it. Or you might look at it as two distinct
+borrows just being tied to the same local variable. This often happens around
+loops (writing a new value of a variable at the end of the loop and using it for
+the last time at the top of the next iteration).
+
+```rust,edition2018
+let mut data = vec![1, 2, 3];
+// This mut allows us to change where the reference points to
+let mut x = &data[0];
+
+println!("{}", x); // Last use of this borrow
+data.push(4);
+x = &data[3]; // We start a new borrow here
+println!("{}", x);
+```
+
+Historically, Rust kept the borrow alive until the end of scope, so these
+examples might fail to compile with older compilers. Also, there are still some
+corner cases where Rust fails to properly shorten the live part of the borrow
+and fails to compile even when it looks like it should. These'll be solved over
+time.
