@@ -138,7 +138,7 @@ against a broken implementation of the trait, then marking the trait `unsafe` is
 a reasonable choice.
 
 As an aside, while `Send` and `Sync` are `unsafe` traits, they are *also*
-automatically implemented for types when such derivations are provably safe
+automatically implemented for types when such derivations are probably safe
 to do. `Send` is automatically derived for all types composed only of values
 whose types also implement `Send`. `Sync` is automatically derived for all
 types composed only of values whose types also implement `Sync`. This minimizes
