@@ -1,21 +1,13 @@
 # The Rustonomicon
 
-#### The Dark Arts of Advanced and Unsafe Rust Programming
-
-> Instead of the programs I had hoped for, there came only a shuddering blackness
-and ineffable loneliness; and I saw at last a fearful truth which no one had
-ever dared to breathe before — the unwhisperable secret of secrets — The fact
-that this language of stone and stridor is not a sentient perpetuation of Rust
-as London is of Old London and Paris of Old Paris, but that it is in fact
-quite `unsafe`, its sprawling body imperfectly embalmed and infested with queer
-animate things which have nothing to do with it as it was in compilation.
-
-This book digs into all the awful details that you need to understand when
-writing Unsafe Rust programs.
+#### The Dark Arts of Unsafe Rust
 
 > THE KNOWLEDGE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
 INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF UNLEASHING INDESCRIBABLE HORRORS THAT
 SHATTER YOUR PSYCHE AND SET YOUR MIND ADRIFT IN THE UNKNOWABLY INFINITE COSMOS.
+
+The Rustonomicon digs into all the awful details that you need to understand when
+writing Unsafe Rust programs.
 
 Should you wish a long and happy career of writing Rust programs, you should
 turn back now and forget you ever saw this book. It is not necessary. However
@@ -30,12 +22,35 @@ have read it, and we will take care to occasionally give a refresher on the
 basics where appropriate. You can skip straight to this book if you want;
 just know that we won't be explaining everything from the ground up.
 
-We're going to dig into exception-safety, pointer aliasing, memory models,
-compiler and hardware implementation details, and even some type-theory.
-Much text will be devoted to exotic corner cases that no one *should* ever have
-to care about, but suddenly become important because we wrote `unsafe`.
+This book exists primarily as a high-level companion to [The Reference][ref].
+Where The Reference exists to detail the syntax and semantics of every part of
+the language, The Rustonomicon exists to describe how to use those pieces together,
+and the issues that you will have in doing so.
 
-We will also be spending a lot of time talking about the different kinds of
-safety and guarantees that programs could care about.
+The Reference will tell you the syntax and semantics of references, destructors, and
+unwinding, but it won't tell you how combining them can lead to exception-safety
+issues, or how to deal with those issues.
 
-[trpl]: ../book/index.html
+It should be noted that when The Rustonomicon was originally written, The
+Reference was in a state of complete disrepair, and so many things that should
+have been covered by The Reference were originally only documented here. Since
+then, The Reference has been revitalized and is properly maintained, although
+it is still far from complete. In general, if the two documents disagree, The
+Reference should be assumed to be correct (it isn't yet considered normative,
+it's just better maintained).
+
+Topics that are within the scope of this book include: the meaning of (un)safety,
+unsafe primitives provided by the language and standard library, techniques for
+creating safe abstractions with those unsafe primitives, subtyping and variance,
+exception-safety (panic/unwind-safety), working with uninitialized memory,
+type punning, concurrency, interoperating with other languages (FFI),
+optimization tricks, how constructs lower to compiler/OS/hardware primitives,
+how to **not** make the memory model people angry, how you're **going** to make the
+memory model people angry, and more.
+
+The Rustonomicon is not a place to exhaustively describe the semantics and guarantees
+of every single API in the standard library, nor is it a place to exhaustively describe
+every feature of Rust.
+
+[trpl]: ../book/
+[ref]: ../reference/
