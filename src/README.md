@@ -17,7 +17,7 @@ language — this book contains lots of useful information.
 Unlike *[The Rust Programming Language][trpl]*, we will be assuming considerable
 prior knowledge. In particular, you should be comfortable with basic systems
 programming and Rust. If you don't feel comfortable with these topics, you
-should consider [reading The Book][trpl] first. That said, we won't assume you
+should consider reading [The Book][trpl] first. That said, we won't assume you
 have read it, and we will take care to occasionally give a refresher on the
 basics where appropriate. You can skip straight to this book if you want;
 just know that we won't be explaining everything from the ground up.
