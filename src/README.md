@@ -52,5 +52,5 @@ The Rustonomicon is not a place to exhaustively describe the semantics and guara
 of every single API in the standard library, nor is it a place to exhaustively describe
 every feature of Rust.
 
-[trpl]: ../book/
-[ref]: ../reference/
+[trpl]: ../book/index.html
+[ref]: ../reference/index.html
