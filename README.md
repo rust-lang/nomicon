@@ -29,34 +29,24 @@ Building the Nomicon requires [mdBook]. To get it:
 $ cargo install mdbook
 ```
 
-### Building
+### `mdbook` usage
 
-To build the Nomicon:
+To build the Nomicon use the `build` sub-command:
 
 ```bash
 $ mdbook build
 ```
 
-The output will be in the `book` subdirectory. To check it out, open it in
-your web browser.
+The output will be placed in the `book` subdirectory. To check it out, open the
+`index.html` file in your web browser. You can pass the `--open` flag to `mdbook
+build` and it'll open the index page (if the process is successful) just like with
+`cargo doc --open`:
 
-_Firefox:_
 ```bash
-$ firefox book/index.html                       # Linux
-$ open -a "Firefox" book/index.html             # OS X
-$ Start-Process "firefox.exe" .\book\index.html # Windows (PowerShell)
-$ start firefox.exe .\book\index.html           # Windows (Cmd)
+$ mdbook build --open
 ```
 
-_Chrome:_
-```bash
-$ google-chrome book/index.html                 # Linux
-$ open -a "Google Chrome" book/index.html       # OS X
-$ Start-Process "chrome.exe" .\book\index.html  # Windows (PowerShell)
-$ start chrome.exe .\book\index.html            # Windows (Cmd)
-```
-
-To run the tests:
+There is also a `test` sub-command to test all code samples contained in the book:
 
 ```bash
 $ mdbook test
