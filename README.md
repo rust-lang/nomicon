@@ -39,8 +39,8 @@ $ mdbook build
 
 The output will be placed in the `book` subdirectory. To check it out, open the
 `index.html` file in your web browser. You can pass the `--open` flag to `mdbook
-build` and it'll open the index page (if the process is successful) just like with
-`cargo doc --open`:
+build` and it'll open the index page in your default browser (if the process is
+successful) just like with `cargo doc --open`:
 
 ```bash
 $ mdbook build --open
@@ -54,7 +54,8 @@ $ mdbook test
 
 ## Contributing
 
-Given that the Nomicon is still in a draft state, we'd love your help! Please feel free to open
-issues about anything, and send in PRs for things you'd like to fix or change. If your change is
-large, please open an issue first, so we can make sure that it's something we'd accept before you
-go through the work of getting a PR together.
+Given that the Nomicon is still in a draft state, we'd love your help! Please
+feel free to open issues about anything, and send in PRs for things you'd like
+to fix or change. If your change is large, please open an issue first, so we can
+make sure that it's something we'd accept before you go through the work of
+getting a PR together.
