@@ -80,7 +80,6 @@ This will eventually get fixed.
 
 ```rust,edition2018,compile_fail
 # use std::collections::HashMap;
-# use std::cmp::Eq;
 # use std::hash::Hash;
 fn get_default<'m, K, V>(map: &'m mut HashMap<K, V>, key: K) -> &'m mut V
 where
