@@ -25,7 +25,7 @@ let y;
 There are some more complex situations which are not possible to desugar using
 scopes, but the order is still defined ‒ variables are dropped in the reverse
 order of their definition, fields of structs and tuples in order of their
-definition. There are some more details about order of drop in [rfc1875].
+definition. There are some more details about order of drop in [RFC 1857][rfc1857].
 
 Let's do this:
 
