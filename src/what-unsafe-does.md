@@ -16,16 +16,19 @@ to your program. You definitely *should not* invoke Undefined Behavior.
 Unlike C, Undefined Behavior is pretty limited in scope in Rust. All the core
 language cares about is preventing the following things:
 
-* Dereferencing null, dangling, or unaligned pointers
+* Dereferencing null, dangling, or unaligned references or raw pointers
+* Performing out-of-bounds arithmetic for the computation of a struct/tuple
+  field address
 * Reading [uninitialized memory][]
 * Breaking the [pointer aliasing rules][]
-* Producing invalid primitive values:
-    * dangling/null references
+* Producing/obtaining invalid primitive values:
+    * dangling/null/unaligned references
     * null `fn` pointers
     * a `bool` that isn't 0 or 1
     * an undefined `enum` discriminant
     * a `char` outside the ranges [0x0, 0xD7FF] and [0xE000, 0x10FFFF]
-    * A non-utf8 `str`
+    * a non-utf8 `str`
+    * a compound type (`enum`/`struct`/array/tuple) with an invalid field
 * Unwinding into another language
 * Causing a [data race][race]
 
