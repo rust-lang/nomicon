@@ -16,7 +16,8 @@ to your program. You definitely *should not* invoke Undefined Behavior.
 Unlike C, Undefined Behavior is pretty limited in scope in Rust. All the core
 language cares about is preventing the following things:
 
-* Dereferencing null, dangling, or unaligned references or raw pointers
+* Loading from or storing to null, dangling, or unaligned references or raw
+  pointers
 * Performing out-of-bounds arithmetic for the computation of an
   `enum`/`struct`/array/slice/tuple field address
 * Reading [uninitialized memory][]
@@ -36,6 +37,10 @@ language cares about is preventing the following things:
 
 "Producing" a value happens any time a value is assigned, passed to a
 function/primitive operation or returned from a function/primitive operation.
+
+A reference/pointer is "dangling" if not all of the bytes it points to are part
+of the same allocation. The span of bytes it points to is determined by the
+pointer value and the size of the pointee type.
 
 That's it. That's all the causes of Undefined Behavior baked into Rust. Of
 course, unsafe functions and traits are free to declare arbitrary other
