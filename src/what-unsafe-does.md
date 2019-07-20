@@ -29,7 +29,8 @@ language cares about is preventing the following things:
     * an undefined `enum` discriminant
     * a `char` outside the ranges [0x0, 0xD7FF] and [0xE000, 0x10FFFF]
     * a non-utf8 `str`
-    * a `NonNull` or `NonZero*` that is 0
+    * an invalid library type with custom invalid values, such as a `NonNull` or
+      `NonZero*` that is 0
 * Unwinding into another language
 * Causing a [data race][race]
 
