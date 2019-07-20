@@ -21,7 +21,7 @@ language cares about is preventing the following things:
   `enum`/`struct`/array/slice/tuple field address
 * Reading [uninitialized memory][]
 * Breaking the [pointer aliasing rules][]
-* Producing/obtaining invalid primitive values:
+* Producing invalid primitive values:
     * dangling/null/unaligned references
     * null `fn` pointers
     * a `bool` that isn't 0 or 1
@@ -32,6 +32,9 @@ language cares about is preventing the following things:
     * a compound type (`enum`/`struct`/array/tuple) with an invalid field
 * Unwinding into another language
 * Causing a [data race][race]
+
+"Producing" a value happens any time a value is assigned, passed to a
+function/primitive operation or returned from a function/primitive operation.
 
 That's it. That's all the causes of Undefined Behavior baked into Rust. Of
 course, unsafe functions and traits are free to declare arbitrary other
