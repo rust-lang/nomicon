@@ -21,7 +21,8 @@ language cares about is preventing the following things:
   `enum`/`struct`/array/slice/tuple field address
 * Reading [uninitialized memory][]
 * Breaking the [pointer aliasing rules][]
-* Producing invalid primitive values:
+* Producing invalid primitive values (either alone or as a field of a compound
+  type such as `enum`/`struct`/array/tuple):
     * dangling/null/unaligned references
     * null `fn` pointers
     * a `bool` that isn't 0 or 1
@@ -29,7 +30,6 @@ language cares about is preventing the following things:
     * a `char` outside the ranges [0x0, 0xD7FF] and [0xE000, 0x10FFFF]
     * a non-utf8 `str`
     * a `NonNull` or `NonZero*` that is 0
-    * a compound type (`enum`/`struct`/array/tuple) with an invalid field
 * Unwinding into another language
 * Causing a [data race][race]
 
