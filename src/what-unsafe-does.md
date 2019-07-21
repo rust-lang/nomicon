@@ -17,7 +17,7 @@ Unlike C, Undefined Behavior is pretty limited in scope in Rust. All the core
 language cares about is preventing the following things:
 
 * Dereferencing (using the `*` operator on) null, dangling, or unaligned
-  references or raw pointers
+  pointers
 * Reading [uninitialized memory][]
 * Breaking the [pointer aliasing rules][]
 * Producing invalid primitive values (either alone or as a field of a compound
