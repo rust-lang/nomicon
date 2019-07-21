@@ -16,10 +16,8 @@ to your program. You definitely *should not* invoke Undefined Behavior.
 Unlike C, Undefined Behavior is pretty limited in scope in Rust. All the core
 language cares about is preventing the following things:
 
-* Loading from or storing to null, dangling, or unaligned references or raw
-  pointers
-* Performing out-of-bounds arithmetic for the computation of an
-  `enum`/`struct`/array/slice/tuple field address
+* Dereferencing (using the `*` operator on) null, dangling, or unaligned
+  references or raw pointers
 * Reading [uninitialized memory][]
 * Breaking the [pointer aliasing rules][]
 * Producing invalid primitive values (either alone or as a field of a compound
