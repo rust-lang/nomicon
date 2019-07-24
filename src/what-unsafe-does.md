@@ -40,7 +40,7 @@ language cares about is preventing the following things:
       `NonZero*` that is 0
 * Unwinding into another language
 * Causing a [data race][race]
-* Executing code compiled with platform features that the current platform does
+* Executing code compiled with target features that the current thread of execution does
   not support (see [`target_feature`])
 
 "Producing" a value happens any time a value is assigned, passed to a
