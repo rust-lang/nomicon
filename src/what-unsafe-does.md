@@ -17,7 +17,7 @@ Unlike C, Undefined Behavior is pretty limited in scope in Rust. All the core
 language cares about is preventing the following things:
 
 * Dereferencing (using the `*` operator on) null, dangling, or unaligned
-  pointers
+  pointers, or fat pointers with invalid metadata (see below)
 * Reading [uninitialized memory][]
 * Breaking the [pointer aliasing rules][]
 * Producing invalid primitive values (either alone or as a field of a compound
@@ -30,6 +30,10 @@ language cares about is preventing the following things:
     * dangling/null/unaligned references, references that do themselves point to
       invalid values, or fat references (to a dynamically sized type) with
       invalid metadata
+        * slice metadata is invalid if the slice has a total size larger than
+          `isize::MAX` bytes in memory
+        * `dyn Trait` metadata is invalid if it is not a pointer to a vtable for
+          `Trait` that matches the actual dynamic trait the reference points to
     * a non-utf8 `str`
     * an uninitialized integer (`i*`/`u*`) or floating point value (`f*`)
     * an invalid library type with custom invalid values, such as a `NonNull` or
