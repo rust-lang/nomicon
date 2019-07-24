@@ -22,13 +22,14 @@ language cares about is preventing the following things:
 * Breaking the [pointer aliasing rules][]
 * Producing invalid primitive values (either alone or as a field of a compound
   type such as `enum`/`struct`/array/tuple):
+    * a `bool` that isn't 0 or 1
+    * an undefined `enum` discriminant
+    * null `fn` pointers
+    * a `char` outside the ranges [0x0, 0xD7FF] and [0xE000, 0x10FFFF]
+    * a `!` (all values are invalid for this type)
     * dangling/null/unaligned references, references that do themselves point to
       invalid values, or fat references (to a dynamically sized type) with
       invalid metadata
-    * null `fn` pointers
-    * a `bool` that isn't 0 or 1
-    * an undefined `enum` discriminant
-    * a `char` outside the ranges [0x0, 0xD7FF] and [0xE000, 0x10FFFF]
     * a non-utf8 `str`
     * an uninitialized integer (`i*`/`u*`) or floating point value (`f*`)
     * an invalid library type with custom invalid values, such as a `NonNull` or
