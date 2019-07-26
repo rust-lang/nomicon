@@ -35,7 +35,8 @@ language cares about is preventing the following things:
         * `dyn Trait` metadata is invalid if it is not a pointer to a vtable for
           `Trait` that matches the actual dynamic trait the reference points to
     * a non-utf8 `str`
-    * an uninitialized integer (`i*`/`u*`) or floating point value (`f*`)
+    * an uninitialized integer (`i*`/`u*`), floating point value (`f*`), or raw
+      pointer
     * an invalid library type with custom invalid values, such as a `NonNull` or
       `NonZero*` that is 0
 * Unwinding into another language
