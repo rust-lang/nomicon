@@ -16,8 +16,8 @@ to your program. You definitely *should not* invoke Undefined Behavior.
 Unlike C, Undefined Behavior is pretty limited in scope in Rust. All the core
 language cares about is preventing the following things:
 
-* Dereferencing (using the `*` operator on) null, dangling, or unaligned
-  pointers, or wide pointers with invalid metadata (see below)
+* Dereferencing (using the `*` operator on) dangling, or unaligned pointers, or
+  wide pointers with invalid metadata (see below)
 * Reading [uninitialized memory][]
 * Breaking the [pointer aliasing rules][]
 * Unwinding into another language
@@ -31,7 +31,7 @@ language cares about is preventing the following things:
     * null `fn` pointers
     * a `char` outside the ranges [0x0, 0xD7FF] and [0xE000, 0x10FFFF]
     * a `!` (all values are invalid for this type)
-    * dangling/null/unaligned references, references that do themselves point to
+    * dangling/unaligned references, references that do themselves point to
       invalid values, or wide references (to a dynamically sized type) with
       invalid metadata
         * slice metadata is invalid if the slice has a total size larger than
@@ -48,8 +48,9 @@ language cares about is preventing the following things:
 function/primitive operation or returned from a function/primitive operation.
 
 A reference/pointer is "dangling" if not all of the bytes it points to are part
-of the same allocation. The span of bytes it points to is determined by the
-pointer value and the size of the pointee type.
+of the same allocation. In particular, null pointers are dangling. The span of bytes it
+points to is determined by the pointer value and the size of the pointee type.
+If the span is empty, "dangling" is the same as "non-null".
 
 That's it. That's all the causes of Undefined Behavior baked into Rust. Of
 course, unsafe functions and traits are free to declare arbitrary other
