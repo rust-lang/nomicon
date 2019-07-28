@@ -17,9 +17,13 @@ Unlike C, Undefined Behavior is pretty limited in scope in Rust. All the core
 language cares about is preventing the following things:
 
 * Dereferencing (using the `*` operator on) null, dangling, or unaligned
-  pointers, or fat pointers with invalid metadata (see below)
+  pointers, or wide pointers with invalid metadata (see below)
 * Reading [uninitialized memory][]
 * Breaking the [pointer aliasing rules][]
+* Unwinding into another language
+* Causing a [data race][race]
+* Executing code compiled with target features that the current thread of execution does
+  not support (see [`target_feature`])
 * Producing invalid primitive values (either alone or as a field of a compound
   type such as `enum`/`struct`/array/tuple):
     * a `bool` that isn't 0 or 1
@@ -28,7 +32,7 @@ language cares about is preventing the following things:
     * a `char` outside the ranges [0x0, 0xD7FF] and [0xE000, 0x10FFFF]
     * a `!` (all values are invalid for this type)
     * dangling/null/unaligned references, references that do themselves point to
-      invalid values, or fat references (to a dynamically sized type) with
+      invalid values, or wide references (to a dynamically sized type) with
       invalid metadata
         * slice metadata is invalid if the slice has a total size larger than
           `isize::MAX` bytes in memory
@@ -38,11 +42,7 @@ language cares about is preventing the following things:
     * an uninitialized integer (`i*`/`u*`), floating point value (`f*`), or raw
       pointer
     * an invalid library type with custom invalid values, such as a `NonNull` or
-      `NonZero*` that is 0
-* Unwinding into another language
-* Causing a [data race][race]
-* Executing code compiled with target features that the current thread of execution does
-  not support (see [`target_feature`])
+      the `NonZero` family of types, that is 0
 
 "Producing" a value happens any time a value is assigned, passed to a
 function/primitive operation or returned from a function/primitive operation.
