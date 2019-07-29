@@ -18,12 +18,11 @@ language cares about is preventing the following things:
 
 * Dereferencing (using the `*` operator on) dangling, or unaligned pointers, or
   wide pointers with invalid metadata (see below)
-* Reading [uninitialized memory][]
 * Breaking the [pointer aliasing rules][]
 * Unwinding into another language
 * Causing a [data race][race]
 * Executing code compiled with target features that the current thread of execution does
-  not support (see [`target_feature`])
+  not support (see [`target_feature`][])
 * Producing invalid primitive values (either alone or as a field of a compound
   type such as `enum`/`struct`/array/tuple):
     * a `bool` that isn't 0 or 1
@@ -39,8 +38,8 @@ language cares about is preventing the following things:
         * `dyn Trait` metadata is invalid if it is not a pointer to a vtable for
           `Trait` that matches the actual dynamic trait the reference points to
     * a non-utf8 `str`
-    * an uninitialized integer (`i*`/`u*`), floating point value (`f*`), or raw
-      pointer
+    * an integer (`i*`/`u*`), floating point value (`f*`), or raw pointer read from
+      [uninitialized memory][]
     * an invalid library type with custom invalid values, such as a `NonNull` or
       the `NonZero` family of types, that is 0
 
