@@ -46,10 +46,10 @@ language cares about is preventing the following things:
 "Producing" a value happens any time a value is assigned, passed to a
 function/primitive operation or returned from a function/primitive operation.
 
-A reference/pointer is "dangling" if not all of the bytes it points to are part
-of the same allocation. In particular, null pointers are dangling. The span of bytes it
-points to is determined by the pointer value and the size of the pointee type.
-If the span is empty, "dangling" is the same as "non-null".
+A reference/pointer is "dangling" if it is null or not all of the bytes it
+points to are part of the same allocation. The span of bytes it points to is
+determined by the pointer value and the size of the pointee type.  If the span
+is empty, "dangling" is the same as "non-null".
 
 That's it. That's all the causes of Undefined Behavior baked into Rust. Of
 course, unsafe functions and traits are free to declare arbitrary other
