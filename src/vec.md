@@ -9,7 +9,7 @@ in a similar form as it is today.
 However we will generally try to avoid unstable code where possible. In
 particular we won't use any intrinsics that could make a code a little
 bit nicer or efficient because intrinsics are permanently unstable. Although
-many intrinsics *do* become stabilized elsewhere (`std::ptr` and `str::mem`
+many intrinsics *do* become stabilized elsewhere (`std::ptr` and `std::mem`
 consist of many intrinsics).
 
 Ultimately this means our implementation may not take advantage of all
