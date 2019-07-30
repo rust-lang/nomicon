@@ -8,25 +8,87 @@ Unfortunately this is pretty rigid, especially if you need to initialize your
 array in a more incremental or dynamic way.
 
 Unsafe Rust gives us a powerful tool to handle this problem:
-[`mem::uninitialized`][uninitialized]. This function pretends to return a value
-when really it does nothing at all. Using it, we can convince Rust that we have
-initialized a variable, allowing us to do trickier things with conditional and
-incremental initialization.
+[`MaybeUninit`]. This type can be used to handle memory that has not been fully
+initialized yet.
 
-Unfortunately, this opens us up to all kinds of problems. Assignment has a
-different meaning to Rust based on whether it believes that a variable is
-initialized or not. If it's believed uninitialized, then Rust will semantically
-just memcopy the bits over the uninitialized ones, and do nothing else. However
-if Rust believes a value to be initialized, it will try to `Drop` the old value!
-Since we've tricked Rust into believing that the value is initialized, we can no
-longer safely use normal assignment.
+With `MaybeUninit`, we can initialize an array element-for-element as follows:
 
-This is also a problem if you're working with a raw system allocator, which
-returns a pointer to uninitialized memory.
+```rust
+use std::mem::{self, MaybeUninit};
 
-To handle this, we must use the [`ptr`] module. In particular, it provides
-three functions that allow us to assign bytes to a location in memory without
-dropping the old value: [`write`], [`copy`], and [`copy_nonoverlapping`].
+// Size of the array is hard-coded but easy to change. This means we can't
+// use [a, b, c] syntax to initialize the array, though!
+const SIZE: usize = 10;
+
+let x = {
+    // Create an uninitialized array of `MaybeUninit`. The `assume_init` is
+    // safe because the type we are claiming to have initialized here is a
+    // bunch of `MaybeUninit`s, which do not require initialization.
+    let mut x: [MaybeUninit<Box<u32>>; SIZE] = unsafe {
+        MaybeUninit::uninit().assume_init()
+    };
+
+    // Dropping a `MaybeUninit` does nothing. Thus using raw pointer
+    // assignment instead of `ptr::write` does not cause the old
+    // uninitialized value to be dropped.
+    // Exception safety is not a concern because Box can't panic
+    for i in 0..SIZE {
+        x[i] = MaybeUninit::new(Box::new(i as u32));
+    }
+
+    // Everything is initialized. Transmute the array to the
+    // initialized type.
+    unsafe { mem::transmute::<_, [Box<u32>; SIZE]>(x) }
+};
+
+println!("{:?}", x);
+```
+
+This code proceeds in three steps:
+
+1. Create an array of `MaybeUninit<T>`. With current stable Rust, we have to use
+   unsafe code for this: we take some uninitialized piece of memory
+   (`MaybeUninit::uninit()`) and claim we have fully initialized it
+   ([`assume_init()`][assume_init]). This seems ridiculous, because we didn't!
+   The reason this is correct is that the array consists itself entirely of
+   `MaybeUninit`, which do not actually require initialization. For most other
+   types, doing `MaybeUninit::uninit().assume_init()` produces an invalid
+   instance of said type, so you got yourself some Undefined Behavior.
+
+2. Initialize the array. The subtle aspect of this is that usually, when we use
+   `=` to assign to a value that the Rust type checker considers to already be
+   initialized (like `x[i]`), the old value stored on the left-hand side gets
+   dropped. This would be a disaster. However, in this case, the type of the
+   left-hand side is `MaybeUninit<Box<u32>>`, and dropping that does not do
+   anything! See below for some more discussion of this `drop` issue.
+
+3. Finally, we have to change the type of our array to remove the
+   `MaybeUninit`. With current stable Rust, this requires a `transmute`.
+   This transmute is legal because in memory, `MaybeUninit<T>` looks the same as `T`.
+
+    However, note that in general, `Container<MaybeUninit<T>>>` does *not* look
+   the same as `Container<T>`! Imagine if `Container` was `Option`, and `T` was
+   `bool`, then `Option<bool>` exploits that `bool` only has two valid values,
+   but `Option<MaybeUninit<bool>>` cannot do that because the `bool` does not
+   have to be initialized.
+
+    So, it depends on `Container` whether transmuting away the `MaybeUninit` is
+   allowed. For arrays, it is (and eventually the standard library will
+   acknowledge that by providing appropriate methods).
+
+It's worth spending a bit more time on the loop in the middle, and in particular
+the assignment operator and its interaction with `drop`.  If we would have
+written something like
+```rust,ignore
+*x[i].as_mut_ptr() = Box::new(i as u32); // WRONG!
+```
+we would actually overwrite a `Box<u32>`, leading to `drop` of uninitialized
+data, which will cause much sadness and pain.
+
+The correct alternative, if for some reason we cannot use `MaybeUninit::new`, is
+to use the [`ptr`] module. In particular, it provides three functions that allow
+us to assign bytes to a location in memory without dropping the old value:
+[`write`], [`copy`], and [`copy_nonoverlapping`].
 
 * `ptr::write(ptr, val)` takes a `val` and moves it into the address pointed
   to by `ptr`.
@@ -40,59 +102,32 @@ dropping the old value: [`write`], [`copy`], and [`copy_nonoverlapping`].
 It should go without saying that these functions, if misused, will cause serious
 havoc or just straight up Undefined Behavior. The only things that these
 functions *themselves* require is that the locations you want to read and write
-are allocated. However the ways writing arbitrary bits to arbitrary
-locations of memory can break things are basically uncountable!
-
-Putting this all together, we get the following:
-
-```rust
-use std::mem;
-use std::ptr;
-
-// size of the array is hard-coded but easy to change. This means we can't
-// use [a, b, c] syntax to initialize the array, though!
-const SIZE: usize = 10;
-
-let mut x: [Box<u32>; SIZE];
-
-unsafe {
-    // convince Rust that x is Totally Initialized
-    x = mem::uninitialized();
-    for i in 0..SIZE {
-        // very carefully overwrite each index without reading it
-        // NOTE: exception safety is not a concern; Box can't panic
-        ptr::write(&mut x[i], Box::new(i as u32));
-    }
-}
-
-println!("{:?}", x);
-```
+are allocated and properly aligned. However, the ways writing arbitrary bits to
+arbitrary locations of memory can break things are basically uncountable!
 
 It's worth noting that you don't need to worry about `ptr::write`-style
 shenanigans with types which don't implement `Drop` or contain `Drop` types,
-because Rust knows not to try to drop them. Similarly you should be able to
-assign to fields of partially initialized structs directly if those fields don't
-contain any `Drop` types.
+because Rust knows not to try to drop them. This is what we relied on in the
+above example. Similarly you should be able to assign to fields of partially
+initialized structs directly if those fields don't contain any `Drop` types.
 
 However when working with uninitialized memory you need to be ever-vigilant for
 Rust trying to drop values you make like this before they're fully initialized.
 Every control path through that variable's scope must initialize the value
 before it ends, if it has a destructor.
-*[This includes code panicking](unwinding.html)*.
-
-Not being careful about uninitialized memory often leads to bugs and it has been
-decided the [`mem::uninitialized`][uninitialized] function should be deprecated.
-The [`MaybeUninit`] type is supposed to replace it as its API wraps many common
-operations needed to be done around initialized memory. This is nightly only for
-now.
+*[This includes code panicking](unwinding.html)*.  `MaybeUninit` helps a bit
+here, because it does not implicitly drop its content - but all this really
+means in case of a panic is that instead of a double-free of the not yet
+initialized parts, you end up with a memory leak of the already initialized
+parts.
 
 And that's about it for working with uninitialized memory! Basically nothing
 anywhere expects to be handed uninitialized memory, so if you're going to pass
 it around at all, be sure to be *really* careful.
 
-[uninitialized]: ../std/mem/fn.uninitialized.html
-[`ptr`]: ../std/ptr/index.html
-[`write`]: ../std/ptr/fn.write.html
-[`copy`]: ../std/ptr/fn.copy.html
-[`copy_nonoverlapping`]: ../std/ptr/fn.copy_nonoverlapping.html
-[`MaybeUninit`]: ../std/mem/union.MaybeUninit.html
+[`MaybeUninit`]: ../core/mem/union.MaybeUninit.html
+[assume_init]: ../core/mem/union.MaybeUninit.html#method.assume_init
+[`ptr`]: ../core/ptr/index.html
+[`write`]: ../core/ptr/fn.write.html
+[`copy`]: ../core/ptr/fn.copy.html
+[`copy_nonoverlapping`]: ../core/ptr/fn.copy_nonoverlapping.html
