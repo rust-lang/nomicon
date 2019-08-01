@@ -51,7 +51,7 @@ and performing an *unsizing coercion*:
 ```rust
 struct MySuperSliceable<T: ?Sized> {
     info: u32,
-    data: T
+    data: T,
 }
 
 fn main() {
