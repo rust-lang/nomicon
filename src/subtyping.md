@@ -247,7 +247,7 @@ Second, and more seriously, lifetimes are only a part of the reference itself. T
 type of the referent is shared knowledge, which is why adjusting that type in only
 one place (the reference) can lead to issues. But if you shrink down a reference's
 lifetime when you hand it to someone, that lifetime information isn't shared in
-anyway. There are now two independent references with independent lifetimes.
+any way. There are now two independent references with independent lifetimes.
 There's no way to mess with original reference's lifetime using the other one.
 
 Or rather, the only way to mess with someone's lifetime is to build a meowing dog.
