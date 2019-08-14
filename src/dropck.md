@@ -2,8 +2,8 @@
 
 We have seen how lifetimes provide us some fairly simple rules for ensuring
 that we never read dangling references. However up to this point we have only ever
-interacted with the *outlives* relationship in an inclusive manner. That is,
-when we talked about `'a: 'b`, it was ok for `'a` to live *exactly* as long as
+interacted with the _outlives_ relationship in an inclusive manner. That is,
+when we talked about `'a: 'b`, it was ok for `'a` to live _exactly_ as long as
 `'b`. At first glance, this seems to be a meaningless distinction. Nothing ever
 gets dropped at the same time as another, right? This is why we used the
 following desugaring of `let` statements:
@@ -35,7 +35,7 @@ let tuple = (vec![], vec![]);
 
 The left vector is dropped first. But does it mean the right one strictly
 outlives it in the eyes of the borrow checker? The answer to this question is
-*no*. The borrow checker could track fields of tuples separately, but it would
+_no_. The borrow checker could track fields of tuples separately, but it would
 still be unable to decide what outlives what in case of vector elements, which
 are dropped manually via pure-library code the borrow checker doesn't
 understand.
@@ -93,15 +93,16 @@ fn main() {
 
 ```text
 error[E0597]: `world.days` does not live long enough
-  --> src/main.rs:20:39
+  --> src/main.rs:19:38
    |
-20 |     world.inspector = Some(Inspector(&world.days));
-   |                                       ^^^^^^^^^^ borrowed value does not live long enough
+19 |     world.inspector = Some(Inspector(&world.days));
+   |                                      ^^^^^^^^^^^ borrowed value does not live long enough
 ...
-23 | }
-   | - `world.days` dropped here while still borrowed
-   |
-   = note: values in a scope are dropped in the opposite order they are created
+22 | }
+   | -
+   | |
+   | `world.days` dropped here while still borrowed
+   | borrow might be used here, when `world` is dropped and runs the destructor for type `World<'_>`
 ```
 
 You can try changing the order of fields or use a tuple instead of the struct,
@@ -113,8 +114,8 @@ live as long as it does actually were destroyed first.
 
 Interestingly, only generic types need to worry about this. If they aren't
 generic, then the only lifetimes they can harbor are `'static`, which will truly
-live *forever*. This is why this problem is referred to as *sound generic drop*.
-Sound generic drop is enforced by the *drop checker*. As of this writing, some
+live _forever_. This is why this problem is referred to as _sound generic drop_.
+Sound generic drop is enforced by the _drop checker_. As of this writing, some
 of the finer details of how the drop checker validates types is totally up in
 the air. However The Big Rule is the subtlety that we have focused on this whole
 section:
@@ -190,12 +191,12 @@ fn main() {
 }
 ```
 
-However, *both* of the above variants are rejected by the borrow
+However, _both_ of the above variants are rejected by the borrow
 checker during the analysis of `fn main`, saying that `days` does not
 live long enough.
 
 The reason is that the borrow checking analysis of `main` does not
-know about the internals of each `Inspector`'s `Drop` implementation.  As
+know about the internals of each `Inspector`'s `Drop` implementation. As
 far as the borrow checker knows while it is analyzing `main`, the body
 of an inspector's destructor might access that borrowed data.
 
@@ -216,7 +217,7 @@ This would help address cases such as the two `Inspector`s above that
 know not to inspect during destruction.
 
 In the meantime, there is an unstable attribute that one can use to
-assert (unsafely) that a generic type's destructor is *guaranteed* to
+assert (unsafely) that a generic type's destructor is _guaranteed_ to
 not access any expired data, even if its type gives it the capability
 to do so.
 
@@ -274,8 +275,8 @@ It is sometimes obvious that no such access can occur, like the case above.
 However, when dealing with a generic type parameter, such access can
 occur indirectly. Examples of such indirect access are:
 
- * invoking a callback,
- * via a trait method call.
+- invoking a callback,
+- via a trait method call.
 
 (Future changes to the language, such as impl specialization, may add
 other avenues for such indirect access.)
@@ -334,7 +335,6 @@ worry at all about doing the right thing for the drop checker. However there
 is one special case that you need to worry about, which we will look at in
 the next section.
 
-
 [rfc1327]: https://github.com/rust-lang/rfcs/blob/master/text/1327-dropck-param-eyepatch.md
 [rfc1857]: https://github.com/rust-lang/rfcs/blob/master/text/1857-stabilize-drop-order.md
-[`ManuallyDrop`]: ../std/mem/struct.ManuallyDrop.html
+[`manuallydrop`]: ../std/mem/struct.ManuallyDrop.html
