@@ -21,8 +21,8 @@ language cares about is preventing the following things:
 * Breaking the [pointer aliasing rules][]
 * Unwinding into another language
 * Causing a [data race][race]
-* Executing code compiled with target features that the current thread of execution does
-  not support (see [`target_feature`][])
+* Executing code compiled with [target features][] that the current thread of execution does
+  not support
 * Producing invalid primitive values (either alone or as a field of a compound
   type such as `enum`/`struct`/array/tuple):
     * a `bool` that isn't 0 or 1
@@ -81,4 +81,4 @@ these problems are considered impractical to categorically prevent.
 [pointer aliasing rules]: references.html
 [uninitialized memory]: uninitialized.html
 [race]: races.html
-[`target_feature`]: ../reference/attributes/codegen.html#the-target_feature-attribute
+[target features]: ../reference/attributes/codegen.html#the-target_feature-attribute
