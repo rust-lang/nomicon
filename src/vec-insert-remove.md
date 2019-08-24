@@ -16,17 +16,20 @@ using the old len.
 pub fn insert(&mut self, index: usize, elem: T) {
     // Note: `<=` because it's valid to insert after everything
     // which would be equivalent to push.
-    assert!(index <= self.len, "index out of bounds");
-    if self.cap == self.len { self.grow(); }
+    assert!(self.len >= index, "index is out of bounds");
+    if self.cap == self.len {
+        self.grow();
+    }
 
     unsafe {
         if index < self.len {
-            // ptr::copy(src, dest, len): "copy from source to dest len elems"
-            ptr::copy(self.ptr.offset(index as isize),
-                      self.ptr.offset(index as isize + 1),
-                      self.len - index);
+            ptr::copy(
+                self.ptr.as_ptr().offset(index as isize),
+                self.ptr.as_ptr().offset(index as isize + 1),
+                self.len - index,
+            );
         }
-        ptr::write(self.ptr.offset(index as isize), elem);
+        ptr::write(self.ptr.as_ptr().offset(index as isize), elem);
         self.len += 1;
     }
 }
@@ -38,13 +41,18 @@ Remove behaves in the opposite manner. We need to shift all the elements from
 ```rust,ignore
 pub fn remove(&mut self, index: usize) -> T {
     // Note: `<` because it's *not* valid to remove after everything
-    assert!(index < self.len, "index out of bounds");
+    assert!(self.len > index, "index is out of bounds");
+
     unsafe {
         self.len -= 1;
-        let result = ptr::read(self.ptr.offset(index as isize));
-        ptr::copy(self.ptr.offset(index as isize + 1),
-                  self.ptr.offset(index as isize),
-                  self.len - index);
+        let result = ptr::read(self.ptr.as_ptr().offset(index as isize));
+
+        ptr::copy(
+            self.ptr.as_ptr().offset(index as isize + 1),
+            self.ptr.as_ptr().offset(index as isize),
+            self.len - index,
+        );
+
         result
     }
 }

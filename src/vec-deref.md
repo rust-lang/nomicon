@@ -16,23 +16,23 @@ use std::ops::Deref;
 
 impl<T> Deref for Vec<T> {
     type Target = [T];
-    fn deref(&self) -> &[T] {
+    fn deref(&self) -> &Self::Target {
         unsafe {
-            ::std::slice::from_raw_parts(self.ptr.as_ptr(), self.len)
+            std::slice::from_raw_parts(self.ptr.as_ptr(), self.len)
         }
     }
 }
 ```
 
-And let's do DerefMut too:
+And let's do `DerefMut` too:
 
 ```rust,ignore
 use std::ops::DerefMut;
 
 impl<T> DerefMut for Vec<T> {
-    fn deref_mut(&mut self) -> &mut [T] {
+    fn deref_mut(&mut self) -> &mut Self::Target {
         unsafe {
-            ::std::slice::from_raw_parts_mut(self.ptr.as_ptr(), self.len)
+            std::slice::from_raw_parts_mut(self.ptr.as_ptr(), self.len)
         }
     }
 }

@@ -11,7 +11,7 @@ allocation.
 IntoIter needs to be DoubleEnded as well, to enable reading from both ends.
 Reading from the back could just be implemented as calling `pop`, but reading
 from the front is harder. We could call `remove(0)` but that would be insanely
-expensive. Instead we're going to just use ptr::read to copy values out of
+expensive. Instead we're going to just use `ptr::read` to copy values out of
 either end of the Vec without mutating the buffer at all.
 
 To do this we're going to use a very common C idiom for array iteration. We'll
@@ -20,7 +20,7 @@ points to one-element past the end. When we want an element from one end, we'll
 read out the value pointed to at that end and move the pointer over by one. When
 the two pointers are equal, we know we're done.
 
-Note that the order of read and offset are reversed for `next` and `next_back`
+Note that the order of read and offset are reversed for `next` and `next_back`.
 For `next_back` the pointer is always after the element it wants to read next,
 while for `next` the pointer is always at the element it wants to read next.
 To see why this is, consider the case where every element but one has been
@@ -55,7 +55,7 @@ And this is what we end up with for initialization:
 
 ```rust,ignore
 impl<T> Vec<T> {
-    fn into_iter(self) -> IntoIter<T> {
+    pub fn into_iter(self) -> IntoIter<T> {
         // Can't destructure Vec since it's Drop
         let ptr = self.ptr;
         let cap = self.cap;
@@ -67,14 +67,14 @@ impl<T> Vec<T> {
         unsafe {
             IntoIter {
                 buf: ptr,
-                cap: cap,
-                start: *ptr,
+                cap,
+                start: ptr.as_ptr(),
                 end: if cap == 0 {
                     // can't offset off this pointer, it's not allocated!
-                    *ptr
+                    ptr.as_ptr()
                 } else {
-                    ptr.offset(len as isize)
-                }
+                    ptr.as_ptr().offset(len as isize)
+                },
             }
         }
     }
@@ -86,7 +86,7 @@ Here's iterating forward:
 ```rust,ignore
 impl<T> Iterator for IntoIter<T> {
     type Item = T;
-    fn next(&mut self) -> Option<T> {
+    fn next(&mut self) -> Option<Self::Item> {
         if self.start == self.end {
             None
         } else {
@@ -99,8 +99,7 @@ impl<T> Iterator for IntoIter<T> {
     }
 
     fn size_hint(&self) -> (usize, Option<usize>) {
-        let len = (self.end as usize - self.start as usize)
-                  / mem::size_of::<T>();
+        let len = (self.end as usize - self.start as usize) / mem::size_of::<T>();
         (len, Some(len))
     }
 }
@@ -110,7 +109,7 @@ And here's iterating backwards.
 
 ```rust,ignore
 impl<T> DoubleEndedIterator for IntoIter<T> {
-    fn next_back(&mut self) -> Option<T> {
+    fn next_back(&mut self) -> Option<Self::Item> {
         if self.start == self.end {
             None
         } else {
@@ -134,12 +133,8 @@ impl<T> Drop for IntoIter<T> {
         if self.cap != 0 {
             // drop any remaining elements
             for _ in &mut *self {}
-
-            let align = mem::align_of::<T>();
-            let elem_size = mem::size_of::<T>();
-            let num_bytes = elem_size * self.cap;
             unsafe {
-                heap::deallocate(self.buf.as_ptr() as *mut _, num_bytes, align);
+                alloc::dealloc(self.buf.as_ptr() as *mut _, alloc::Layout::new::<T>());
             }
         }
     }

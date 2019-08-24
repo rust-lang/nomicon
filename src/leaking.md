@@ -122,6 +122,7 @@ Nope.
 Let's consider a simplified implementation of Rc:
 
 ```rust,ignore
+# use std::alloc;
 struct Rc<T> {
     ptr: *mut RcBox<T>,
 }
@@ -134,8 +135,7 @@ struct RcBox<T> {
 impl<T> Rc<T> {
     fn new(data: T) -> Self {
         unsafe {
-            // Wouldn't it be nice if heap::allocate worked like this?
-            let ptr = heap::allocate::<RcBox<T>>();
+            let ptr = alloc::alloc(alloc::Layout::new::<RcBox<T>>);
             ptr::write(ptr, RcBox {
                 data: data,
                 ref_count: 1,
@@ -159,7 +159,7 @@ impl<T> Drop for Rc<T> {
             if (*self.ptr).ref_count == 0 {
                 // drop the data and then free it
                 ptr::read(self.ptr);
-                heap::deallocate(self.ptr);
+                alloc::dealloc(self.ptr, alloc::Layout::new::<RcBox<T>>);
             }
         }
     }

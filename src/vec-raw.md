@@ -18,45 +18,47 @@ struct RawVec<T> {
 impl<T> RawVec<T> {
     fn new() -> Self {
         assert!(mem::size_of::<T>() != 0, "TODO: implement ZST support");
-        RawVec { ptr: Unique::empty(), cap: 0 }
+        Self {
+            ptr: Unique::empty(),
+            cap: 0,
+        }
     }
 
     // unchanged from Vec
     fn grow(&mut self) {
+        // this is all pretty delicate, so let's say it's all unsafe
         unsafe {
-            let align = mem::align_of::<T>();
-            let elem_size = mem::size_of::<T>();
+            let layout = alloc::Layout::new::<T>();
 
             let (new_cap, ptr) = if self.cap == 0 {
-                let ptr = heap::allocate(elem_size, align);
+                let ptr = alloc::alloc(layout);
                 (1, ptr)
             } else {
-                let new_cap = 2 * self.cap;
-                let ptr = heap::reallocate(self.ptr.as_ptr() as *mut _,
-                                            self.cap * elem_size,
-                                            new_cap * elem_size,
-                                            align);
+                let new_cap = self.cap * 2;
+                let ptr = alloc::realloc(
+                    self.ptr.as_ptr() as *mut u8,
+                    layout,
+                    new_cap * mem::size_of::<T>(),
+                );
                 (new_cap, ptr)
             };
 
             // If allocate or reallocate fail, we'll get `null` back
-            if ptr.is_null() { oom() }
+            if ptr.is_null() {
+                alloc::handle_alloc_error(layout);
+            }
 
-            self.ptr = Unique::new(ptr as *mut _);
+            self.ptr = Unique::new_unchecked(ptr as *mut T);
             self.cap = new_cap;
         }
     }
 }
 
-
 impl<T> Drop for RawVec<T> {
     fn drop(&mut self) {
         if self.cap != 0 {
-            let align = mem::align_of::<T>();
-            let elem_size = mem::size_of::<T>();
-            let num_bytes = elem_size * self.cap;
             unsafe {
-                heap::deallocate(self.ptr.as_mut() as *mut _, num_bytes, align);
+                alloc::dealloc(self.ptr.as_ptr() as *mut u8, alloc::Layout::new::<T>());
             }
         }
     }
@@ -116,15 +118,20 @@ impl<T> Drop for IntoIter<T> {
 impl<T> Vec<T> {
     pub fn into_iter(self) -> IntoIter<T> {
         unsafe {
-            // need to use ptr::read to unsafely move the buf out since it's
+            // need to use `ptr::read` to unsafely move the buf out since it's
             // not Copy, and Vec implements Drop (so we can't destructure it).
             let buf = ptr::read(&self.buf);
             let len = self.len;
             mem::forget(self);
 
             IntoIter {
-                start: *buf.ptr,
-                end: buf.ptr.offset(len as isize),
+                start: buf.ptr.as_ptr(),
+                end: if buf.cap == 0 {
+                    // can't offset off this pointer, it's not allocated!
+                    buf.ptr.as_ptr()
+                } else {
+                    buf.ptr.as_ptr().offset(len as isize)
+                },
                 _buf: buf,
             }
         }

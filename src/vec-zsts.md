@@ -35,39 +35,46 @@ method of RawVec.
 ```rust,ignore
 impl<T> RawVec<T> {
     fn new() -> Self {
-        // !0 is usize::MAX. This branch should be stripped at compile time.
-        let cap = if mem::size_of::<T>() == 0 { !0 } else { 0 };
-
+        // This branch should be stripped at compile time.
+        let cap = if mem::size_of::<T>() == 0 {
+            std::usize::MAX
+        } else {
+            0
+        };
         // Unique::empty() doubles as "unallocated" and "zero-sized allocation"
-        RawVec { ptr: Unique::empty(), cap: cap }
+        Self {
+            ptr: Unique::empty(),
+            cap,
+        }
     }
 
     fn grow(&mut self) {
         unsafe {
-            let elem_size = mem::size_of::<T>();
-
-            // since we set the capacity to usize::MAX when elem_size is
+            // Since we set the capacity to `usize::MAX` for ZST is
             // 0, getting to here necessarily means the Vec is overfull.
-            assert!(elem_size != 0, "capacity overflow");
+            assert!(mem::size_of::<T>() != 0, "capacity overflow");
 
-            let align = mem::align_of::<T>();
+            let layout = alloc::Layout::new::<T>();
 
             let (new_cap, ptr) = if self.cap == 0 {
-                let ptr = heap::allocate(elem_size, align);
+                let ptr = alloc::alloc(layout);
                 (1, ptr)
             } else {
-                let new_cap = 2 * self.cap;
-                let ptr = heap::reallocate(self.ptr.as_ptr() as *mut _,
-                                            self.cap * elem_size,
-                                            new_cap * elem_size,
-                                            align);
+                let new_cap = self.cap * 2;
+                let ptr = alloc::realloc(
+                    self.ptr.as_ptr() as *mut u8,
+                    layout,
+                    new_cap * mem::size_of::<T>(),
+                );
                 (new_cap, ptr)
             };
 
             // If allocate or reallocate fail, we'll get `null` back
-            if ptr.is_null() { oom() }
+            if ptr.is_null() {
+                alloc::handle_alloc_error(layout);
+            }
 
-            self.ptr = Unique::new(ptr as *mut _);
+            self.ptr = Unique::new_unchecked(ptr as *mut T);
             self.cap = new_cap;
         }
     }
@@ -75,15 +82,10 @@ impl<T> RawVec<T> {
 
 impl<T> Drop for RawVec<T> {
     fn drop(&mut self) {
-        let elem_size = mem::size_of::<T>();
-
-        // don't free zero-sized allocations, as they were never allocated.
-        if self.cap != 0 && elem_size != 0 {
-            let align = mem::align_of::<T>();
-
-            let num_bytes = elem_size * self.cap;
+        // Do not free zero-sized allocations, as they were never allocated.
+        if self.cap != 0 && mem::size_of::<T>() != 0 {
             unsafe {
-                heap::deallocate(self.ptr.as_ptr() as *mut _, num_bytes, align);
+                alloc::dealloc(self.ptr.as_ptr() as *mut u8, alloc::Layout::new::<T>());
             }
         }
     }
@@ -106,15 +108,15 @@ increment, and then cast them back:
 ```rust,ignore
 impl<T> RawValIter<T> {
     unsafe fn new(slice: &[T]) -> Self {
-        RawValIter {
+        Self {
             start: slice.as_ptr(),
             end: if mem::size_of::<T>() == 0 {
-                ((slice.as_ptr() as usize) + slice.len()) as *const _
+                ((slice.as_ptr() as usize) + slice.len()) as *const T
             } else if slice.len() == 0 {
                 slice.as_ptr()
             } else {
                 slice.as_ptr().offset(slice.len() as isize)
-            }
+            },
         }
     }
 }
@@ -129,14 +131,14 @@ map size 0 to divide by 1.
 ```rust,ignore
 impl<T> Iterator for RawValIter<T> {
     type Item = T;
-    fn next(&mut self) -> Option<T> {
+    fn next(&mut self) -> Option<Self::Item> {
         if self.start == self.end {
             None
         } else {
             unsafe {
                 let result = ptr::read(self.start);
                 self.start = if mem::size_of::<T>() == 0 {
-                    (self.start as usize + 1) as *const _
+                    (self.start as usize + 1) as *const T
                 } else {
                     self.start.offset(1)
                 };
@@ -146,21 +148,24 @@ impl<T> Iterator for RawValIter<T> {
     }
 
     fn size_hint(&self) -> (usize, Option<usize>) {
-        let elem_size = mem::size_of::<T>();
-        let len = (self.end as usize - self.start as usize)
-                  / if elem_size == 0 { 1 } else { elem_size };
+        let elem_size = if mem::size_of::<T>() == 0 {
+            1
+        } else {
+            mem::size_of::<T>()
+        };
+        let len = (self.end as usize - self.start as usize) / elem_size;
         (len, Some(len))
     }
 }
 
 impl<T> DoubleEndedIterator for RawValIter<T> {
-    fn next_back(&mut self) -> Option<T> {
+    fn next_back(&mut self) -> Option<Self::Item> {
         if self.start == self.end {
             None
         } else {
             unsafe {
                 self.end = if mem::size_of::<T>() == 0 {
-                    (self.end as usize - 1) as *const _
+                    (self.end as usize - 1) as *const T
                 } else {
                     self.end.offset(-1)
                 };

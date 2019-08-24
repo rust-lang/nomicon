@@ -18,11 +18,13 @@ For `push`, if the old len (before push was called) is 0, then we want to write
 to the 0th index. So we should offset by the old len.
 
 ```rust,ignore
-pub fn push(&mut self, elem: T) {
-    if self.len == self.cap { self.grow(); }
+pub fn push(&mut self, elem: T) -> () {
+    if self.len == self.cap {
+        self.grow();
+    }
 
     unsafe {
-        ptr::write(self.ptr.offset(self.len as isize), elem);
+        ptr::write(self.ptr.as_ptr().offset(self.len as isize), elem);
     }
 
     // Can't fail, we'll OOM first.
@@ -47,9 +49,7 @@ pub fn pop(&mut self) -> Option<T> {
         None
     } else {
         self.len -= 1;
-        unsafe {
-            Some(ptr::read(self.ptr.offset(self.len as isize)))
-        }
+        unsafe { Some(ptr::read(self.ptr.as_ptr().offset(self.len as isize))) }
     }
 }
 ```

@@ -15,15 +15,24 @@ want to use `empty` because there's no real allocation to talk about but
 
 So:
 
-```rust,ignore
-#![feature(alloc, heap_api)]
-
+```rust
+# #![feature(ptr_internals)]
+# use std::ptr::{self, Unique};
 use std::mem;
 
+# pub struct Vec<T> {
+#     ptr: Unique<T>,
+#     cap: usize,
+#     len: usize,
+# }
 impl<T> Vec<T> {
-    fn new() -> Self {
+    pub fn new() -> Self {
         assert!(mem::size_of::<T>() != 0, "We're not ready to handle ZSTs");
-        Vec { ptr: Unique::empty(), len: 0, cap: 0 }
+        Vec {
+            ptr: Unique::empty(),
+            len: 0,
+            cap: 0,
+        }
     }
 }
 ```
@@ -37,8 +46,8 @@ that, we'll need to use the rest of the heap APIs. These basically allow us to
 talk directly to Rust's allocator (jemalloc by default).
 
 We'll also need a way to handle out-of-memory (OOM) conditions. The standard
-library calls `std::alloc::oom()`, which in turn calls the the `oom` langitem,
-which aborts the program in a platform-specific manner.
+library calls `std::alloc::handle_alloc_error()`, which in turn calls the the
+`oom` langitem, which aborts the program in a platform-specific manner.
 The reason we abort and don't panic is because unwinding can cause allocations
 to happen, and that seems like a bad thing to do when your allocator just came
 back with "hey I don't have any more memory".
@@ -157,24 +166,22 @@ such we will guard against this case explicitly.
 Ok with all the nonsense out of the way, let's actually allocate some memory:
 
 ```rust,ignore
-use std::alloc::oom;
+use std::alloc;
 
 fn grow(&mut self) {
     // this is all pretty delicate, so let's say it's all unsafe
     unsafe {
-        // current API requires us to specify size and alignment manually.
-        let align = mem::align_of::<T>();
-        let elem_size = mem::size_of::<T>();
+        let layout = alloc::Layout::new::<T>();
 
         let (new_cap, ptr) = if self.cap == 0 {
-            let ptr = heap::allocate(elem_size, align);
+            let ptr = alloc::alloc(layout);
             (1, ptr)
         } else {
             // as an invariant, we can assume that `self.cap < isize::MAX`,
             // so this doesn't need to be checked.
             let new_cap = self.cap * 2;
             // Similarly this can't overflow due to previously allocating this
-            let old_num_bytes = self.cap * elem_size;
+            let old_num_bytes = self.cap * mem::size_of::<T>();
 
             // check that the new allocation doesn't exceed `isize::MAX` at all
             // regardless of the actual size of the capacity. This combines the
@@ -182,21 +189,22 @@ fn grow(&mut self) {
             // we need to make. We lose the ability to allocate e.g. 2/3rds of
             // the address space with a single Vec of i16's on 32-bit though.
             // Alas, poor Yorick -- I knew him, Horatio.
-            assert!(old_num_bytes <= (::std::isize::MAX as usize) / 2,
-                    "capacity overflow");
+            assert!(
+                old_num_bytes <= (std::isize::MAX as usize) / 2,
+                "capacity overflow"
+            );
 
             let new_num_bytes = old_num_bytes * 2;
-            let ptr = heap::reallocate(self.ptr.as_ptr() as *mut _,
-                                        old_num_bytes,
-                                        new_num_bytes,
-                                        align);
+            let ptr = alloc::realloc(self.ptr.as_ptr() as *mut u8, layout, new_num_bytes);
             (new_cap, ptr)
         };
 
         // If allocate or reallocate fail, we'll get `null` back
-        if ptr.is_null() { oom(); }
+        if ptr.is_null() {
+            alloc::handle_alloc_error(layout);
+        }
 
-        self.ptr = Unique::new(ptr as *mut _);
+        self.ptr = Unique::new_unchecked(ptr as *mut T);
         self.cap = new_cap;
     }
 }
