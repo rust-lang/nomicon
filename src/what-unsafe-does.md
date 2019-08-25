@@ -16,8 +16,7 @@ to your program. You definitely *should not* invoke Undefined Behavior.
 Unlike C, Undefined Behavior is pretty limited in scope in Rust. All the core
 language cares about is preventing the following things:
 
-* Dereferencing (using the `*` operator on) dangling, or unaligned pointers, or
-  wide pointers with invalid metadata (see below)
+* Dereferencing (using the `*` operator on) dangling or unaligned pointers (see below)
 * Breaking the [pointer aliasing rules][]
 * Unwinding into another language
 * Causing a [data race][race]
@@ -36,6 +35,7 @@ language cares about is preventing the following things:
           `isize::MAX` bytes in memory
         * `dyn Trait` metadata is invalid if it is not a pointer to a vtable for
           `Trait` that matches the actual dynamic trait the reference points to
+    * a wide raw pointer that has invalid metadata (see above)
     * a `str` that isn't valid UTF-8
     * an integer (`i*`/`u*`), floating point value (`f*`), or raw pointer read from
       [uninitialized memory][]
