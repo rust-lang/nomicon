@@ -16,10 +16,14 @@ fn index(idx: usize, arr: &[u8]) -> Option<u8> {
 }
 ```
 
-This function is safe and correct. We check that the index is in bounds, and if it
-is, index into the array in an unchecked manner. But even in such a trivial
-function, the scope of the unsafe block is questionable. Consider changing the
-`<` to a `<=`:
+This function is safe and correct. We check that the index is in bounds, and if
+it is, index into the array in an unchecked manner. We say that such a correct
+unsafely implemented function is *sound*, meaning that safe code cannot cause
+Undefined Behavior through it (which, remember, is the single fundamental
+property of Safe Rust).
+
+But even in such a trivial function, the scope of the unsafe block is
+questionable. Consider changing the `<` to a `<=`:
 
 ```rust
 fn index(idx: usize, arr: &[u8]) -> Option<u8> {
@@ -33,10 +37,10 @@ fn index(idx: usize, arr: &[u8]) -> Option<u8> {
 }
 ```
 
-This program is now unsound, and yet *we only modified safe code*. This is the
-fundamental problem of safety: it's non-local. The soundness of our unsafe
-operations necessarily depends on the state established by otherwise
-"safe" operations.
+This program is now *unsound*, Safe Rust can cause Undefined Behavior, and yet
+*we only modified safe code*. This is the fundamental problem of safety: it's
+non-local. The soundness of our unsafe operations necessarily depends on the
+state established by otherwise "safe" operations.
 
 Safety is modular in the sense that opting into unsafety doesn't require you
 to consider arbitrary other kinds of badness. For instance, doing an unchecked
