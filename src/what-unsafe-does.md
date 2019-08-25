@@ -29,13 +29,12 @@ language cares about is preventing the following things:
     * a null `fn` pointer
     * a `char` outside the ranges [0x0, 0xD7FF] and [0xE000, 0x10FFFF]
     * a `!` (all values are invalid for this type)
-    * a reference that is dangling, unaligned, points to an invalid value, or
-      that has invalid metadata (if wide)
+    * a reference/`Box` that is dangling, unaligned, or points to an invalid value.
+    * a wide reference, `Box` or raw pointer that has invalid metadata:
         * slice metadata is invalid if the slice has a total size larger than
           `isize::MAX` bytes in memory
         * `dyn Trait` metadata is invalid if it is not a pointer to a vtable for
           `Trait` that matches the actual dynamic trait the reference points to
-    * a wide raw pointer that has invalid metadata (see above)
     * a `str` that isn't valid UTF-8
     * an integer (`i*`/`u*`), floating point value (`f*`), or raw pointer read from
       [uninitialized memory][]
