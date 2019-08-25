@@ -30,7 +30,7 @@ language cares about is preventing the following things:
     * a `char` outside the ranges [0x0, 0xD7FF] and [0xE000, 0x10FFFF]
     * a `!` (all values are invalid for this type)
     * a reference/`Box` that is dangling, unaligned, or points to an invalid value.
-    * a wide reference, `Box` or raw pointer that has invalid metadata:
+    * a wide reference, `Box`, or raw pointer that has invalid metadata:
         * slice metadata is invalid if the slice has a total size larger than
           `isize::MAX` bytes in memory
         * `dyn Trait` metadata is invalid if it is not a pointer to a vtable for
