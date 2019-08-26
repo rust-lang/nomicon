@@ -34,7 +34,7 @@ language cares about is preventing the following things:
     * a reference/`Box` that is dangling, unaligned, or points to an invalid value.
     * a wide reference, `Box`, or raw pointer that has invalid metadata:
         * `dyn Trait` metadata is invalid if it is not a pointer to a vtable for
-          `Trait` that matches the actual dynamic trait the reference points to
+          `Trait` that matches the actual dynamic trait the pointer or reference points to
         * slice metadata is invalid if the length is not a valid `usize`
           (i.e., it must not be read from uninitialized memory)
     * a `str` that isn't valid UTF-8
