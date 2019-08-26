@@ -29,15 +29,15 @@ language cares about is preventing the following things:
     * a null `fn` pointer
     * a `char` outside the ranges [0x0, 0xD7FF] and [0xE000, 0x10FFFF]
     * a `!` (all values are invalid for this type)
-    * a reference/`Box` that is dangling, unaligned, or points to an invalid value.
-    * a wide reference, `Box`, or raw pointer that has invalid metadata:
-        * slice metadata is invalid if the slice has a total size larger than
-          `isize::MAX` bytes in memory
-        * `dyn Trait` metadata is invalid if it is not a pointer to a vtable for
-          `Trait` that matches the actual dynamic trait the reference points to
-    * a `str` that isn't valid UTF-8
     * an integer (`i*`/`u*`), floating point value (`f*`), or raw pointer read from
       [uninitialized memory][]
+    * a reference/`Box` that is dangling, unaligned, or points to an invalid value.
+    * a wide reference, `Box`, or raw pointer that has invalid metadata:
+        * `dyn Trait` metadata is invalid if it is not a pointer to a vtable for
+          `Trait` that matches the actual dynamic trait the reference points to
+        * slice metadata is invalid if the length is not a valid `usize`
+          (i.e., it must not be read from uninitialized memory)
+    * a `str` that isn't valid UTF-8
     * a type with custom invalid values that is one of those values, such as a
       `NonNull` that is null. (Requesting custom invalid values is an unstable
       feature, but some stable libstd types, like `NonNull`, make use of it.)
