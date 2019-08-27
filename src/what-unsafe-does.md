@@ -18,7 +18,7 @@ language cares about is preventing the following things:
 
 * Dereferencing (using the `*` operator on) dangling or unaligned pointers (see below)
 * Breaking the [pointer aliasing rules][]
-* Calling a function with the wrong call ABI (in particular, with the wrong unwind ABI).
+* Calling a function with the wrong call ABI or wrong unwind ABI.
 * Causing a [data race][race]
 * Executing code compiled with [target features][] that the current thread of execution does
   not support
