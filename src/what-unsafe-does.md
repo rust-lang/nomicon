@@ -50,7 +50,7 @@ points to are part of the same allocation (so in particular they all have to be
 part of *some* allocation). The span of bytes it points to is determined by the
 pointer value and the size of the pointee type. As a consequence, if the span is
 empty, "dangling" is the same as "non-null". Note that slices point to their
-entire range, so it's very important that the length metadata is never too large
+entire range, so it's important that the length metadata is never too large
 (in particular, allocations and therefore slices cannot be bigger than
 `isize::MAX` bytes). If for some reason this is too cumbersome, consider using
 raw pointers.
