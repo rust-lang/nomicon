@@ -16,10 +16,9 @@ to your program. You definitely *should not* invoke Undefined Behavior.
 Unlike C, Undefined Behavior is pretty limited in scope in Rust. All the core
 language cares about is preventing the following things:
 
-* Dereferencing (using the `*` operator on) dangling, or unaligned pointers, or
-  wide pointers with invalid metadata (see below)
+* Dereferencing (using the `*` operator on) dangling or unaligned pointers (see below)
 * Breaking the [pointer aliasing rules][]
-* Unwinding into another language
+* Calling a function with the wrong call ABI or unwinding from a function with the wrong unwind ABI.
 * Causing a [data race][race]
 * Executing code compiled with [target features][] that the current thread of execution does
   not support
@@ -30,15 +29,15 @@ language cares about is preventing the following things:
     * a null `fn` pointer
     * a `char` outside the ranges [0x0, 0xD7FF] and [0xE000, 0x10FFFF]
     * a `!` (all values are invalid for this type)
-    * a reference that is dangling, unaligned, points to an invalid value, or
-      that has invalid metadata (if wide)
-        * slice metadata is invalid if the slice has a total size larger than
-          `isize::MAX` bytes in memory
-        * `dyn Trait` metadata is invalid if it is not a pointer to a vtable for
-          `Trait` that matches the actual dynamic trait the reference points to
-    * a `str` that isn't valid UTF-8
     * an integer (`i*`/`u*`), floating point value (`f*`), or raw pointer read from
       [uninitialized memory][]
+    * a reference/`Box` that is dangling, unaligned, or points to an invalid value.
+    * a wide reference, `Box`, or raw pointer that has invalid metadata:
+        * `dyn Trait` metadata is invalid if it is not a pointer to a vtable for
+          `Trait` that matches the actual dynamic trait the pointer or reference points to
+        * slice metadata is invalid if the length is not a valid `usize`
+          (i.e., it must not be read from uninitialized memory)
+    * a `str` that isn't valid UTF-8
     * a type with custom invalid values that is one of those values, such as a
       `NonNull` that is null. (Requesting custom invalid values is an unstable
       feature, but some stable libstd types, like `NonNull`, make use of it.)
@@ -51,8 +50,10 @@ points to are part of the same allocation (so in particular they all have to be
 part of *some* allocation). The span of bytes it points to is determined by the
 pointer value and the size of the pointee type. As a consequence, if the span is
 empty, "dangling" is the same as "non-null". Note that slices point to their
-entire range, so it's very important that the length metadata is never too
-large. If for some reason this is too cumbersome, consider using raw pointers.
+entire range, so it's important that the length metadata is never too large
+(in particular, allocations and therefore slices cannot be bigger than
+`isize::MAX` bytes). If for some reason this is too cumbersome, consider using
+raw pointers.
 
 That's it. That's all the causes of Undefined Behavior baked into Rust. Of
 course, unsafe functions and traits are free to declare arbitrary other
