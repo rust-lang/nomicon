@@ -116,11 +116,33 @@ However when working with uninitialized memory you need to be ever-vigilant for
 Rust trying to drop values you make like this before they're fully initialized.
 Every control path through that variable's scope must initialize the value
 before it ends, if it has a destructor.
-*[This includes code panicking](unwinding.html)*.  `MaybeUninit` helps a bit
+*[This includes code panicking](unwinding.html)*. `MaybeUninit` helps a bit
 here, because it does not implicitly drop its content - but all this really
 means in case of a panic is that instead of a double-free of the not yet
 initialized parts, you end up with a memory leak of the already initialized
 parts.
+
+Note that, to use the `ptr` methods, you need to first obtain a *raw pointer* to
+the data you want to initialize. It is illegal to construct a *reference* to
+uninitialized data, which implies that you have to be careful when obtaining
+said raw pointer:
+* For an array of `T`, you can use `base_ptr.add(idx)` where `base_ptr: *mut T`
+to compute the address of array index `idx`. This relies on
+how arrays are laid out in memory.
+* For a struct, however, in general we do not know how it is laid out, and we
+also cannot use `&mut base_ptr.field` as that would be creating a
+reference. Thus, it is currently not possible to create a raw pointer to a field
+of a partially initialized struct, and also not possible to initialize a single
+field of a partially initialized struct.  (A
+[solution to this problem](https://github.com/rust-lang/rfcs/pull/2582) is being
+worked on.)
+
+One last remark: when reading old Rust code, you might stumble upon the
+deprecated `mem::uninitialized` function.  That function used to be the only way
+to deal with uninitialized memory on the stack, but it turned out to be
+impossible to properly integrate with the rest of the language.  Always use
+`MaybeUninit` instead in new code, and port old code over when you get the
+opportunity.
 
 And that's about it for working with uninitialized memory! Basically nothing
 anywhere expects to be handed uninitialized memory, so if you're going to pass
