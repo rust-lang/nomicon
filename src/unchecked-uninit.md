@@ -110,8 +110,7 @@ arbitrary locations of memory can break things are basically uncountable!
 It's worth noting that you don't need to worry about `ptr::write`-style
 shenanigans with types which don't implement `Drop` or contain `Drop` types,
 because Rust knows not to try to drop them. This is what we relied on in the
-above example. Similarly you should be able to assign to fields of partially
-initialized structs directly if those fields don't contain any `Drop` types.
+above example.
 
 However when working with uninitialized memory you need to be ever-vigilant for
 Rust trying to drop values you make like this before they're fully initialized.
