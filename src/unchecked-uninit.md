@@ -41,7 +41,7 @@ let x = {
     unsafe { mem::transmute::<_, [Box<u32>; SIZE]>(x) }
 };
 
-println!("{:?}", x);
+dbg!(x);
 ```
 
 This code proceeds in three steps:
