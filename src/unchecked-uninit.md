@@ -152,5 +152,5 @@ it around at all, be sure to be *really* careful.
 [assume_init]: ../core/mem/union.MaybeUninit.html#method.assume_init
 [`ptr`]: ../core/ptr/index.html
 [`write`]: ../core/ptr/fn.write.html
-[`copy`]: ../core/ptr/fn.copy.html
-[`copy_nonoverlapping`]: ../core/ptr/fn.copy_nonoverlapping.html
+[`copy`]: ../std/ptr/fn.copy.html
+[`copy_nonoverlapping`]: ../std/ptr/fn.copy_nonoverlapping.html
