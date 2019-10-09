@@ -16,7 +16,7 @@ examples yourself, you’ll need to add `libc` to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-libc = "0.2.0"
+libc = "0.2"
 ```
 
 [libc]: https://crates.io/crates/libc
