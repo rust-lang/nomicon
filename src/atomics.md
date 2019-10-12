@@ -1,20 +1,23 @@
 # Atomics
 
-Rust pretty blatantly just inherits C11's memory model for atomics. This is not
+Rust pretty blatantly just inherits the memory model for atomics from C++20. This is not
 due to this model being particularly excellent or easy to understand. Indeed,
 this model is quite complex and known to have [several flaws][C11-busted].
 Rather, it is a pragmatic concession to the fact that *everyone* is pretty bad
 at modeling atomics. At very least, we can benefit from existing tooling and
-research around C.
+research around the C/C++ memory model.
+(You'll often see this model referred to as "C11" or "C/C++11". C and C++ share their
+memory model and those were the first versions but they have received some bugfixes
+since then.)
 
 Trying to fully explain the model in this book is fairly hopeless. It's defined
 in terms of madness-inducing causality graphs that require a full book to
 properly understand in a practical way. If you want all the nitty-gritty
-details, you should check out [C's specification (Section 7.17)][C11-model].
+details, you should check out the [C++20 draft specification (Section 31)][C++-model].
 Still, we'll try to cover the basics and some of the problems Rust developers
 face.
 
-The C11 memory model is fundamentally about trying to bridge the gap between the
+The C++ memory model is fundamentally about trying to bridge the gap between the
 semantics we want, the optimizations compilers want, and the inconsistent chaos
 our hardware wants. *We* would like to just write programs and have them do
 exactly what we said but, you know, fast. Wouldn't that be great?
@@ -113,7 +116,7 @@ programming:
 
 # Data Accesses
 
-The C11 memory model attempts to bridge the gap by allowing us to talk about the
+The C++ memory model attempts to bridge the gap by allowing us to talk about the
 *causality* of our program. Generally, this is by establishing a *happens
 before* relationship between parts of the program and the threads that are
 running them. This gives the hardware and compiler room to optimize the program
@@ -148,7 +151,7 @@ propagated to other threads. The set of orderings Rust exposes are:
 * Acquire
 * Relaxed
 
-(Note: We explicitly do not expose the C11 *consume* ordering)
+(Note: We explicitly do not expose the C++ *consume* ordering)
 
 TODO: negative reasoning vs positive reasoning? TODO: "can't forget to
 synchronize"
@@ -252,4 +255,4 @@ relaxed operations can be cheaper on weakly-ordered platforms.
 
 
 [C11-busted]: http://plv.mpi-sws.org/c11comp/popl15.pdf
-[C11-model]: http://www.open-std.org/jtc1/sc22/wg14/www/standards.html#9899
+[C++-model]: http://eel.is/c++draft/atomics.order
