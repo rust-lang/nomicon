@@ -6,9 +6,9 @@ this model is quite complex and known to have [several flaws][C11-busted].
 Rather, it is a pragmatic concession to the fact that *everyone* is pretty bad
 at modeling atomics. At very least, we can benefit from existing tooling and
 research around the C/C++ memory model.
-(You'll often see this model referred to as "C11" or "C/C++11". C and C++ share their
-memory model and those were the first versions but they have received some bugfixes
-since then.)
+(You'll often see this model referred to as "C/C++11" or just "C11". C just copies
+the C++ memory model; and C++11 was the first version of the model but it has
+received some bugfixes since then.)
 
 Trying to fully explain the model in this book is fairly hopeless. It's defined
 in terms of madness-inducing causality graphs that require a full book to
