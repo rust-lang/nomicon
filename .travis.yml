@@ -2,7 +2,10 @@ language: shell
 
 cache:
   directories:
-    - "$HOME/.cargo/bin"
+    - "$HOME/.cargo"
+before_cache:
+  - cargo install -Z install-upgrade cargo-cache --debug
+  - cargo cache --autoclean
 
 before_install:
   - curl -sSL https://sh.rustup.rs | sh -s -- -y --default-toolchain=nightly --profile=minimal
