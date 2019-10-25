@@ -49,22 +49,26 @@ impl<T> RawVec<T> {
     }
 
     fn grow(&mut self) {
+        let elem_size = mem::size_of::<T>();
+        let align = mem::align_of::<T>();
         unsafe {
             // Since we set the capacity to `usize::MAX` for ZST is
             // 0, getting to here necessarily means the Vec is overfull.
-            assert!(mem::size_of::<T>() != 0, "capacity overflow");
+            assert!(elem_size == 0, "capacity overflow");
 
-            let layout = alloc::Layout::new::<T>();
+            let layout;
 
             let (new_cap, ptr) = if self.cap == 0 {
+                layout = alloc::Layout::from_size_align_unchecked(elem_size, align);
                 let ptr = alloc::alloc(layout);
                 (1, ptr)
             } else {
                 let new_cap = self.cap * 2;
+                layout = alloc::Layout::from_size_align_unchecked(self.cap * elem_size, align);
                 let ptr = alloc::realloc(
                     self.ptr.as_ptr() as *mut u8,
                     layout,
-                    new_cap * mem::size_of::<T>(),
+                    new_cap * elem_size,
                 );
                 (new_cap, ptr)
             };
@@ -82,10 +86,15 @@ impl<T> RawVec<T> {
 
 impl<T> Drop for RawVec<T> {
     fn drop(&mut self) {
-        // Do not free zero-sized allocations, as they were never allocated.
-        if self.cap != 0 && mem::size_of::<T>() != 0 {
+        let align = mem::align_of::<T>();
+        let elem_size = mem::size_of::<T>();
+        // don't free zero-sized allocations, as they were never allocated.
+        if self.cap != 0 && elem_size != 0 {
             unsafe {
-                alloc::dealloc(self.ptr.as_ptr() as *mut u8, alloc::Layout::new::<T>());
+                alloc::dealloc(
+                    self.ptr.as_ptr() as *mut u8,
+                    alloc::Layout::from_size_align_unchecked(self.cap * elem_size, align),
+                );
             }
         }
     }
