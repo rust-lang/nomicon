@@ -1,0 +1,14 @@
+[book]
+title = "The Rustonomicon"
+author = "The Rust Project Developers"
+description = "The Dark Arts of Advanced and Unsafe Rust Programming"
+
+[build]
+build-dir = "book"
+create-missing = false
+
+[output.html]
+git-repository-url = "https://github.com/rust-lang-nursery/nomicon"
+
+[output.html.search]
+limit-results = 30
