@@ -166,14 +166,21 @@ such we will guard against this case explicitly.
 Ok with all the nonsense out of the way, let's actually allocate some memory:
 
 ```rust,ignore
-use std::alloc;
+use std::alloc::{self, Layout};
 
 fn grow(&mut self) {
     // this is all pretty delicate, so let's say it's all unsafe
     unsafe {
-        let layout = alloc::Layout::new::<T>();
+        let align = mem::align_of::<T>();
+        let elem_size = mem::size_of::<T>();
+
+        let layout;
 
         let (new_cap, ptr) = if self.cap == 0 {
+            let layout = Layout::from_size_align_unchecked(
+                elem_size,
+                align,
+            );
             let ptr = alloc::alloc(layout);
             (1, ptr)
         } else {
@@ -181,7 +188,7 @@ fn grow(&mut self) {
             // so this doesn't need to be checked.
             let new_cap = self.cap * 2;
             // Similarly this can't overflow due to previously allocating this
-            let old_num_bytes = self.cap * mem::size_of::<T>();
+            let old_num_bytes = self.cap * elem_size;
 
             // check that the new allocation doesn't exceed `isize::MAX` at all
             // regardless of the actual size of the capacity. This combines the
@@ -195,6 +202,10 @@ fn grow(&mut self) {
             );
 
             let new_num_bytes = old_num_bytes * 2;
+            layout = Layout::from_size_align_unchecked(
+                new_cap * elem_size,
+                align,
+            );
             let ptr = alloc::realloc(self.ptr.as_ptr() as *mut u8, layout, new_num_bytes);
             (new_cap, ptr)
         };
