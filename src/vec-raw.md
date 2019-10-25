@@ -58,7 +58,14 @@ impl<T> Drop for RawVec<T> {
     fn drop(&mut self) {
         if self.cap != 0 {
             unsafe {
-                alloc::dealloc(self.ptr.as_ptr() as *mut u8, alloc::Layout::new::<T>());
+                let align = mem::align_of::<T>();
+                let elem_size = mem::size_of::<T>();
+                let num_bytes = elem_size * self.cap;
+
+                alloc::dealloc(
+                    self.buf.as_ptr() as *mut u8,
+                    alloc::Layout::from_size_align_unchecked(num_bytes, align),
+                );
             }
         }
     }
