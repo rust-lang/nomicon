@@ -133,8 +133,16 @@ impl<T> Drop for IntoIter<T> {
         if self.cap != 0 {
             // drop any remaining elements
             for _ in &mut *self {}
+
+            let align = mem::align_of::<T>();
+            let elem_size = mem::size_of::<T>();
+            let num_bytes = elem_size * self.cap;
+
             unsafe {
-                alloc::dealloc(self.buf.as_ptr() as *mut _, alloc::Layout::new::<T>());
+                alloc::dealloc(
+                    self.buf.as_ptr() as *mut _,
+                    alloc::Layout::from_size_align_unchecked(num_bytes, align),
+                );
             }
         }
     }
