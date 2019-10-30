@@ -23,7 +23,7 @@ infinitesimal fragments of despair.
 
 Building the Nomicon requires [mdBook]. To get it:
 
-[mdBook]: https://github.com/rust-lang-nursery/mdBook
+[mdBook]: https://github.com/rust-lang/mdBook
 
 ```bash
 $ cargo install mdbook
