@@ -31,7 +31,7 @@ panics can only be caught by the parent thread. This means catching a panic
 requires spinning up an entire OS thread! This unfortunately stands in conflict
 to Rust's philosophy of zero-cost abstractions.
 
-There is an unstable API called `catch_panic` that enables catching a panic
+There is an API called `catch_panic` that enables catching a panic
 without spawning a thread. Still, we would encourage you to only do this
 sparingly. In particular, Rust's current unwinding implementation is heavily
 optimized for the "doesn't unwind" case. If a program doesn't unwind, there
