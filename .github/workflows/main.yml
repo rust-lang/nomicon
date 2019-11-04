@@ -12,8 +12,8 @@ jobs:
     - name: Install Rust
       run: |
         rustup set profile minimal
-        rustup toolchain install nightly -c rust-docs
-        rustup default nightly 
+        rustup toolchain install nightly
+        rustup default nightly
     - name: Install mdbook
       run: |
         mkdir bin
