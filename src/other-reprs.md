@@ -1,7 +1,7 @@
 # Alternative representations
 
 Rust allows you to specify alternative data layout strategies from the default.
-There's also the [reference].
+There's also the [unsafe code guidelines] (note that it's **NOT** normative).
 
 
 
@@ -143,7 +143,7 @@ This is a modifier on `repr(C)` and `repr(rust)`. It is incompatible with
 
 
 
-[reference]: https://github.com/rust-rfcs/unsafe-code-guidelines/tree/master/reference/src/representation.md
+[unsafe code guidelines]: https://rust-lang.github.io/unsafe-code-guidelines/layout.html
 [drop flags]: drop-flags.html
 [ub loads]: https://github.com/rust-lang/rust/issues/27060
 [`UnsafeCell`]: ../std/cell/struct.UnsafeCell.html
