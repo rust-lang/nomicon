@@ -96,9 +96,7 @@ Here’s a table of all the wonderful ways `PhantomData` could be used:
 | `PhantomData<&'a mut T>`    | variant   | invariant                 |
 | `PhantomData<*const T>`     | -         | variant                   |
 | `PhantomData<*mut T>`       | -         | invariant                 |
-| `PhantomData<fn(T)>`        | -         | contravariant (*)         |
+| `PhantomData<fn(T)>`        | -         | contravariant             |
 | `PhantomData<fn() -> T>`    | -         | variant                   |
 | `PhantomData<fn(T) -> T>`   | -         | invariant                 |
 | `PhantomData<Cell<&'a ()>>` | invariant | -                         |
-
-(*) If contravariance gets scrapped, this would be invariant.
