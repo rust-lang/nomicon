@@ -39,7 +39,7 @@ language cares about is preventing the following things:
           (i.e., it must not be read from uninitialized memory)
     * a `str` that isn't valid UTF-8
     * a type with custom invalid values that is one of those values, such as a
-      `NonNull` that is null. (Requesting custom invalid values is an unstable
+      [`NonNull`] that is null. (Requesting custom invalid values is an unstable
       feature, but some stable libstd types, like `NonNull`, make use of it.)
 
 "Producing" a value happens any time a value is assigned, passed to a
@@ -85,3 +85,4 @@ these problems are considered impractical to categorically prevent.
 [uninitialized memory]: uninitialized.html
 [race]: races.html
 [target features]: ../reference/attributes/codegen.html#the-target_feature-attribute
+[`NonNull`]: ../std/ptr/struct.NonNull.html
