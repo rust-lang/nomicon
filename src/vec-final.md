@@ -1,15 +1,14 @@
 # The Final Code
 
 ```rust
-#![feature(ptr_internals)]
-#![feature(allocator_api)]
-#![feature(alloc_layout_extra)]
+#![feature(ptr_internals)] // std::ptr::Unique
+#![feature(alloc_internals)] // std::alloc::*
 
-use std::ptr::{Unique, NonNull, self};
 use std::mem;
 use std::ops::{Deref, DerefMut};
+use std::alloc::{alloc, realloc, Layout, dealloc, rust_oom};
 use std::marker::PhantomData;
-use std::alloc::{Alloc, GlobalAlloc, Layout, Global, handle_alloc_error};
+use std::ptr::{self, Unique};
 
 struct RawVec<T> {
     ptr: Unique<T>,
@@ -18,11 +17,9 @@ struct RawVec<T> {
 
 impl<T> RawVec<T> {
     fn new() -> Self {
-        // !0 is usize::MAX. This branch should be stripped at compile time.
-        let cap = if mem::size_of::<T>() == 0 { !0 } else { 0 };
-
+        let cap = if mem::size_of::<T>() == 0 { ::std::usize::MAX } else { 0 };
         // Unique::empty() doubles as "unallocated" and "zero-sized allocation"
-        RawVec { ptr: Unique::empty(), cap: cap }
+        RawVec { ptr: Unique::empty(), cap, }
     }
 
     fn grow(&mut self) {
@@ -33,28 +30,34 @@ impl<T> RawVec<T> {
             // 0, getting to here necessarily means the Vec is overfull.
             assert!(elem_size != 0, "capacity overflow");
 
+            let align = mem::align_of::<T>();
+
             let (new_cap, ptr) = if self.cap == 0 {
-                let ptr = Global.alloc(Layout::array::<T>(1).unwrap());
+                let layout = Layout::from_size_align_unchecked(elem_size, align);
+                let ptr = alloc(layout);
                 (1, ptr)
             } else {
-                let new_cap = 2 * self.cap;
-                let c: NonNull<T> = self.ptr.into();
-                let ptr = Global.realloc(c.cast(),
-                                         Layout::array::<T>(self.cap).unwrap(),
-                                         Layout::array::<T>(new_cap).unwrap().size());
+                let new_cap = self.cap * 2;
+                let old_num_bytes = self.cap * elem_size;
+                assert!(
+                    old_num_bytes <= (::std::isize::MAX as usize) / 2,
+                    "Capacity overflow!"
+                );
+                let num_new_bytes = old_num_bytes * 2;
+                let layout = Layout::from_size_align_unchecked(old_num_bytes, align);
+                let ptr = realloc(self.ptr.as_ptr() as *mut _, layout, num_new_bytes);
                 (new_cap, ptr)
             };
 
-            // If allocate or reallocate fail, oom
-            if ptr.is_err() {
-                handle_alloc_error(Layout::from_size_align_unchecked(
+            // If allocate or reallocate fail, we'll get `null` back
+            if ptr.is_null() {
+                rust_oom(Layout::from_size_align_unchecked(
                     new_cap * elem_size,
-                    mem::align_of::<T>(),
-                ))
+                    align,
+                ));
             }
-            let ptr = ptr.unwrap();
 
-            self.ptr = Unique::new_unchecked(ptr.as_ptr() as *mut _);
+            self.ptr = Unique::new(ptr as *mut _).unwrap();
             self.cap = new_cap;
         }
     }
@@ -62,38 +65,47 @@ impl<T> RawVec<T> {
 
 impl<T> Drop for RawVec<T> {
     fn drop(&mut self) {
-        let elem_size = mem::size_of::<T>();
-        if self.cap != 0 && elem_size != 0 {
-            unsafe {
-                let c: NonNull<T> = self.ptr.into();
-                Global.dealloc(c.cast(),
-                               Layout::array::<T>(self.cap).unwrap());
+        if self.cap != 0 {
+            let elem_size = mem::size_of::<T>();
+
+            // don't free zero-sized allocations, as they were never allocated.
+            if self.cap != 0 && elem_size != 0 {
+                let align = mem::align_of::<T>();
+                let num_bytes = elem_size * self.cap;
+                unsafe {
+                    let layout = Layout::from_size_align_unchecked(num_bytes, align);
+                    dealloc(self.ptr.as_ptr() as *mut _, layout);
+                }
             }
         }
     }
 }
 
-pub struct Vec<T> {
+
+
+pub struct NomVec<T> {
     buf: RawVec<T>,
     len: usize,
 }
 
-impl<T> Vec<T> {
-    fn ptr(&self) -> *mut T { self.buf.ptr.as_ptr() }
+impl<T> NomVec<T> {
+    fn ptr(&self) -> *mut T {
+        self.buf.ptr.as_ptr()
+    }
 
-    fn cap(&self) -> usize { self.buf.cap }
+    fn cap(&self) -> usize {
+        self.buf.cap
+    }
 
     pub fn new() -> Self {
-        Vec { buf: RawVec::new(), len: 0 }
+        Self { buf: RawVec::new(), len: 0, }
     }
+
     pub fn push(&mut self, elem: T) {
         if self.len == self.cap() { self.buf.grow(); }
-
         unsafe {
             ptr::write(self.ptr().offset(self.len as isize), elem);
         }
-
-        // Can't fail, we'll OOM first.
         self.len += 1;
     }
 
@@ -108,15 +120,21 @@ impl<T> Vec<T> {
         }
     }
 
+    pub fn len(&self) -> usize {
+        self.len
+    }
+
     pub fn insert(&mut self, index: usize, elem: T) {
+        // Note: `<=` because it's valid to insert after everything
+        // which would be equivalent to push.
         assert!(index <= self.len, "index out of bounds");
         if self.cap() == self.len { self.buf.grow(); }
-
         unsafe {
             if index < self.len {
                 ptr::copy(self.ptr().offset(index as isize),
                           self.ptr().offset(index as isize + 1),
-                          self.len - index);
+                          self.len - index
+                );
             }
             ptr::write(self.ptr().offset(index as isize), elem);
             self.len += 1;
@@ -135,44 +153,38 @@ impl<T> Vec<T> {
         }
     }
 
-    pub fn into_iter(self) -> IntoIter<T> {
+    #[allow(dead_code)]
+    fn into_iter(self) -> IntoIter<T> {
         unsafe {
+            // need to use ptr::read to unsafely move the buf out since it's
+            // not Copy, and Vec implements Drop (so we can't destructure it).
             let iter = RawValIter::new(&self);
             let buf = ptr::read(&self.buf);
             mem::forget(self);
-
-            IntoIter {
-                iter: iter,
-                _buf: buf,
-            }
+            IntoIter { iter, _buf: buf, }
         }
     }
 
     pub fn drain(&mut self) -> Drain<T> {
         unsafe {
             let iter = RawValIter::new(&self);
-
             // this is a mem::forget safety thing. If Drain is forgotten, we just
             // leak the whole Vec's contents. Also we need to do this *eventually*
             // anyway, so why not do it now?
             self.len = 0;
-
-            Drain {
-                iter: iter,
-                vec: PhantomData,
-            }
+            Drain { iter, vec: PhantomData, }
         }
     }
 }
 
-impl<T> Drop for Vec<T> {
+impl<T> Drop for NomVec<T> {
     fn drop(&mut self) {
+        // deallocation is handled by RawVec
         while let Some(_) = self.pop() {}
-        // allocation is handled by RawVec
     }
 }
 
-impl<T> Deref for Vec<T> {
+impl<T> Deref for NomVec<T> {
     type Target = [T];
     fn deref(&self) -> &[T] {
         unsafe {
@@ -181,7 +193,7 @@ impl<T> Deref for Vec<T> {
     }
 }
 
-impl<T> DerefMut for Vec<T> {
+impl<T> DerefMut for NomVec<T> {
     fn deref_mut(&mut self) -> &mut [T] {
         unsafe {
             ::std::slice::from_raw_parts_mut(self.ptr(), self.len)
@@ -191,6 +203,30 @@ impl<T> DerefMut for Vec<T> {
 
 
 
+struct IntoIter<T> {
+    _buf: RawVec<T>,
+    iter: RawValIter<T>,
+}
+
+impl<T> Iterator for IntoIter<T> {
+    type Item = T;
+    fn next(&mut self) -> Option<T> { self.iter.next() }
+
+    fn size_hint(&self) -> (usize, Option<usize>) { self.iter.size_hint() }
+}
+
+impl<T> DoubleEndedIterator for IntoIter<T> {
+    fn next_back(&mut self) -> Option<T> { self.iter.next_back() }
+}
+
+impl<T> Drop for IntoIter<T> {
+    fn drop(&mut self) {
+        // only need to ensure all our elements are read;
+        // buffer will clean itself up afterwards.
+        for _ in &mut self.iter {}
+    }
+}
+
 
 
 struct RawValIter<T> {
@@ -199,12 +235,17 @@ struct RawValIter<T> {
 }
 
 impl<T> RawValIter<T> {
+    // unsafe to construct because it has no associated lifetimes.
+    // This is necessary to store a RawValIter in the same struct as
+    // its actual allocation. OK since it's a private implementation
+    // detail.
     unsafe fn new(slice: &[T]) -> Self {
         RawValIter {
             start: slice.as_ptr(),
-            end: if mem::size_of::<T>() == 0 {
-                ((slice.as_ptr() as usize) + slice.len()) as *const _
-            } else if slice.len() == 0 {
+            end: if slice.len() == 0 {
+                // if `len = 0`, then this is not actually allocated memory.
+                // Need to avoid offsetting because that will give wrong
+                // information to LLVM via GEP.
                 slice.as_ptr()
             } else {
                 slice.as_ptr().offset(slice.len() as isize)
@@ -232,9 +273,7 @@ impl<T> Iterator for RawValIter<T> {
     }
 
     fn size_hint(&self) -> (usize, Option<usize>) {
-        let elem_size = mem::size_of::<T>();
-        let len = (self.end as usize - self.start as usize)
-                  / if elem_size == 0 { 1 } else { elem_size };
+        let len = (self.end as usize - self.start as usize) / mem::size_of::<T>();
         (len, Some(len))
     }
 }
@@ -245,11 +284,7 @@ impl<T> DoubleEndedIterator for RawValIter<T> {
             None
         } else {
             unsafe {
-                self.end = if mem::size_of::<T>() == 0 {
-                    (self.end as usize - 1) as *const _
-                } else {
-                    self.end.offset(-1)
-                };
+                self.end = self.end.offset(-1);
                 Some(ptr::read(self.end))
             }
         }
@@ -258,33 +293,11 @@ impl<T> DoubleEndedIterator for RawValIter<T> {
 
 
 
-
-pub struct IntoIter<T> {
-    _buf: RawVec<T>, // we don't actually care about this. Just need it to live.
-    iter: RawValIter<T>,
-}
-
-impl<T> Iterator for IntoIter<T> {
-    type Item = T;
-    fn next(&mut self) -> Option<T> { self.iter.next() }
-    fn size_hint(&self) -> (usize, Option<usize>) { self.iter.size_hint() }
-}
-
-impl<T> DoubleEndedIterator for IntoIter<T> {
-    fn next_back(&mut self) -> Option<T> { self.iter.next_back() }
-}
-
-impl<T> Drop for IntoIter<T> {
-    fn drop(&mut self) {
-        for _ in &mut *self {}
-    }
-}
-
-
-
-
 pub struct Drain<'a, T: 'a> {
-    vec: PhantomData<&'a mut Vec<T>>,
+    // Need to bound the lifetime here, so we do it with `&'a mut Vec<T>`
+    // because that's semantically what we contain. We're "just" calling
+    // `pop()` and `remove(0)`.
+    vec: PhantomData<&'a mut NomVec<T>>,
     iter: RawValIter<T>,
 }
 
@@ -300,8 +313,113 @@ impl<'a, T> DoubleEndedIterator for Drain<'a, T> {
 
 impl<'a, T> Drop for Drain<'a, T> {
     fn drop(&mut self) {
-        // pre-drain the iter
         for _ in &mut self.iter {}
+    }
+}
+
+
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn vec_push() {
+        let mut cv = NomVec::new();
+        cv.push(2);
+        assert_eq!(cv.len(), 1);
+        cv.push(3);
+        assert_eq!(cv.len(), 2);
+    }
+
+    #[test]
+    fn vec_iter() {
+        let mut cv = NomVec::new();
+        cv.push(2);
+        cv.push(3);
+        let mut accum = 0;
+        for x in cv.iter() {
+            accum += x;
+        }
+        assert_eq!(accum, 5);
+    }
+
+    #[test]
+    fn vec_into_iter() {
+        let mut cv = NomVec::new();
+        cv.push(2);
+        cv.push(3);
+        assert_eq!(cv.into_iter().collect::<Vec<i32>>(), vec![2, 3]);
+    }
+
+    #[test]
+    fn vec_into_double_ended_iter() {
+        let mut cv = NomVec::new();
+        cv.push(2);
+        cv.push(3);
+        assert_eq!(*cv.iter().next_back().unwrap(), 3);
+    }
+
+    #[test]
+    fn vec_pop() {
+        let mut cv = NomVec::new();
+        cv.push(2);
+        assert_eq!(cv.len(), 1);
+        cv.pop();
+        assert_eq!(cv.len(), 0);
+        assert!(cv.pop() == None);
+    }
+
+    #[test]
+    fn vec_insert() {
+        let mut cv: NomVec<i32> = NomVec::new();
+        cv.insert(0, 2); // test insert at end
+        cv.insert(0, 1); // test insert at beginning
+        assert_eq!(cv.pop().unwrap(), 2);
+    }
+
+    #[test]
+    fn vec_remove() {
+        let mut cv = NomVec::new();
+        cv.push(2);
+        assert_eq!(cv.remove(0), 2);
+        assert_eq!(cv.len(), 0);
+    }
+
+    #[test]
+    #[should_panic(expected = "index out of bounds")]
+    fn vec_cant_remove() {
+        let mut cv: NomVec<i32> = NomVec::new();
+        cv.remove(0);
+    }
+
+    #[test]
+    fn vec_drain() {
+        let mut cv = NomVec::new();
+        cv.push(1);
+        cv.push(2);
+        cv.push(3);
+        assert_eq!(cv.len(), 3);
+        {
+            let mut drain = cv.drain();
+            assert_eq!(drain.next().unwrap(), 1);
+            assert_eq!(drain.next_back().unwrap(), 3);
+        }
+        assert_eq!(cv.len(), 0);
+    }
+
+    #[derive(PartialEq, Debug)]
+    struct ZST;
+
+    #[test]
+    fn vec_zst() {
+        let mut cv = NomVec::new();
+        cv.push(ZST {});
+        cv.push(ZST {});
+        assert_eq!(cv.len(), 2);
+        assert_eq!(cv.pop().unwrap(), ZST {});
+        assert_eq!(cv.pop().unwrap(), ZST {});
+        assert_eq!(cv.pop(), None);
     }
 }
 
@@ -316,7 +434,7 @@ impl<'a, T> Drop for Drain<'a, T> {
 # mod tests {
 #     use super::*;
 #     pub fn create_push_pop() {
-#         let mut v = Vec::new();
+#         let mut v = NomVec::new();
 #         v.push(1);
 #         assert_eq!(1, v.len());
 #         assert_eq!(1, v[0]);
@@ -334,7 +452,7 @@ impl<'a, T> Drop for Drain<'a, T> {
 #     }
 #
 #     pub fn iter_test() {
-#         let mut v = Vec::new();
+#         let mut v = NomVec::new();
 #         for i in 0..10 {
 #             v.push(Box::new(i))
 #         }
@@ -347,7 +465,7 @@ impl<'a, T> Drop for Drain<'a, T> {
 #     }
 #
 #     pub fn test_drain() {
-#         let mut v = Vec::new();
+#         let mut v = NomVec::new();
 #         for i in 0..10 {
 #             v.push(Box::new(i))
 #         }
@@ -364,7 +482,7 @@ impl<'a, T> Drop for Drain<'a, T> {
 #     }
 #
 #     pub fn test_zst() {
-#         let mut v = Vec::new();
+#         let mut v = NomVec::new();
 #         for _i in 0..10 {
 #             v.push(())
 #         }

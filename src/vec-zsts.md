@@ -35,13 +35,12 @@ method of RawVec.
 ```rust,ignore
 impl<T> RawVec<T> {
     fn new() -> Self {
-        // !0 is usize::MAX. This branch should be stripped at compile time.
-        let cap = if mem::size_of::<T>() == 0 { !0 } else { 0 };
-
+        let cap = if mem::size_of::<T>() == 0 { ::std::usize::MAX } else { 0 };
         // Unique::empty() doubles as "unallocated" and "zero-sized allocation"
-        RawVec { ptr: Unique::empty(), cap: cap }
+        RawVec { ptr: Unique::empty(), cap, }
     }
 
+    // unchanged from Vec
     fn grow(&mut self) {
         unsafe {
             let elem_size = mem::size_of::<T>();
@@ -53,21 +52,31 @@ impl<T> RawVec<T> {
             let align = mem::align_of::<T>();
 
             let (new_cap, ptr) = if self.cap == 0 {
-                let ptr = heap::allocate(elem_size, align);
+                let layout = Layout::from_size_align_unchecked(elem_size, align);
+                let ptr = alloc(layout);
                 (1, ptr)
             } else {
-                let new_cap = 2 * self.cap;
-                let ptr = heap::reallocate(self.ptr.as_ptr() as *mut _,
-                                            self.cap * elem_size,
-                                            new_cap * elem_size,
-                                            align);
+                let new_cap = self.cap * 2;
+                let old_num_bytes = self.cap * elem_size;
+                assert!(
+                    old_num_bytes <= (::std::isize::MAX as usize) / 2,
+                    "Capacity overflow!"
+                );
+                let num_new_bytes = old_num_bytes * 2;
+                let layout = Layout::from_size_align_unchecked(old_num_bytes, align);
+                let ptr = realloc(self.ptr.as_ptr() as *mut _, layout, num_new_bytes);
                 (new_cap, ptr)
             };
 
             // If allocate or reallocate fail, we'll get `null` back
-            if ptr.is_null() { oom() }
+            if ptr.is_null() {
+                rust_oom(Layout::from_size_align_unchecked(
+                    new_cap * elem_size,
+                    align,
+                ));
+            }
 
-            self.ptr = Unique::new(ptr as *mut _);
+            self.ptr = Unique::new(ptr as *mut _).unwrap();
             self.cap = new_cap;
         }
     }
@@ -75,15 +84,17 @@ impl<T> RawVec<T> {
 
 impl<T> Drop for RawVec<T> {
     fn drop(&mut self) {
-        let elem_size = mem::size_of::<T>();
+        if self.cap != 0 {
+            let elem_size = mem::size_of::<T>();
 
-        // don't free zero-sized allocations, as they were never allocated.
-        if self.cap != 0 && elem_size != 0 {
-            let align = mem::align_of::<T>();
-
-            let num_bytes = elem_size * self.cap;
-            unsafe {
-                heap::deallocate(self.ptr.as_ptr() as *mut _, num_bytes, align);
+            // don't free zero-sized allocations, as they were never allocated.
+            if self.cap != 0 && elem_size != 0 {
+                let align = mem::align_of::<T>();
+                let num_bytes = elem_size * self.cap;
+                unsafe {
+                    let layout = Layout::from_size_align_unchecked(num_bytes, align);
+                    dealloc(self.ptr.as_ptr() as *mut _, layout);
+                }
             }
         }
     }
