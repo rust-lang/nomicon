@@ -28,21 +28,31 @@ impl<T> RawVec<T> {
             let elem_size = mem::size_of::<T>();
 
             let (new_cap, ptr) = if self.cap == 0 {
-                let ptr = heap::allocate(elem_size, align);
+                let layout = Layout::from_size_align_unchecked(elem_size, align);
+                let ptr = alloc(layout);
                 (1, ptr)
             } else {
-                let new_cap = 2 * self.cap;
-                let ptr = heap::reallocate(self.ptr.as_ptr() as *mut _,
-                                            self.cap * elem_size,
-                                            new_cap * elem_size,
-                                            align);
+                let new_cap = self.cap * 2;
+                let old_num_bytes = self.cap * elem_size;
+                assert!(
+                    old_num_bytes <= (::std::isize::MAX as usize) / 2,
+                    "Capacity overflow!"
+                );
+                let num_new_bytes = old_num_bytes * 2;
+                let layout = Layout::from_size_align_unchecked(old_num_bytes, align);
+                let ptr = realloc(self.ptr.as_ptr() as *mut _, layout, num_new_bytes);
                 (new_cap, ptr)
             };
 
             // If allocate or reallocate fail, we'll get `null` back
-            if ptr.is_null() { oom() }
+            if ptr.is_null() {
+                rust_oom(Layout::from_size_align_unchecked(
+                    new_cap * elem_size,
+                    align,
+                ));
+            }
 
-            self.ptr = Unique::new(ptr as *mut _);
+            self.ptr = Unique::new(ptr as *mut _).unwrap();
             self.cap = new_cap;
         }
     }
@@ -56,7 +66,8 @@ impl<T> Drop for RawVec<T> {
             let elem_size = mem::size_of::<T>();
             let num_bytes = elem_size * self.cap;
             unsafe {
-                heap::deallocate(self.ptr.as_mut() as *mut _, num_bytes, align);
+                let layout = Layout::from_size_align_unchecked(num_bytes, align);
+                dealloc(self.ptr.as_ptr() as *mut _, layout);
             }
         }
     }
@@ -81,7 +92,7 @@ impl<T> Vec<T> {
     }
 
     // push/pop/insert/remove largely unchanged:
-    // * `self.ptr -> self.ptr()`
+    // * `self.ptr.as_ptr() -> self.ptr()`
     // * `self.cap -> self.cap()`
     // * `self.grow -> self.buf.grow()`
 }
@@ -123,8 +134,8 @@ impl<T> Vec<T> {
             mem::forget(self);
 
             IntoIter {
-                start: *buf.ptr,
-                end: buf.ptr.offset(len as isize),
+                start: buf.ptr.as_ptr(),
+                end: buf.ptr.as_ptr().offset(len as isize),
                 _buf: buf,
             }
         }

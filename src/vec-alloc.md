@@ -157,7 +157,7 @@ such we will guard against this case explicitly.
 Ok with all the nonsense out of the way, let's actually allocate some memory:
 
 ```rust,ignore
-use std::alloc::oom;
+use std::alloc::{alloc, realloc, Layout, rust_oom};
 
 fn grow(&mut self) {
     // this is all pretty delicate, so let's say it's all unsafe
@@ -167,7 +167,8 @@ fn grow(&mut self) {
         let elem_size = mem::size_of::<T>();
 
         let (new_cap, ptr) = if self.cap == 0 {
-            let ptr = heap::allocate(elem_size, align);
+            let layout = Layout::from_size_align_unchecked(elem_size, align);
+            let ptr = alloc(layout);
             (1, ptr)
         } else {
             // as an invariant, we can assume that `self.cap < isize::MAX`,
@@ -186,17 +187,17 @@ fn grow(&mut self) {
                     "capacity overflow");
 
             let new_num_bytes = old_num_bytes * 2;
-            let ptr = heap::reallocate(self.ptr.as_ptr() as *mut _,
-                                        old_num_bytes,
-                                        new_num_bytes,
-                                        align);
+            let layout = Layout::from_size_align_unchecked(old_num_bytes, align);
+            let ptr = realloc(self.ptr.as_ptr() as *mut _, layout, num_new_bytes);
             (new_cap, ptr)
         };
 
         // If allocate or reallocate fail, we'll get `null` back
-        if ptr.is_null() { oom(); }
+        if ptr.is_null() {
+            rust_oom(Layout::from_size_align_unchecked(new_cap * elem_size, align));
+        }
 
-        self.ptr = Unique::new(ptr as *mut _);
+        self.ptr = Unique::new(ptr as *mut _).unwrap();
         self.cap = new_cap;
     }
 }

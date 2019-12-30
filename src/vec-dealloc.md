@@ -12,6 +12,8 @@ haven't actually allocated any memory.
 
 
 ```rust,ignore
+use std::alloc::dealloc;
+
 impl<T> Drop for Vec<T> {
     fn drop(&mut self) {
         if self.cap != 0 {
@@ -21,7 +23,8 @@ impl<T> Drop for Vec<T> {
             let elem_size = mem::size_of::<T>();
             let num_bytes = elem_size * self.cap;
             unsafe {
-                heap::deallocate(self.ptr.as_ptr() as *mut _, num_bytes, align);
+                let layout = Layout::from_size_align_unchecked(num_bytes, align);
+                dealloc(self.ptr.as_ptr() as *mut _, layout);
             }
         }
     }

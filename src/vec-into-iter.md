@@ -73,7 +73,7 @@ impl<T> Vec<T> {
                     // can't offset off this pointer, it's not allocated!
                     *ptr
                 } else {
-                    ptr.offset(len as isize)
+                    ptr.as_ptr().offset(len as isize)
                 }
             }
         }
@@ -139,7 +139,8 @@ impl<T> Drop for IntoIter<T> {
             let elem_size = mem::size_of::<T>();
             let num_bytes = elem_size * self.cap;
             unsafe {
-                heap::deallocate(self.buf.as_ptr() as *mut _, num_bytes, align);
+                let layout = Layout::from_size_align_unchecked(num_bytes, align);
+                dealloc(self.buf.as_ptr() as *mut _, layout);
             }
         }
     }
