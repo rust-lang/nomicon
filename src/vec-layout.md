@@ -69,6 +69,8 @@ Unfortunately the mechanism for stating that your value is non-zero is
 unstable and unlikely to be stabilized soon. As such we're just going to
 take the hit and use std's Unique:
 
+*Note: using `#![feature(_)]` requires you use the nightly rust channel. You can enable this via `$ rustup override set nightly` in your project or via [other precedence overrides](https://github.com/rust-lang/rustup#override-precedence).*
+
 
 ```rust
 #![feature(ptr_internals)]
