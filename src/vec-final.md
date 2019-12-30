@@ -22,6 +22,7 @@ impl<T> RawVec<T> {
         RawVec { ptr: Unique::empty(), cap, }
     }
 
+    // unchanged from Vec
     fn grow(&mut self) {
         unsafe {
             let elem_size = mem::size_of::<T>();
@@ -153,18 +154,6 @@ impl<T> NomVec<T> {
         }
     }
 
-    #[allow(dead_code)]
-    fn into_iter(self) -> IntoIter<T> {
-        unsafe {
-            // need to use ptr::read to unsafely move the buf out since it's
-            // not Copy, and Vec implements Drop (so we can't destructure it).
-            let iter = RawValIter::new(&self);
-            let buf = ptr::read(&self.buf);
-            mem::forget(self);
-            IntoIter { iter, _buf: buf, }
-        }
-    }
-
     pub fn drain(&mut self) -> Drain<T> {
         unsafe {
             let iter = RawValIter::new(&self);
@@ -201,9 +190,24 @@ impl<T> DerefMut for NomVec<T> {
     }
 }
 
+impl<T> IntoIterator for NomVec<T> {
+    type Item = T;
+    type IntoIter = IntoIter<T>;
+
+    fn into_iter(self) -> IntoIter<T> {
+        unsafe {
+            // need to use ptr::read to unsafely move the buf out since it's
+            // not Copy, and Vec implements Drop (so we can't destructure it).
+            let iter = RawValIter::new(&self);
+            let buf = ptr::read(&self.buf);
+            mem::forget(self);
+            IntoIter { iter, _buf: buf, }
+        }
+    }
+}
 
 
-struct IntoIter<T> {
+pub struct IntoIter<T> {
     _buf: RawVec<T>,
     iter: RawValIter<T>,
 }
@@ -242,7 +246,9 @@ impl<T> RawValIter<T> {
     unsafe fn new(slice: &[T]) -> Self {
         RawValIter {
             start: slice.as_ptr(),
-            end: if slice.len() == 0 {
+            end: if mem::size_of::<T>() == 0 {
+                ((slice.as_ptr() as usize) + slice.len()) as *const _
+            } else if slice.len() == 0 {
                 // if `len = 0`, then this is not actually allocated memory.
                 // Need to avoid offsetting because that will give wrong
                 // information to LLVM via GEP.
@@ -408,20 +414,22 @@ mod tests {
         assert_eq!(cv.len(), 0);
     }
 
-    #[derive(PartialEq, Debug)]
-    struct ZST;
-
     #[test]
     fn vec_zst() {
-        let mut cv = NomVec::new();
-        cv.push(ZST {});
-        cv.push(ZST {});
-        assert_eq!(cv.len(), 2);
-        assert_eq!(cv.pop().unwrap(), ZST {});
-        assert_eq!(cv.pop().unwrap(), ZST {});
-        assert_eq!(cv.pop(), None);
+        let mut v = NomVec::new();
+        for _i in 0..10 {
+            v.push(());
+        }
+        assert_eq!(v.len(), 10);
+
+        let mut count = 0;
+        for _ in v.into_iter() {
+            count += 1
+        }
+        assert_eq!(10, count);
     }
 }
+
 
 # fn main() {
 #     tests::create_push_pop();
