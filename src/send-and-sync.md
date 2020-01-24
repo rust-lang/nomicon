@@ -6,7 +6,7 @@ synchronization to manage this access, they are absolutely not thread-safe. Rust
 captures this through the `Send` and `Sync` traits.
 
 * A type is Send if it is safe to send it to another thread.
-* A type is Sync if it is safe to share between threads (`&T` is Send).
+* A type is Sync if it is safe to share between threads (`&T` is Sync).
 
 Send and Sync are fundamental to Rust's concurrency story. As such, a
 substantial amount of special tooling exists to make them work right. First and
