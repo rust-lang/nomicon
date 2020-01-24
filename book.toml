@@ -1,0 +1,7 @@
+[book]
+author = "The Rust Project Developers"
+title = "The Rustonomicon"
+description = "The Dark Arts of Advanced and Unsafe Rust Programming"
+
+[output.html]
+git-repository-url = "https://github.com/rust-lang/nomicon"
