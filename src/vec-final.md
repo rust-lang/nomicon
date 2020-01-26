@@ -9,7 +9,7 @@ use std::ptr::{Unique, NonNull, self};
 use std::mem;
 use std::ops::{Deref, DerefMut};
 use std::marker::PhantomData;
-use std::alloc::{Alloc, GlobalAlloc, Layout, Global, handle_alloc_error};
+use std::alloc::{AllocRef, GlobalAlloc, Layout, Global, handle_alloc_error};
 
 struct RawVec<T> {
     ptr: Unique<T>,
