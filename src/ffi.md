@@ -648,7 +648,7 @@ fn main() {
 And the code on the C side looks like this:
 
 ```c
-void register(void (*f)(void (*)(int), int)) {
+void register(void (*f)(int (*)(int), int)) {
     ...
 }
 ```
