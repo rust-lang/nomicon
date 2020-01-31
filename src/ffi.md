@@ -662,13 +662,13 @@ fairly easy, but requires a few things:
 
 ```rust
 #[no_mangle]
-pub extern fn hello_rust() -> *const u8 {
+pub extern "C" fn hello_rust() -> *const u8 {
     "Hello, world!\0".as_ptr()
 }
 # fn main() {}
 ```
 
-The `extern` makes this function adhere to the C calling convention, as
+The `extern "C"` makes this function adhere to the C calling convention, as
 discussed above in "[Foreign Calling
 Conventions](ffi.html#foreign-calling-conventions)". The `no_mangle`
 attribute turns off Rust's name mangling, so that it is easier to link to.
