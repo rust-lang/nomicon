@@ -37,7 +37,7 @@ that, we'll need to use the rest of the heap APIs. These basically allow us to
 talk directly to Rust's allocator (jemalloc by default).
 
 We'll also need a way to handle out-of-memory (OOM) conditions. The standard
-library calls `std::alloc::oom()`, which in turn calls the the `oom` langitem,
+library calls `std::alloc::oom()`, which in turn calls the `oom` langitem,
 which aborts the program in a platform-specific manner.
 The reason we abort and don't panic is because unwinding can cause allocations
 to happen, and that seems like a bad thing to do when your allocator just came
