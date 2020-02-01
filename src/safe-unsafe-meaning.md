@@ -56,7 +56,7 @@ implementations have generally been rigorously manually checked, so the Safe Rus
 interfaces built on top of these implementations can be assumed to be safe.
 
 The need for all of this separation boils down a single fundamental property
-of Safe Rust:
+of Safe Rust, the *soundness property*:
 
 **No matter what, Safe Rust can't cause Undefined Behavior.**
 
