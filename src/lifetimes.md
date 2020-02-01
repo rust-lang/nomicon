@@ -261,6 +261,8 @@ data.push(4);
 // Here, the destructor is run and therefore this'll fail to compile.
 ```
 
+One way to convince the compiler that `x` is no longer valid is by using `drop(x)` before `data.push(4)`.
+
 Furthermore, there might be multiple possible last uses of the borrow, for
 example in each branch of a condition.
 
