@@ -183,8 +183,8 @@ to trying to explain:
 The types with \*'s are the ones we will be focusing on, as they are in
 some sense "fundamental". All the others can be understood by analogy to the others:
 
-* Vec and all other owning pointers and collections follow the same logic as Box
-* Cell and all other interior mutability types follow the same logic as UnsafeCell
+* `Vec` and all other owning pointers and collections follow the same logic as `Box`
+* `Cell` and all other interior mutability types follow the same logic as `UnsafeCell`
 * `*const` follows the logic of `&T`
 * `*mut` follows the logic of `&mut T` (or `UnsafeCell<T>`)
 
