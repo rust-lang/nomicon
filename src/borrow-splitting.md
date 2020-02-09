@@ -66,13 +66,15 @@ the implementation requires some unsafety:
 # impl<T> FakeSlice<T> {
 # fn len(&self) -> usize { unimplemented!() }
 # fn as_mut_ptr(&mut self) -> *mut T { unimplemented!() }
-fn split_at_mut(&mut self, mid: usize) -> (&mut [T], &mut [T]) {
+pub fn split_at_mut(&mut self, mid: usize) -> (&mut [T], &mut [T]) {
     let len = self.len();
     let ptr = self.as_mut_ptr();
-    assert!(mid <= len);
+
     unsafe {
+        assert!(mid <= len);
+
         (from_raw_parts_mut(ptr, mid),
-         from_raw_parts_mut(ptr.offset(mid as isize), len - mid))
+         from_raw_parts_mut(ptr.add(mid), len - mid))
     }
 }
 # }
