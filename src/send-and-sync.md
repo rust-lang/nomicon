@@ -54,7 +54,7 @@ In the *incredibly rare* case that a type is inappropriately automatically
 derived to be Send or Sync, then one can also unimplement Send and Sync:
 
 ```rust
-#![feature(optin_builtin_traits)]
+#![feature(negative_impls)]
 
 // I have some magic semantics for some synchronization primitive!
 struct SpecialThreadToken(u8);
