@@ -9,7 +9,7 @@ use std::ptr::{Unique, NonNull, self};
 use std::mem;
 use std::ops::{Deref, DerefMut};
 use std::marker::PhantomData;
-use std::alloc::{AllocRef, GlobalAlloc, Layout, Global, handle_alloc_error};
+use std::alloc::{AllocInit, AllocRef, GlobalAlloc, Layout, Global, handle_alloc_error};
 
 struct RawVec<T> {
     ptr: Unique<T>,
@@ -34,7 +34,7 @@ impl<T> RawVec<T> {
             assert!(elem_size != 0, "capacity overflow");
 
             let (new_cap, ptr) = if self.cap == 0 {
-                let ptr = Global.alloc(Layout::array::<T>(1).unwrap());
+                let ptr = Global.alloc(Layout::array::<T>(1).unwrap(), AllocInit::Uninitialized);
                 (1, ptr)
             } else {
                 let new_cap = 2 * self.cap;
