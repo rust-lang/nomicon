@@ -182,7 +182,7 @@ fn grow(&mut self) {
             // we need to make. We lose the ability to allocate e.g. 2/3rds of
             // the address space with a single Vec of i16's on 32-bit though.
             // Alas, poor Yorick -- I knew him, Horatio.
-            assert!(old_num_bytes <= (::std::isize::MAX as usize) / 2,
+            assert!(old_num_bytes <= (isize::MAX as usize) / 2,
                     "capacity overflow");
 
             let new_num_bytes = old_num_bytes * 2;
