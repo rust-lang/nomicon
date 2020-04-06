@@ -9,7 +9,15 @@ use std::ptr::{Unique, NonNull, self};
 use std::mem;
 use std::ops::{Deref, DerefMut};
 use std::marker::PhantomData;
-use std::alloc::{AllocInit, AllocRef, GlobalAlloc, Layout, Global, handle_alloc_error};
+use std::alloc::{
+    AllocInit,
+    AllocRef,
+    Global,
+    GlobalAlloc,
+    Layout,
+    ReallocPlacement,
+    handle_alloc_error
+};
 
 struct RawVec<T> {
     ptr: Unique<T>,
@@ -39,9 +47,11 @@ impl<T> RawVec<T> {
             } else {
                 let new_cap = 2 * self.cap;
                 let c: NonNull<T> = self.ptr.into();
-                let ptr = Global.realloc(c.cast(),
-                                         Layout::array::<T>(self.cap).unwrap(),
-                                         Layout::array::<T>(new_cap).unwrap().size());
+                let ptr = Global.grow(c.cast(),
+                                      Layout::array::<T>(self.cap).unwrap(),
+                                      Layout::array::<T>(new_cap).unwrap().size(),
+                                      ReallocPlacement::MayMove,
+                                      AllocInit::Uninitialized);
                 (new_cap, ptr)
             };
 
@@ -52,7 +62,7 @@ impl<T> RawVec<T> {
                     mem::align_of::<T>(),
                 ))
             }
-            let (ptr, _) = ptr.unwrap();
+            let ptr = ptr.unwrap().ptr;
 
             self.ptr = Unique::new_unchecked(ptr.as_ptr() as *mut _);
             self.cap = new_cap;
