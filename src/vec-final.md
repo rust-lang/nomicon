@@ -186,7 +186,7 @@ impl<T> Deref for Vec<T> {
     type Target = [T];
     fn deref(&self) -> &[T] {
         unsafe {
-            ::std::slice::from_raw_parts(self.ptr(), self.len)
+            std::slice::from_raw_parts(self.ptr(), self.len)
         }
     }
 }
@@ -194,7 +194,7 @@ impl<T> Deref for Vec<T> {
 impl<T> DerefMut for Vec<T> {
     fn deref_mut(&mut self) -> &mut [T] {
         unsafe {
-            ::std::slice::from_raw_parts_mut(self.ptr(), self.len)
+            std::slice::from_raw_parts_mut(self.ptr(), self.len)
         }
     }
 }
