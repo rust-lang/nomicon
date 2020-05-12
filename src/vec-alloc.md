@@ -9,8 +9,8 @@ This is perfectly fine because we already have `cap == 0` as our sentinel for no
 allocation. We don't even need to handle it specially in almost any code because
 we usually need to check if `cap > len` or `len > 0` anyway. The recommended
 Rust value to put here is `mem::align_of::<T>()`. Unique provides a convenience
-for this: `Unique::empty()`. There are quite a few places where we'll
-want to use `empty` because there's no real allocation to talk about but
+for this: `Unique::dangling()`. There are quite a few places where we'll
+want to use `dangling` because there's no real allocation to talk about but
 `null` would make the compiler do bad things.
 
 So:
@@ -23,7 +23,7 @@ use std::mem;
 impl<T> Vec<T> {
     fn new() -> Self {
         assert!(mem::size_of::<T>() != 0, "We're not ready to handle ZSTs");
-        Vec { ptr: Unique::empty(), len: 0, cap: 0 }
+        Vec { ptr: Unique::dangling(), len: 0, cap: 0 }
     }
 }
 ```
