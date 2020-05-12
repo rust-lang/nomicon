@@ -29,8 +29,8 @@ impl<T> RawVec<T> {
         // !0 is usize::MAX. This branch should be stripped at compile time.
         let cap = if mem::size_of::<T>() == 0 { !0 } else { 0 };
 
-        // Unique::empty() doubles as "unallocated" and "zero-sized allocation"
-        RawVec { ptr: Unique::empty(), cap: cap }
+        // Unique::dangling() doubles as "unallocated" and "zero-sized allocation"
+        RawVec { ptr: Unique::dangling(), cap: cap }
     }
 
     fn grow(&mut self) {

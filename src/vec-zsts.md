@@ -19,7 +19,7 @@ RawValIter and RawVec respectively. How mysteriously convenient.
 ## Allocating Zero-Sized Types
 
 So if the allocator API doesn't support zero-sized allocations, what on earth
-do we store as our allocation? `Unique::empty()` of course! Almost every operation
+do we store as our allocation? `Unique::dangling()` of course! Almost every operation
 with a ZST is a no-op since ZSTs have exactly one value, and therefore no state needs
 to be considered to store or load them. This actually extends to `ptr::read` and
 `ptr::write`: they won't actually look at the pointer at all. As such we never need
@@ -38,8 +38,8 @@ impl<T> RawVec<T> {
         // !0 is usize::MAX. This branch should be stripped at compile time.
         let cap = if mem::size_of::<T>() == 0 { !0 } else { 0 };
 
-        // Unique::empty() doubles as "unallocated" and "zero-sized allocation"
-        RawVec { ptr: Unique::empty(), cap: cap }
+        // Unique::dangling() doubles as "unallocated" and "zero-sized allocation"
+        RawVec { ptr: Unique::dangling(), cap: cap }
     }
 
     fn grow(&mut self) {
