@@ -37,7 +37,6 @@ language cares about is preventing the following things:
           `Trait` that matches the actual dynamic trait the pointer or reference points to
         * slice metadata is invalid if the length is not a valid `usize`
           (i.e., it must not be read from uninitialized memory)
-    * a `str` that isn't valid UTF-8
     * a type with custom invalid values that is one of those values, such as a
       `NonNull` that is null. (Requesting custom invalid values is an unstable
       feature, but some stable libstd types, like `NonNull`, make use of it.)
