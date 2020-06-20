@@ -34,8 +34,8 @@ with the main definitions.
 A very simple example of an unconst operation is
 
 ```rust
-static S:i32 = 0;
-const BAD:bool = (&S as *const i32 as usize) % 16 == 0;
+static S: i32 = 0;
+const BAD: bool = (&S as *const i32 as usize) % 16 == 0;
 ```
 
 The modulo operation here is not supported by the miri engine because evaluating
