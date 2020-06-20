@@ -53,7 +53,7 @@ itself, but then executing `%` on this *pointer value* is unsupported.
 However, it does not seem appropriate to blame the `%` operation above for this
 failure. `%` on "normal" `usize` values (`Scalar::Bits`) is perfectly fine, just using it on
 values computed from pointers is an issue.  Essentially, `&i32 as *const i32 as
-usize` is a "safe" `usize` at run-time (meaning that applying safe operations to
+usize` computes a "safe" `usize` at run-time (meaning that applying safe operations to
 this `usize` cannot lead to misbehavior, following terminology [suggested here])
 -- but the same value is *not* "safe" at compile-time, because we can cause a
 const safety violation by applying a safe operation (namely, `%`).
