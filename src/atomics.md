@@ -199,9 +199,10 @@ reordered to occur before it.
 
 When thread A releases a location in memory and then thread B subsequently
 acquires *the same* location in memory, causality is established. Every write
-that happened before A's release will be observed by B after its acquisition.
-However no causality is established with any other threads. Similarly, no
-causality is established if A and B access *different* locations in memory.
+(including non-atomic and relaxed atomic writes) that happened before A's
+release will be observed by B after its acquisition. However no causality is 
+established with any other threads. Similarly, no causality is established 
+if A and B access *different* locations in memory.
 
 Basic use of release-acquire is therefore simple: you acquire a location of
 memory to begin the critical section, and then release that location to end it.
