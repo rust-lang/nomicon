@@ -91,12 +91,12 @@ Here’s a table of all the wonderful ways `PhantomData` could be used:
 
 | Phantom type                | `'a`      | `T`                       |
 |-----------------------------|-----------|---------------------------|
-| `PhantomData<T>`            | -         | variant (with drop check) |
-| `PhantomData<&'a T>`        | variant   | variant                   |
-| `PhantomData<&'a mut T>`    | variant   | invariant                 |
-| `PhantomData<*const T>`     | -         | variant                   |
+| `PhantomData<T>`            | -         | covariant (with drop check) |
+| `PhantomData<&'a T>`        | covariant | covariant                 |
+| `PhantomData<&'a mut T>`    | covariant | invariant                 |
+| `PhantomData<*const T>`     | -         | covariant                 |
 | `PhantomData<*mut T>`       | -         | invariant                 |
 | `PhantomData<fn(T)>`        | -         | contravariant             |
-| `PhantomData<fn() -> T>`    | -         | variant                   |
+| `PhantomData<fn() -> T>`    | -         | covariant                 |
 | `PhantomData<fn(T) -> T>`   | -         | invariant                 |
 | `PhantomData<Cell<&'a ()>>` | invariant | -                         |
