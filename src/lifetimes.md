@@ -213,7 +213,7 @@ understand `Vec` at all. What it *does* see is that `x` has to live for `'b` to
 be printed. The signature of `Index::index` subsequently demands that the
 reference we take to `data` has to survive for `'b`. When we try to call `push`,
 it then sees us try to make an `&'c mut data`. Rust knows that `'c` is contained
-within `'b`, and rejects our program because the `&'b data` must still be live!
+within `'b`, and rejects our program because the `&'b data` must still be alive!
 
 Here we see that the lifetime system is much more coarse than the reference
 semantics we're actually interested in preserving. For the most part, *that's
