@@ -51,16 +51,14 @@ For numeric casts, there are quite a few cases to consider:
 * casting from a smaller integer to a larger integer (e.g. u8 -> u32) will
     * zero-extend if the source is unsigned
     * sign-extend if the source is signed
-* casting from a float to an integer will round the float towards zero
-    * **[NOTE: currently this will cause Undefined Behavior if the rounded
-      value cannot be represented by the target integer type][float-int]**.
-      This includes Inf and NaN. This is a bug and will be fixed.
+* casting from a float to an integer will round the float towards zero and
+  produces a "saturating cast" when the float is outside the integer's range
+    * floats that are too big turn into the largest possible integer
+    * floats that are too small produce the smallest possible integer
+    * NaN produces zero
 * casting from an integer to float will produce the floating point
   representation of the integer, rounded if necessary (rounding to
   nearest, ties to even)
 * casting from an f32 to an f64 is perfect and lossless
 * casting from an f64 to an f32 will produce the closest possible value
   (rounding to nearest, ties to even)
-
-
-[float-int]: https://github.com/rust-lang/rust/issues/10184
