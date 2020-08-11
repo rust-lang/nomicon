@@ -52,9 +52,6 @@ For numeric casts, there are quite a few cases to consider:
     * zero-extend if the source is unsigned
     * sign-extend if the source is signed
 * casting from a float to an integer will round the float towards zero
-    * **[NOTE: currently this will cause Undefined Behavior if the rounded
-      value cannot be represented by the target integer type][float-int]**.
-      This includes Inf and NaN. This is a bug and will be fixed.
 * casting from an integer to float will produce the floating point
   representation of the integer, rounded if necessary (rounding to
   nearest, ties to even)
