@@ -58,7 +58,7 @@ impl<T> RawVec<T> {
                     mem::align_of::<T>(),
                 ))
             }
-            let ptr = ptr.unwrap().ptr;
+            let ptr = ptr.unwrap();
 
             self.ptr = Unique::new_unchecked(ptr.as_ptr() as *mut _);
             self.cap = new_cap;
