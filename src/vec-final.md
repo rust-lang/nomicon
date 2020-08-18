@@ -10,12 +10,10 @@ use std::mem;
 use std::ops::{Deref, DerefMut};
 use std::marker::PhantomData;
 use std::alloc::{
-    AllocInit,
     AllocRef,
     Global,
     GlobalAlloc,
     Layout,
-    ReallocPlacement,
     handle_alloc_error
 };
 
@@ -42,16 +40,14 @@ impl<T> RawVec<T> {
             assert!(elem_size != 0, "capacity overflow");
 
             let (new_cap, ptr) = if self.cap == 0 {
-                let ptr = Global.alloc(Layout::array::<T>(1).unwrap(), AllocInit::Uninitialized);
+                let ptr = Global.alloc(Layout::array::<T>(1).unwrap());
                 (1, ptr)
             } else {
                 let new_cap = 2 * self.cap;
                 let c: NonNull<T> = self.ptr.into();
                 let ptr = Global.grow(c.cast(),
                                       Layout::array::<T>(self.cap).unwrap(),
-                                      Layout::array::<T>(new_cap).unwrap().size(),
-                                      ReallocPlacement::MayMove,
-                                      AllocInit::Uninitialized);
+                                      Layout::array::<T>(new_cap).unwrap().size());
                 (new_cap, ptr)
             };
 
