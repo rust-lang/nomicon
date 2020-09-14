@@ -47,7 +47,7 @@ impl<T> RawVec<T> {
                 let c: NonNull<T> = self.ptr.into();
                 let ptr = Global.grow(c.cast(),
                                       Layout::array::<T>(self.cap).unwrap(),
-                                      Layout::array::<T>(new_cap).unwrap().size());
+                                      Layout::array::<T>(new_cap).unwrap());
                 (new_cap, ptr)
             };
 
