@@ -3,8 +3,8 @@
 Safe Rust guarantees an absence of data races, which are defined as:
 
 * two or more threads concurrently accessing a location of memory
-* one of them is a write
-* one of them is unsynchronized
+* one or more of them is a write
+* one or more of them is unsynchronized
 
 A data race has Undefined Behavior, and is therefore impossible to perform
 in Safe Rust. Data races are *mostly* prevented through Rust's ownership system:
