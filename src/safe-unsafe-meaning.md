@@ -24,19 +24,19 @@ maintains the contracts the trait requires.
 
 You can use `unsafe` on a block to declare that all unsafe actions performed
 within are verified to uphold the contracts of those operations. For instance,
-the index passed to `slice::get_unchecked` is in-bounds.
+the index passed to [`slice::get_unchecked`][get_unchecked] is in-bounds.
 
 You can use `unsafe` on a trait implementation to declare that the implementation
-upholds the trait's contract. For instance, that a type implementing `Send` is
+upholds the trait's contract. For instance, that a type implementing [`Send`] is
 really safe to move to another thread.
 
 The standard library has a number of unsafe functions, including:
 
-* `slice::get_unchecked`, which performs unchecked indexing, allowing
-  memory safety to be freely violated.
-* `mem::transmute` reinterprets some value as having a given type, bypassing
-  type safety in arbitrary ways (see [conversions] for details).
-* Every raw pointer to a sized type has an `offset` method that
+* [`slice::get_unchecked`][get_unchecked], which performs unchecked indexing,
+  allowing memory safety to be freely violated.
+* [`mem::transmute`][transmute] reinterprets some value as having a given type,
+  bypassing type safety in arbitrary ways (see [conversions] for details).
+* Every raw pointer to a sized type has an [`offset`][ptr_offset] method that
   invokes Undefined Behavior if the passed offset is not ["in bounds"][ptr_offset].
 * All FFI (Foreign Function Interface) functions are `unsafe` to call because the
   other language can do arbitrary operations that the Rust compiler can't check.
@@ -65,11 +65,11 @@ relationship between Safe and Unsafe Rust. Safe Rust inherently has to
 trust that any Unsafe Rust it touches has been written correctly.
 On the other hand, Unsafe Rust has to be very careful about trusting Safe Rust.
 
-As an example, Rust has the `PartialOrd` and `Ord` traits to differentiate
+As an example, Rust has the [`PartialOrd`] and [`Ord`] traits to differentiate
 between types which can "just" be compared, and those that provide a "total"
 ordering (which basically means that comparison behaves reasonably).
 
-`BTreeMap` doesn't really make sense for partially-ordered types, and so it
+[`BTreeMap`] doesn't really make sense for partially-ordered types, and so it
 requires that its keys implement `Ord`. However, `BTreeMap` has Unsafe Rust code
 inside of its implementation. Because it would be unacceptable for a sloppy `Ord`
 implementation (which is Safe to write) to cause Undefined Behavior, the Unsafe
@@ -156,4 +156,8 @@ of the sort of care that must be taken, and what contracts Unsafe Rust must upho
 [`GlobalAlloc`]: ../std/alloc/trait.GlobalAlloc.html
 [conversions]: conversions.html
 [ptr_offset]: ../std/primitive.pointer.html#method.offset
-
+[get_unchecked]: ../std/primitive.slice.html#method.get_unchecked
+[transmute]: ../std/mem/fn.transmute.html
+[`PartialOrd`]: ../std/cmp/trait.PartialOrd.html
+[`Ord`]: ../std/cmp/trait.Ord.html
+[`BTreeMap`]: ../std/collections/struct.BTreeMap.html

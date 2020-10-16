@@ -20,7 +20,7 @@ information that "completes" them (more on this below).
 There are two major DSTs exposed by the language:
 
 * trait objects: `dyn MyTrait`
-* slices: `[T]`, `str`, and others
+* slices: [`[T]`], [`str`], and others
 
 A trait object represents some type that implements the traits it specifies.
 The exact original type is *erased* in favor of runtime reflection
@@ -194,3 +194,5 @@ should behave.
 
 [dst-issue]: https://github.com/rust-lang/rust/issues/26403
 [extern-types]: https://github.com/rust-lang/rfcs/blob/master/text/1861-extern-types.md
+[`str`]: ../std/primitive.str.html
+[`[T]`]: ../std/primitive.slice.html
