@@ -7,6 +7,8 @@ The only things that are different in Unsafe Rust are that you can:
 * Implement `unsafe` traits
 * Mutate statics
 * Access fields of `union`s
+* Cast raw pointers to integers within const contexts
+* Compare raw pointers within const contexts
 
 That's it. The reason these operations are relegated to Unsafe is that misusing
 any of these things will cause the ever dreaded Undefined Behavior. Invoking
@@ -18,6 +20,7 @@ language cares about is preventing the following things:
 
 * Dereferencing (using the `*` operator on) dangling or unaligned pointers (see below)
 * Breaking the [pointer aliasing rules][]
+* Violating the [const safety][] rules
 * Calling a function with the wrong call ABI or unwinding from a function with the wrong unwind ABI.
 * Causing a [data race][race]
 * Executing code compiled with [target features][] that the current thread of execution does
@@ -84,3 +87,4 @@ these problems are considered impractical to categorically prevent.
 [uninitialized memory]: uninitialized.html
 [race]: races.html
 [target features]: ../reference/attributes/codegen.html#the-target_feature-attribute
+[const safety rules]: const-safety.html
