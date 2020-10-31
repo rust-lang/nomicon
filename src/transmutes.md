@@ -15,20 +15,24 @@ boggling.
   is going to cause arbitrary chaos that can't really be predicted. Do not
   transmute `3` to `bool`. Even if you never *do* anything with the `bool`. Just
   don't.
+
 * Transmute has an overloaded return type. If you do not specify the return type
   it may produce a surprising type to satisfy inference.
-* Transmuting an & to &mut is UB.
-    * Transmuting an & to &mut is *always* UB.
+
+* Transmuting an `&` to `&mut` is UB.
+    * Transmuting an `&` to `&mut` is *always* UB.
     * No you can't do it.
     * No you're not special.
+
 * Transmuting to a reference without an explicitly provided lifetime
-  produces an [unbounded lifetime]
+  produces an [unbounded lifetime].
+
 * When transmuting between different compound types, you have to make sure they
   are laid out the same way! If layouts differ, the wrong fields are going to
   get filled with the wrong data, which will make you unhappy and can also be UB
   (see above).
 
-    So how do you know if the layouts are the same? For `repr(C)` types and
+  So how do you know if the layouts are the same? For `repr(C)` types and
   `repr(transparent)` types, layout is precisely defined. But for your
   run-of-the-mill `repr(Rust)`, it is not. Even different instances of the same
   generic type can have wildly different layout. `Vec<i32>` and `Vec<u32>`
@@ -47,7 +51,7 @@ pointer casts or `union`s, but without any of the lints or other basic sanity
 checks. Raw pointer casts and `union`s do not magically avoid the above rules.
 
 
-[unbounded lifetime]: unbounded-lifetimes.html
+[unbounded lifetime]: ./unbounded-lifetimes.md
 [transmute]: ../std/mem/fn.transmute.html
 [transmute_copy]: ../std/mem/fn.transmute_copy.html
 [ucg-layout]: https://rust-lang.github.io/unsafe-code-guidelines/layout.html
