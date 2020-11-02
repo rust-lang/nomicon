@@ -122,7 +122,7 @@ compiler will be able to emit code to avoid an unaligned load.
 `repr(packed)` is not to be used lightly. Unless you have extreme requirements,
 this should not be used.
 
-This repr is a modifier on `repr(C)` and `repr(rust)`.
+This repr is a modifier on `repr(C)` and `repr(Rust)`.
 
 
 
@@ -136,7 +136,7 @@ This enables several tricks, like making sure neighboring elements of an array
 never share the same cache line with each other (which may speed up certain
 kinds of concurrent code).
 
-This is a modifier on `repr(C)` and `repr(rust)`. It is incompatible with
+This is a modifier on `repr(C)` and `repr(Rust)`. It is incompatible with
 `repr(packed)`.
 
 
