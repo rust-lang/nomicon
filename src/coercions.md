@@ -18,6 +18,9 @@ Coercion is allowed between the following types:
     * `&mut T` to `*mut T`
 * Unsizing: `T` to `U` if `T` implements `CoerceUnsized<U>`
 * Deref coercion: Expression `&x` of type `&T` to `&*x` of type `&U` if `T` derefs to `U` (i.e. `T: Deref<Target=U>`)
+* Non-capturing closure to a function pointer ([RFC 1558], e.g. `|| 8usize` to `fn() -> usize`)
+
+[RFC 1558]: https://rust-lang.github.io/rfcs/1558-closure-to-fn-coercion.html
 
 `CoerceUnsized<Pointer<U>> for Pointer<T> where T: Unsize<U>` is implemented
 for all pointer types (including smart pointers like Box and Rc). Unsize is
