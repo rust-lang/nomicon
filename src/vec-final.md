@@ -10,7 +10,7 @@ use std::mem;
 use std::ops::{Deref, DerefMut};
 use std::marker::PhantomData;
 use std::alloc::{
-    AllocRef,
+    Allocator,
     Global,
     GlobalAlloc,
     Layout,
@@ -40,7 +40,7 @@ impl<T> RawVec<T> {
             assert!(elem_size != 0, "capacity overflow");
 
             let (new_cap, ptr) = if self.cap == 0 {
-                let ptr = Global.alloc(Layout::array::<T>(1).unwrap());
+                let ptr = Global.allocate(Layout::array::<T>(1).unwrap());
                 (1, ptr)
             } else {
                 let new_cap = 2 * self.cap;
@@ -72,7 +72,7 @@ impl<T> Drop for RawVec<T> {
         if self.cap != 0 && elem_size != 0 {
             unsafe {
                 let c: NonNull<T> = self.ptr.into();
-                Global.dealloc(c.cast(),
+                Global.deallocate(c.cast(),
                                Layout::array::<T>(self.cap).unwrap());
             }
         }

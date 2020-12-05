@@ -28,7 +28,7 @@ For instance, a custom implementation of `Box` might write `Drop` like this:
 ```rust
 #![feature(ptr_internals, allocator_api)]
 
-use std::alloc::{AllocRef, Global, GlobalAlloc, Layout};
+use std::alloc::{Allocator, Global, GlobalAlloc, Layout};
 use std::mem;
 use std::ptr::{drop_in_place, NonNull, Unique};
 
@@ -39,7 +39,7 @@ impl<T> Drop for Box<T> {
         unsafe {
             drop_in_place(self.ptr.as_ptr());
             let c: NonNull<T> = self.ptr.into();
-            Global.dealloc(c.cast(), Layout::new::<T>())
+            Global.deallocate(c.cast(), Layout::new::<T>())
         }
     }
 }
@@ -55,7 +55,7 @@ However this wouldn't work:
 ```rust
 #![feature(allocator_api, ptr_internals)]
 
-use std::alloc::{AllocRef, Global, GlobalAlloc, Layout};
+use std::alloc::{Allocator, Global, GlobalAlloc, Layout};
 use std::ptr::{drop_in_place, Unique, NonNull};
 use std::mem;
 
@@ -66,7 +66,7 @@ impl<T> Drop for Box<T> {
         unsafe {
             drop_in_place(self.ptr.as_ptr());
             let c: NonNull<T> = self.ptr.into();
-            Global.dealloc(c.cast(), Layout::new::<T>());
+            Global.deallocate(c.cast(), Layout::new::<T>());
         }
     }
 }
@@ -79,7 +79,7 @@ impl<T> Drop for SuperBox<T> {
             // Hyper-optimized: deallocate the box's contents for it
             // without `drop`ing the contents
             let c: NonNull<T> = self.my_box.ptr.into();
-            Global.dealloc(c.cast::<u8>(), Layout::new::<T>());
+            Global.deallocate(c.cast::<u8>(), Layout::new::<T>());
         }
     }
 }
@@ -128,7 +128,7 @@ of Self during `drop` is to use an Option:
 ```rust
 #![feature(allocator_api, ptr_internals)]
 
-use std::alloc::{AllocRef, GlobalAlloc, Global, Layout};
+use std::alloc::{Allocator, GlobalAlloc, Global, Layout};
 use std::ptr::{drop_in_place, Unique, NonNull};
 use std::mem;
 
@@ -139,7 +139,7 @@ impl<T> Drop for Box<T> {
         unsafe {
             drop_in_place(self.ptr.as_ptr());
             let c: NonNull<T> = self.ptr.into();
-            Global.dealloc(c.cast(), Layout::new::<T>());
+            Global.deallocate(c.cast(), Layout::new::<T>());
         }
     }
 }
@@ -154,7 +154,7 @@ impl<T> Drop for SuperBox<T> {
             // field as `None` to prevent Rust from trying to Drop it.
             let my_box = self.my_box.take().unwrap();
             let c: NonNull<T> = my_box.ptr.into();
-            Global.dealloc(c.cast(), Layout::new::<T>());
+            Global.deallocate(c.cast(), Layout::new::<T>());
             mem::forget(my_box);
         }
     }
