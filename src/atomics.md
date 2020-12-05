@@ -71,7 +71,7 @@ cache.
 After all, that's the whole point of the cache, right? If every read from the
 cache had to run back to shared memory to double check that it hadn't changed,
 what would the point be? The end result is that the hardware doesn't guarantee
-that events that occur in the same order on *one* thread, occur in the same
+that events that occur in some order on *one* thread, occur in the same
 order on *another* thread. To guarantee this, we must issue special instructions
 to the CPU telling it to be a bit less smart.
 
