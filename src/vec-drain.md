@@ -26,7 +26,7 @@ impl<'a, T> Iterator for Drain<'a, T> {
 -- wait, this is seeming familiar. Let's do some more compression. Both
 IntoIter and Drain have the exact same structure, let's just factor it out.
 
-```rust
+```rust,ignore
 struct RawValIter<T> {
     start: *const T,
     end: *const T,
@@ -75,7 +75,7 @@ impl<T> DoubleEndedIterator for IntoIter<T> {
 
 impl<T> Drop for IntoIter<T> {
     fn drop(&mut self) {
-        for _ in &mut self.iter {}
+        for _ in &mut *self {}
     }
 }
 
@@ -123,7 +123,7 @@ impl<'a, T> DoubleEndedIterator for Drain<'a, T> {
 
 impl<'a, T> Drop for Drain<'a, T> {
     fn drop(&mut self) {
-        for _ in &mut self.iter {}
+        for _ in &mut *self {}
     }
 }
 

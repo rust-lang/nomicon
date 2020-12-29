@@ -16,10 +16,6 @@ want to use `dangling` because there's no real allocation to talk about but
 So:
 
 ```rust,ignore
-#![feature(alloc, heap_api)]
-
-use std::mem;
-
 impl<T> Vec<T> {
     fn new() -> Self {
         assert!(mem::size_of::<T>() != 0, "We're not ready to handle ZSTs");
@@ -75,9 +71,7 @@ compiler to be able to reason about data dependencies and aliasing.
 
 As a simple example, consider the following fragment of code:
 
-```rust
-# let x = &mut 0;
-# let y = &mut 0;
+```rust,ignore
 *x *= 7;
 *y *= 3;
 ```
@@ -157,22 +151,18 @@ such we will guard against this case explicitly.
 Ok with all the nonsense out of the way, let's actually allocate some memory:
 
 ```rust,ignore
-use std::alloc::oom;
-
 fn grow(&mut self) {
     // this is all pretty delicate, so let's say it's all unsafe
     unsafe {
-        // current API requires us to specify size and alignment manually.
-        let align = mem::align_of::<T>();
         let elem_size = mem::size_of::<T>();
 
         let (new_cap, ptr) = if self.cap == 0 {
-            let ptr = heap::allocate(elem_size, align);
+            let ptr = Global.allocate(Layout::array::<T>(1).unwrap());
             (1, ptr)
         } else {
             // as an invariant, we can assume that `self.cap < isize::MAX`,
             // so this doesn't need to be checked.
-            let new_cap = self.cap * 2;
+            let new_cap = 2 * self.cap;
             // Similarly this can't overflow due to previously allocating this
             let old_num_bytes = self.cap * elem_size;
 
@@ -185,18 +175,24 @@ fn grow(&mut self) {
             assert!(old_num_bytes <= (isize::MAX as usize) / 2,
                     "capacity overflow");
 
-            let new_num_bytes = old_num_bytes * 2;
-            let ptr = heap::reallocate(self.ptr.as_ptr() as *mut _,
-                                        old_num_bytes,
-                                        new_num_bytes,
-                                        align);
+            let c: NonNull<T> = self.ptr.into();
+            let ptr = Global.grow(c.cast(),
+                                  Layout::array::<T>(self.cap).unwrap(),
+                                  Layout::array::<T>(new_cap).unwrap());
             (new_cap, ptr)
         };
 
-        // If allocate or reallocate fail, we'll get `null` back
-        if ptr.is_null() { oom(); }
+        // If allocate or reallocate fail, oom
+        if ptr.is_err() {
+            handle_alloc_error(Layout::from_size_align_unchecked(
+                new_cap * elem_size,
+                mem::align_of::<T>(),
+            ))
+        }
 
-        self.ptr = Unique::new(ptr as *mut _);
+        let ptr = ptr.unwrap();
+
+        self.ptr = Unique::new_unchecked(ptr.as_ptr() as *mut _);
         self.cap = new_cap;
     }
 }
@@ -204,4 +200,3 @@ fn grow(&mut self) {
 
 Nothing particularly tricky here. Just computing sizes and alignments and doing
 some careful multiplication checks.
-

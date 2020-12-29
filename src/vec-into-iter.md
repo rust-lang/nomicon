@@ -43,7 +43,7 @@ dropped.
 So we're going to use the following struct:
 
 ```rust,ignore
-struct IntoIter<T> {
+pub struct IntoIter<T> {
     buf: Unique<T>,
     cap: usize,
     start: *const T,
@@ -55,7 +55,7 @@ And this is what we end up with for initialization:
 
 ```rust,ignore
 impl<T> Vec<T> {
-    fn into_iter(self) -> IntoIter<T> {
+    pub fn into_iter(self) -> IntoIter<T> {
         // Can't destructure Vec since it's Drop
         let ptr = self.ptr;
         let cap = self.cap;
@@ -68,13 +68,13 @@ impl<T> Vec<T> {
             IntoIter {
                 buf: ptr,
                 cap: cap,
-                start: *ptr,
+                start: ptr.as_ptr(),
                 end: if cap == 0 {
                     // can't offset off this pointer, it's not allocated!
-                    *ptr
+                    ptr.as_ptr()
                 } else {
-                    ptr.offset(len as isize)
-                }
+                    ptr.as_ptr().offset(len as isize)
+                },
             }
         }
     }
@@ -135,11 +135,10 @@ impl<T> Drop for IntoIter<T> {
             // drop any remaining elements
             for _ in &mut *self {}
 
-            let align = mem::align_of::<T>();
-            let elem_size = mem::size_of::<T>();
-            let num_bytes = elem_size * self.cap;
             unsafe {
-                heap::deallocate(self.buf.as_ptr() as *mut _, num_bytes, align);
+                let c: NonNull<T> = self.buf.into();
+                Global.deallocate(c.cast(),
+                                  Layout::array::<T>(self.cap).unwrap());
             }
         }
     }
