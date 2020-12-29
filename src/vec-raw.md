@@ -1,4 +1,3 @@
-
 # RawVec
 
 We've actually reached an interesting situation here: we've duplicated the logic
@@ -17,46 +16,50 @@ struct RawVec<T> {
 
 impl<T> RawVec<T> {
     fn new() -> Self {
-        assert!(mem::size_of::<T>() != 0, "TODO: implement ZST support");
+        assert!(mem::size_of::<T>() != 0, "We're not ready to handle ZSTs");
         RawVec { ptr: Unique::dangling(), cap: 0 }
     }
 
     // unchanged from Vec
     fn grow(&mut self) {
         unsafe {
-            let align = mem::align_of::<T>();
             let elem_size = mem::size_of::<T>();
 
             let (new_cap, ptr) = if self.cap == 0 {
-                let ptr = heap::allocate(elem_size, align);
+                let ptr = Global.allocate(Layout::array::<T>(1).unwrap());
                 (1, ptr)
             } else {
                 let new_cap = 2 * self.cap;
-                let ptr = heap::reallocate(self.ptr.as_ptr() as *mut _,
-                                            self.cap * elem_size,
-                                            new_cap * elem_size,
-                                            align);
+                let c: NonNull<T> = self.ptr.into();
+                let ptr = Global.grow(c.cast(),
+                                      Layout::array::<T>(self.cap).unwrap(),
+                                      Layout::array::<T>(new_cap).unwrap());
                 (new_cap, ptr)
             };
 
-            // If allocate or reallocate fail, we'll get `null` back
-            if ptr.is_null() { oom() }
+            // If allocate or reallocate fail, oom
+            if ptr.is_err() {
+                handle_alloc_error(Layout::from_size_align_unchecked(
+                    new_cap * elem_size,
+                    mem::align_of::<T>(),
+                ))
+            }
 
-            self.ptr = Unique::new(ptr as *mut _);
+            let ptr = ptr.unwrap();
+
+            self.ptr = Unique::new_unchecked(ptr.as_ptr() as *mut _);
             self.cap = new_cap;
         }
     }
 }
 
-
 impl<T> Drop for RawVec<T> {
     fn drop(&mut self) {
         if self.cap != 0 {
-            let align = mem::align_of::<T>();
-            let elem_size = mem::size_of::<T>();
-            let num_bytes = elem_size * self.cap;
             unsafe {
-                heap::deallocate(self.ptr.as_mut() as *mut _, num_bytes, align);
+                let c: NonNull<T> = self.ptr.into();
+                Global.deallocate(c.cast(),
+                                  Layout::array::<T>(self.cap).unwrap());
             }
         }
     }
@@ -81,7 +84,7 @@ impl<T> Vec<T> {
     }
 
     // push/pop/insert/remove largely unchanged:
-    // * `self.ptr -> self.ptr()`
+    // * `self.ptr.as_ptr() -> self.ptr()`
     // * `self.cap -> self.cap()`
     // * `self.grow -> self.buf.grow()`
 }
@@ -97,7 +100,7 @@ impl<T> Drop for Vec<T> {
 And finally we can really simplify IntoIter:
 
 ```rust,ignore
-struct IntoIter<T> {
+pub struct IntoIter<T> {
     _buf: RawVec<T>, // we don't actually care about this. Just need it to live.
     start: *const T,
     end: *const T,
@@ -123,8 +126,8 @@ impl<T> Vec<T> {
             mem::forget(self);
 
             IntoIter {
-                start: *buf.ptr,
-                end: buf.ptr.offset(len as isize),
+                start: buf.ptr.as_ptr(),
+                end: buf.ptr.as_ptr().offset(len as isize),
                 _buf: buf,
             }
         }

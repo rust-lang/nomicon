@@ -6,13 +6,12 @@ elements that have been initialized.
 
 Naively, this means we just want this design:
 
-```rust
+```rust,ignore
 pub struct Vec<T> {
     ptr: *mut T,
     cap: usize,
     len: usize,
 }
-# fn main() {}
 ```
 
 And indeed this would compile. Unfortunately, it would be incorrect. First, the
@@ -37,7 +36,7 @@ As a recap, Unique is a wrapper around a raw pointer that declares that:
 We can implement all of the above requirements except for the last
 one in stable Rust:
 
-```rust
+```rust,ignore
 use std::marker::PhantomData;
 use std::ops::Deref;
 use std::mem;
@@ -61,8 +60,6 @@ impl<T> Unique<T> {
         self.ptr as *mut T
     }
 }
-
-# fn main() {}
 ```
 
 Unfortunately the mechanism for stating that your value is non-zero is
@@ -70,18 +67,12 @@ unstable and unlikely to be stabilized soon. As such we're just going to
 take the hit and use std's Unique:
 
 
-```rust
-#![feature(ptr_internals)]
-
-use std::ptr::{Unique, self};
-
+```rust,ignore
 pub struct Vec<T> {
     ptr: Unique<T>,
     cap: usize,
     len: usize,
 }
-
-# fn main() {}
 ```
 
 If you don't care about the null-pointer optimization, then you can use the

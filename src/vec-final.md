@@ -174,7 +174,7 @@ impl<T> Vec<T> {
 impl<T> Drop for Vec<T> {
     fn drop(&mut self) {
         while let Some(_) = self.pop() {}
-        // allocation is handled by RawVec
+        // deallocation is handled by RawVec
     }
 }
 
@@ -214,7 +214,7 @@ impl<T> RawValIter<T> {
                 slice.as_ptr()
             } else {
                 slice.as_ptr().offset(slice.len() as isize)
-            }
+            },
         }
     }
 }
@@ -307,10 +307,10 @@ impl<'a, T> DoubleEndedIterator for Drain<'a, T> {
 impl<'a, T> Drop for Drain<'a, T> {
     fn drop(&mut self) {
         // pre-drain the iter
-        for _ in &mut self.iter {}
+        for _ in &mut *self {}
     }
 }
-
+#
 # fn main() {
 #     tests::create_push_pop();
 #     tests::iter_test();
@@ -318,7 +318,7 @@ impl<'a, T> Drop for Drain<'a, T> {
 #     tests::test_zst();
 #     println!("All tests finished OK");
 # }
-
+#
 # mod tests {
 #     use super::*;
 #     pub fn create_push_pop() {

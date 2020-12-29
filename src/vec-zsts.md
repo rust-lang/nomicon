@@ -11,7 +11,7 @@ zero-sized types. We need to be careful of two things:
   C-style pointer iterator.
 
 Thankfully we abstracted out pointer-iterators and allocating handling into
-RawValIter and RawVec respectively. How mysteriously convenient.
+`RawValIter` and `RawVec` respectively. How mysteriously convenient.
 
 
 
@@ -30,7 +30,7 @@ no longer valid with zero-sized types. We must explicitly guard against capacity
 overflow for zero-sized types.
 
 Due to our current architecture, all this means is writing 3 guards, one in each
-method of RawVec.
+method of `RawVec`.
 
 ```rust,ignore
 impl<T> RawVec<T> {
@@ -50,24 +50,29 @@ impl<T> RawVec<T> {
             // 0, getting to here necessarily means the Vec is overfull.
             assert!(elem_size != 0, "capacity overflow");
 
-            let align = mem::align_of::<T>();
-
             let (new_cap, ptr) = if self.cap == 0 {
-                let ptr = heap::allocate(elem_size, align);
+                let ptr = Global.allocate(Layout::array::<T>(1).unwrap());
                 (1, ptr)
             } else {
                 let new_cap = 2 * self.cap;
-                let ptr = heap::reallocate(self.ptr.as_ptr() as *mut _,
-                                            self.cap * elem_size,
-                                            new_cap * elem_size,
-                                            align);
+                let c: NonNull<T> = self.ptr.into();
+                let ptr = Global.grow(c.cast(),
+                                      Layout::array::<T>(self.cap).unwrap(),
+                                      Layout::array::<T>(new_cap).unwrap());
                 (new_cap, ptr)
             };
 
-            // If allocate or reallocate fail, we'll get `null` back
-            if ptr.is_null() { oom() }
+            // If allocate or reallocate fail, oom
+            if ptr.is_err() {
+                handle_alloc_error(Layout::from_size_align_unchecked(
+                    new_cap * elem_size,
+                    mem::align_of::<T>(),
+                ))
+            }
 
-            self.ptr = Unique::new(ptr as *mut _);
+            let ptr = ptr.unwrap();
+
+            self.ptr = Unique::new_unchecked(ptr.as_ptr() as *mut _);
             self.cap = new_cap;
         }
     }
@@ -79,11 +84,10 @@ impl<T> Drop for RawVec<T> {
 
         // don't free zero-sized allocations, as they were never allocated.
         if self.cap != 0 && elem_size != 0 {
-            let align = mem::align_of::<T>();
-
-            let num_bytes = elem_size * self.cap;
             unsafe {
-                heap::deallocate(self.ptr.as_ptr() as *mut _, num_bytes, align);
+                let c: NonNull<T> = self.ptr.into();
+                Global.deallocate(c.cast(),
+                                  Layout::array::<T>(self.cap).unwrap());
             }
         }
     }
@@ -114,7 +118,7 @@ impl<T> RawValIter<T> {
                 slice.as_ptr()
             } else {
                 slice.as_ptr().offset(slice.len() as isize)
-            }
+            },
         }
     }
 }
