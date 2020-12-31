@@ -34,7 +34,8 @@ Without this assert, some of our early drafts will do some Very Bad Things.
 
 Next we need to figure out what to actually do when we *do* want space. For
 that, we'll need to use the rest of the heap APIs. These basically allow us to
-talk directly to Rust's allocator (jemalloc by default).
+talk directly to Rust's allocator (`malloc` on Unix platforms and `HeapAlloc`
+on Windows by default).
 
 We'll also need a way to handle out-of-memory (OOM) conditions. The standard
 library calls `std::alloc::oom()`, which in turn calls the `oom` langitem,
