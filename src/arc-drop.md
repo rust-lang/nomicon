@@ -6,22 +6,28 @@ low enough, otherwise the data will live forever on the heap.
 To do this, we can implement `Drop`.
 
 Basically, we need to:
-1. Get the `ArcInner` value of the `Arc`
-2. Decrement the reference count
-3. If there is only one reference remaining to the data, then:
-4. Atomically fence the data to prevent reordering of the use and deletion of
-   the data, then:
-5. Drop the inner data 
+1. Decrement the reference count
+2. If there is only one reference remaining to the data, then:
+3. Atomically fence the data to prevent reordering of the use and deletion of
+   the data
+4. Drop the inner data 
 
-Now, we need to decrement the reference count. We can also bring in step 3 by
-returning if the reference count is not equal to 1 (as `fetch_sub` returns the
-previous value):
+First, we'll need to get access to the `ArcInner`:
 ```rust,ignore
-if self.inner().rc.fetch_sub(1, Ordering::Release) != 1 {
+let inner = unsafe { self.ptr.as_ref() };
+```
+
+Now, we need to decrement the reference count. To streamline our code, we can
+also return if the returned value from `fetch_sub` (the value of the reference
+count before decrementing it) is not equal to `1` (which happens when we are not
+the last reference to the data).
+```rust,ignore
+if inner.rc.fetch_sub(1, Ordering::???) != 1 {
     return;
 }
 ```
 
+TODO
 We then need to create an atomic fence to prevent reordering of the use of the
 data and deletion of the data. As described in [the standard library's
 implementation of `Arc`][3]:
@@ -78,7 +84,8 @@ Now, let's wrap this all up inside the `Drop` implementation:
 ```rust,ignore
 impl<T> Drop for Arc<T> {
     fn drop(&mut self) {
-        if self.inner().rc.fetch_sub(1, Ordering::Release) != 1 {
+        let inner = unsafe { self.ptr.as_ref() };
+        if inner.rc.fetch_sub(1, Ordering::Release) != 1 {
             return;
         }
         // This fence is needed to prevent reordering of the use and deletion

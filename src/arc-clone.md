@@ -3,13 +3,17 @@
 Now that we've got some basic code set up, we'll need a way to clone the `Arc`.
 
 Basically, we need to:
-1. Get the `ArcInner` value of the `Arc`
-2. Increment the atomic reference count
-3. Construct a new instance of the `Arc` from the inner pointer
+1. Increment the atomic reference count
+2. Construct a new instance of the `Arc` from the inner pointer
 
-Next, we can update the atomic reference count as follows:
+First, we need to get access to the `ArcInner`:
 ```rust,ignore
-self.inner().rc.fetch_add(1, Ordering::Relaxed);
+let inner = unsafe { self.ptr.as_ref() };
+```
+
+We can update the atomic reference count as follows:
+```rust,ignore
+let old_rc = inner.rc.fetch_add(1, Ordering::Relaxed);
 ```
 
 As described in [the standard library's implementation of `Arc` cloning][2]:
@@ -30,15 +34,37 @@ We'll need to add another import to use `Ordering`:
 use std::sync::atomic::Ordering;
 ```
 
-It is possible that in some contrived programs (e.g. using `mem::forget`) that
-the reference count could overflow, but it's unreasonable that would happen in
-any reasonable program.
+However, we have one problem with this implementation right now. What if someone
+decides to `mem::forget` a bunch of Arcs? The code we have written so far (and
+will write) assumes that the reference count accurately portrays how many Arcs
+are in memory, but with `mem::forget` this is false. Thus, when more and more
+Arcs are cloned from this one without them being `Drop`ped and the reference
+count being decremented, we can overflow! This will cause use-after-free which
+is **INCREDIBLY BAD!**
+
+To handle this, we need to check that the reference count does not go over some
+arbitrary value (below `usize::MAX`, as we're storing the reference count as an
+`AtomicUsize`), and do *something*.
+
+The standard library's implementation decides to just abort the program (as it
+is an incredibly unlikely case in normal code and if it happens, the program is
+probably incredibly degenerate) if the reference count reaches `isize::MAX`
+(about half of `usize::MAX`) on any thread, on the assumption that there are
+probably not about 2 billion threads (or about **9 quintillion** on some 64-bit
+machines) incrementing the reference count at once. This is what we'll do.
+
+It's pretty simple to implement this behaviour:
+```rust,ignore
+if old_rc >= isize::MAX {
+    std::process::abort();
+}
+```
 
 Then, we need to return a new instance of the `Arc`:
 ```rust,ignore
 Self {
     ptr: self.ptr,
-    _marker: PhantomData
+    phantom: PhantomData
 }
 ```
 
@@ -48,12 +74,18 @@ use std::sync::atomic::Ordering;
 
 impl<T> Clone for Arc<T> {
     fn clone(&self) -> Arc<T> {
+        let inner = unsafe { self.ptr.as_ref() };
         // Using a relaxed ordering is alright here as knowledge of the original
         // reference prevents other threads from wrongly deleting the object.
-        self.inner().rc.fetch_add(1, Ordering::Relaxed);
+        inner.rc.fetch_add(1, Ordering::Relaxed);
+
+        if old_rc >= isize::MAX {
+            std::process::abort();
+        }
+
         Self {
             ptr: self.ptr,
-            _marker: PhantomData,
+            phantom: PhantomData,
         }
     }
 }

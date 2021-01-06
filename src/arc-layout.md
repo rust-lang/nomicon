@@ -2,14 +2,25 @@
 
 Let's start by making the layout for our implementation of `Arc`.
 
-We'll need at least two things: a pointer to our data and a shared atomic
-reference count. Since we're *building* `Arc`, we can't store the reference
-count inside another `Arc`. Instead, we can get the best of both worlds and
-store our data and the reference count in one structure and get a pointer to
-that. This also prevents having to dereference two separate pointers inside our
-code, which may also improve performance. (Yay!)
+An `Arc<T>` provides thread-safe shared ownership of a value of type `T`,
+allocated in the heap. Sharing implies immutability in Rust, so we don't need to
+design anything that manages access to that value, right? Although interior
+mutability types like Mutex allow Arc's users to create shared mutability, Arc
+itself doesn't need to concern itself with these issues.
 
-Naively, it'd looks something like this:
+However there _is_ one place where Arc needs to concern itself with mutation:
+destruction. When all the owners of the Arc go away, we need to be able to
+`drop` its contents and free its allocation. So we need a way for an owner to
+know if it's the _last_ owner, and the simplest way to do that is with a count
+of the owners -- Reference Counting.
+
+Unfortunately, this reference count is inherently shared mutable state, so Arc
+_does_ need to think about synchronization. We _could_ use a Mutex for this, but
+that's overkill. Instead, we'll use atomics. And since everyone already needs a
+pointer to the T's allocation, we might as well put the reference count in that
+same allocation.
+
+Naively, it would look something like this:
 ```rust,ignore
 use std::sync::atomic;
 
@@ -41,7 +52,7 @@ To fix the second problem, we can include a `PhantomData` marker containing an
 `ArcInner<T>`. This will tell the drop checker that we have some notion of
 ownership of a value of `ArcInner<T>` (which itself contains some `T`).
 
-With these changes, our new structure will look like this:
+With these changes we get our final structure:
 ```rust,ignore
 use std::marker::PhantomData;
 use std::ptr::NonNull;
