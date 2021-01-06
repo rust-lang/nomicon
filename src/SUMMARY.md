@@ -60,7 +60,6 @@
       * [Base Code](arc-base.md)
       * [Cloning](arc-clone.md)
       * [Dropping](arc-drop.md)
-      * [Deref](arc-deref.md)
       * [Final Code](arc-final.md)
 * [FFI](ffi.md)
 * [Beneath `std`](beneath-std.md)

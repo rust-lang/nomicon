@@ -10,11 +10,6 @@ We'll first need a way to construct an `Arc<T>`.
 This is pretty simple, as we just need to box the `ArcInner<T>` and get a
 `NonNull<T>` pointer to it.
 
-We start the reference counter at 1, as that first reference is the current
-pointer. As the `Arc` is cloned or dropped, it is updated. It is okay to call
-`unwrap()` on the `Option` returned by `NonNull` as `Box::into_raw` guarantees
-that the pointer returned is not null.
-
 ```rust,ignore
 impl<T> Arc<T> {
     pub fn new(data: T) -> Arc<T> {
@@ -28,7 +23,7 @@ impl<T> Arc<T> {
             // It is okay to call `.unwrap()` here as we get a pointer from
             // `Box::into_raw` which is guaranteed to not be null.
             ptr: NonNull::new(Box::into_raw(boxed)).unwrap(),
-            _marker: PhantomData,
+            phantom: PhantomData,
         }
     }
 }
@@ -43,8 +38,8 @@ more information on these, see [the section on `Send` and
 
 This is okay because:
 * You can only get a mutable reference to the value inside an `Arc` if and only
-  if it is the only `Arc` referencing that data
-* We use atomic counters for reference counting
+  if it is the only `Arc` referencing that data (which only happens in `Drop`)
+* We use atomics for the shared mutable reference counting
 
 ```rust,ignore
 unsafe impl<T: Sync + Send> Send for Arc<T> {}
@@ -56,26 +51,59 @@ bounds, it would be possible to share values that are thread-unsafe across a
 thread boundary via an `Arc`, which could possibly cause data races or
 unsoundness.
 
-## Getting the `ArcInner`
+For example, if those bounds were not present, `Arc<Rc<u32>>` would be `Sync` or
+`Send`, meaning that you could clone the `Rc` out of the `Arc` to send it across
+a thread (without creating an entirely new `Rc`), which would create data races
+as `Rc` is not thread-safe.
 
-We'll now want to make a private helper function, `inner()`, which just returns
-the dereferenced `NonNull` pointer.
+## Getting the `ArcInner`
 
 To dereference the `NonNull<T>` pointer into a `&T`, we can call
 `NonNull::as_ref`. This is unsafe, unlike the typical `as_ref` function, so we
 must call it like this:
 ```rust,ignore
-// inside the impl<T> Arc<T> block from before:
-fn inner(&self) -> &ArcInner<T> {
-    unsafe { self.ptr.as_ref() }
-}
+unsafe { self.ptr.as_ref() }
 ```
+
+We'll be using this snippet a few times in this code (usually with an associated
+`let` binding).
 
 This unsafety is okay because while this `Arc` is alive, we're guaranteed that
 the inner pointer is valid.
 
+## Deref
+
+Alright. Now we can make `Arc`s (and soon will be able to clone and destroy them correctly), but how do we get
+to the data inside?
+
+What we need now is an implementation of `Deref`.
+
+We'll need to import the trait:
+```rust,ignore
+use std::ops::Deref;
+```
+
+And here's the implementation:
+```rust,ignore
+impl<T> Deref for Arc<T> {
+    type Target = T;
+
+    fn deref(&self) -> &T {
+        let inner = unsafe { self.ptr.as_ref() };
+        &inner.data
+    }
+}
+```
+
+Pretty simple, eh? This simply dereferences the `NonNull` pointer to the
+`ArcInner<T>`, then gets a reference to the data inside.
+
+## Code
+
 Here's all the code from this section:
 ```rust,ignore
+use std::ops::Deref;
+
 impl<T> Arc<T> {
     pub fn new(data: T) -> Arc<T> {
         // We start the reference count at 1, as that first reference is the
@@ -88,17 +116,21 @@ impl<T> Arc<T> {
             // It is okay to call `.unwrap()` here as we get a pointer from
             // `Box::into_raw` which is guaranteed to not be null.
             ptr: NonNull::new(Box::into_raw(boxed)).unwrap(),
-            _marker: PhantomData,
+            phantom: PhantomData,
         }
-    }
-
-    fn inner(&self) -> &ArcInner<T> {
-        // This unsafety is okay because while this Arc is alive, we're
-        // guaranteed that the inner pointer is valid.
-        unsafe { self.ptr.as_ref() }
     }
 }
 
 unsafe impl<T: Sync + Send> Send for Arc<T> {}
 unsafe impl<T: Sync + Send> Sync for Arc<T> {}
+
+
+impl<T> Deref for Arc<T> {
+    type Target = T;
+
+    fn deref(&self) -> &T {
+        let inner = unsafe { self.ptr.as_ref() };
+        &inner.data
+    }
+}
 ```
