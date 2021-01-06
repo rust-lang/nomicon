@@ -49,8 +49,9 @@ impl<T> Deref for Arc<T> {
 impl<T> Clone for Arc<T> {
     fn clone(&self) -> Arc<T> {
         let inner = unsafe { self.ptr.as_ref() };
-        // Using a relaxed ordering is alright here as knowledge of the original
-        // reference prevents other threads from wrongly deleting the object.
+        // Using a relaxed ordering is alright here as we don't need any atomic
+        // synchronization here as we're not modifying or accessing the inner
+        // data.
         let old_rc = inner.rc.fetch_add(1, Ordering::Relaxed);
 
         if old_rc >= isize::MAX as usize {
