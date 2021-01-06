@@ -46,16 +46,14 @@ impl<T> Deref for Arc<T> {
     }
 }
 
-use std::sync::atomic::Ordering;
-
 impl<T> Clone for Arc<T> {
     fn clone(&self) -> Arc<T> {
         let inner = unsafe { self.ptr.as_ref() };
         // Using a relaxed ordering is alright here as knowledge of the original
         // reference prevents other threads from wrongly deleting the object.
-        inner.rc.fetch_add(1, Ordering::Relaxed);
+        let old_rc = inner.rc.fetch_add(1, Ordering::Relaxed);
 
-        if old_rc >= isize::MAX {
+        if old_rc >= isize::MAX as usize {
             std::process::abort();
         }
 
