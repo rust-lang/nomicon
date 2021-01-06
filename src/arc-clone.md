@@ -13,21 +13,22 @@ let inner = unsafe { self.ptr.as_ref() };
 
 We can update the atomic reference count as follows:
 ```rust,ignore
-let old_rc = inner.rc.fetch_add(1, Ordering::Relaxed);
+let old_rc = inner.rc.fetch_add(1, Ordering::???);
 ```
 
-As described in [the standard library's implementation of `Arc` cloning][2]:
-> Using a relaxed ordering is alright here, as knowledge of the original
-> reference prevents other threads from erroneously deleting the object.
-> 
-> As explained in the [Boost documentation][1]:
-> > Increasing the reference counter can always be done with
-> > memory_order_relaxed: New references to an object can only be formed from an
-> > existing reference, and passing an existing reference from one thread to
-> > another must already provide any required synchronization.
-> 
-> [1]: https://www.boost.org/doc/libs/1_55_0/doc/html/atomic/usage_examples.html
-[2]: https://github.com/rust-lang/rust/blob/e1884a8e3c3e813aada8254edfa120e85bf5ffca/library/alloc/src/sync.rs#L1171-L1181
+But what ordering should we use here? We don't really have any code that will
+need atomic synchronization when cloning, as we do not modify the internal value
+while cloning. Thus, we can use a Relaxed ordering here, which implies no
+happens-before relationship but is atomic. When `Drop`ping the Arc, however,
+we'll need to atomically synchronize when decrementing the reference count. This
+is described more in [the section on the `Drop` implementation for
+`Arc`](arc-drop.md) For more information on atomic relationships and Relaxed
+ordering, see [the section on atomics](atomics.md).
+
+Thus, the code becomes this:
+```rust,ignore
+let old_rc = inner.rc.fetch_add(1, Ordering::Relaxed);
+```
 
 We'll need to add another import to use `Ordering`:
 ```rust,ignore
@@ -75,8 +76,9 @@ use std::sync::atomic::Ordering;
 impl<T> Clone for Arc<T> {
     fn clone(&self) -> Arc<T> {
         let inner = unsafe { self.ptr.as_ref() };
-        // Using a relaxed ordering is alright here as knowledge of the original
-        // reference prevents other threads from wrongly deleting the object.
+        // Using a relaxed ordering is alright here as we don't need any atomic
+        // synchronization here as we're not modifying or accessing the inner
+        // data.
         let old_rc = inner.rc.fetch_add(1, Ordering::Relaxed);
 
         if old_rc >= isize::MAX as usize {
