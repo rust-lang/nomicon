@@ -74,7 +74,7 @@ care about, but the lifetime system is too coarse-grained to handle that.
 
 # Improperly reduced borrows
 
-This currently fails to compile, because Rust doesn't understand that the borrow
+The following code fails to compile, because Rust doesn't understand that the borrow
 is no longer needed and conservatively falls back to using a whole scope for it.
 This will eventually get fixed.
 
