@@ -22,7 +22,7 @@ while cloning. Thus, we can use a Relaxed ordering here, which implies no
 happens-before relationship but is atomic. When `Drop`ping the Arc, however,
 we'll need to atomically synchronize when decrementing the reference count. This
 is described more in [the section on the `Drop` implementation for
-`Arc`](arc-drop.md) For more information on atomic relationships and Relaxed
+`Arc`](arc-drop.md). For more information on atomic relationships and Relaxed
 ordering, see [the section on atomics](atomics.md).
 
 Thus, the code becomes this:
