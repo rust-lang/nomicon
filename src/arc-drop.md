@@ -22,12 +22,11 @@ also return if the returned value from `fetch_sub` (the value of the reference
 count before decrementing it) is not equal to `1` (which happens when we are not
 the last reference to the data).
 ```rust,ignore
-if inner.rc.fetch_sub(1, Ordering::???) != 1 {
+if inner.rc.fetch_sub(1, Ordering::Relaxed) != 1 {
     return;
 }
 ```
 
-TODO
 We then need to create an atomic fence to prevent reordering of the use of the
 data and deletion of the data. As described in [the standard library's
 implementation of `Arc`][3]:
