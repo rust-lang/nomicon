@@ -96,5 +96,29 @@ where
 }
 ```
 
+Because of the lifetime restrictions imposed, `&mut map`'s lifetime
+overlaps other mutable borrows, resulting in a compile error:
+
+```text
+error[E0499]: cannot borrow `*map` as mutable more than once at a time
+  --> src/main.rs:12:13
+   |
+4  |   fn get_default<'m, K, V>(map: &'m mut HashMap<K, V>, key: K) -> &'m mut V
+   |                  -- lifetime `'m` defined here
+...
+9  |       match map.get_mut(&key) {
+   |       -     --- first mutable borrow occurs here
+   |  _____|
+   | |
+10 | |         Some(value) => value,
+11 | |         None => {
+12 | |             map.insert(key.clone(), V::default());
+   | |             ^^^ second mutable borrow occurs here
+13 | |             map.get_mut(&key).unwrap()
+14 | |         }
+15 | |     }
+   | |_____- returning this value requires that `*map` is borrowed for `'m`
+```
+
 
 [ex2]: lifetimes.html#example-aliasing-a-mutable-reference
