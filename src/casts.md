@@ -56,6 +56,8 @@ For numeric casts, there are quite a few cases to consider:
     * floats that are too big turn into the largest possible integer
     * floats that are too small produce the smallest possible integer
     * NaN produces zero
+    * inf produces largest possible integer
+    * -inf produces smallest possible integer
 * casting from an integer to float will produce the floating point
   representation of the integer, rounded if necessary (rounding to
   nearest, ties to even)
