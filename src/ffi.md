@@ -740,8 +740,18 @@ void bar(struct Bar *arg);
 To do this in Rust, let’s create our own opaque types:
 
 ```rust
-#[repr(C)] pub struct Foo { _private: [u8; 0] }
-#[repr(C)] pub struct Bar { _private: [u8; 0] }
+#[repr(C)]
+pub struct Foo {
+    _data: [u8; 0],
+    _marker:
+        core::marker::PhantomData<(*mut u8, core::marker::PhantomPinned)>,
+}
+#[repr(C)]
+pub struct Bar {
+    _data: [u8; 0],
+    _marker:
+        core::marker::PhantomData<(*mut u8, core::marker::PhantomPinned)>,
+}
 
 extern "C" {
     pub fn foo(arg: *mut Foo);
@@ -750,12 +760,12 @@ extern "C" {
 # fn main() {}
 ```
 
-By including a private field and no constructor, 
+By including at least one private field and no constructor,
 we create an opaque type that we can't instantiate outside of this module.
 (A struct with no field could be instantiated by anyone.)
 We also want to use this type in FFI, so we have to add `#[repr(C)]`.
-And to avoid warning around using `()` in FFI, we instead use an empty array,
-which works just as well as an empty type but is FFI-compatible.
+The marker ensures the compiler does not mark the struct as `Send`, `Sync` and `Unpin` are
+not applied to the struct. (`*mut u8` is not `Send` or `Sync`, `PhantomPinned` is not `Unpin`)
 
 But because our `Foo` and `Bar` types are
 different, we’ll get type safety between the two of them, so we cannot
