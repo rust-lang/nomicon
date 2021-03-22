@@ -74,7 +74,114 @@ of their pervasive use of raw pointers to manage allocations and complex ownersh
 Similarly, most iterators into these collections are Send and Sync because they
 largely behave like an `&` or `&mut` into the collection.
 
+[`Box`][box-doc] is implemented as it's own special intrinsic type by the
+compiler for [various reasons][box-is-special], but we can implement something
+with similar-ish behaviour ourselves to see an example of when it is sound to
+implement Send and Sync. Let's call it a `Carton`.
+
+We start by writing code to take a value allocated on the stack and transfer it
+to the heap.
+
+```rust
+use std::mem::size_of;
+use std::ptr::NonNull;
+
+struct Carton<T>(NonNull<T>);
+
+impl<T> Carton<T> {
+    pub fn new(mut value: T) -> Self {
+        // Allocate enough memory on the heap to store one T
+        let ptr = unsafe { libc::calloc(1, size_of::<T>()) as *mut T };
+
+        // NonNull is just a wrapper that enforces that the pointer isn't null.
+        // Malloc returns null if it can't allocate.
+        let mut ptr = NonNull::new(ptr).expect("We assume malloc doesn't fail");
+
+        // Move value from the stack to the location we allocated on the heap
+        unsafe {
+            // Safety: The pointer returned by calloc is alligned, initialized,
+            // and dereferenceable, and we have exclusive access to the pointer.
+            *ptr.as_mut() = value;
+        }
+
+        Self(ptr)
+    }
+}
+```
+
+This isn't very useful, because once our users give us a value they have no way
+to access it. [`Box`][box-doc] implements [`Deref`][deref-doc] and
+[`DerefMut`][deref-mut-doc] so that you can access the inner value. Let's do
+that.
+
+```rust
+use std::ops::{Deref, DerefMut};
+
+impl<T> Deref for Carton<T> {
+    type Target = T;
+
+    fn deref(&self) -> &Self::Target {
+        unsafe {
+            // Safety: The pointer is aligned, initialized, and dereferenceable
+            //   by the logic in [`Self::new`]. We require writers to borrow the
+            //   Carton, and the lifetime of the return value is elided to the
+            //   lifetime of the input. This means the borrow checker will
+            //   enforce that no one can mutate the contents of the Carton until
+            //   the reference returned is dropped.
+            self.0.as_ref()
+        }
+    }
+}
+
+impl<T> DerefMut for Carton<T> {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        unsafe {
+            // Safety: The pointer is aligned, initialized, and dereferenceable
+            //   by the logic in [`Self::new]. We require writers to mutably
+            //   borrow the Carton, and the lifetime of the return value is
+            //   elided to the lifetime of the input. This means the borrow
+            //   checker will enforce that no one else can access the contents
+            //   of the Carton until the mutable reference returned is dropped.
+            self.0.as_mut()
+        }
+    }
+}
+```
+
+Finally, lets think about whether our `Carton` is Send and Sync. Something can
+safely be Send unless it shares mutable state with something else without
+enforcing exclusive access to it. Each `Carton` has a unique pointer, so
+we're good.
+
+```rust
+// Safety: No one besides us has the raw pointer, so we can safely transfer the
+// Carton to another thread.
+unsafe impl<T> Send for Carton<T> {}
+```
+
+What about Sync? For `Carton` to be Sync we have to enforce that you can't
+write to something stored in a `&Carton` while that same something could be read
+or written to from another `&Carton`. Since you need an `&mut Carton` to
+write to the pointer, and the borrow checker enforces that mutable
+references must be exclusive, there are no soundness issues making `Carton`
+sync either.
+
+```rust
+// Safety: Our implementation of DerefMut requires writers to mutably borrow the
+// Carton, so the borrow checker will only let us have references to the Carton
+// on multiple threads if no one has a mutable reference to the Carton.
+unsafe impl<T> Sync for Carton<T> {}
+```
+
 TODO: better explain what can or can't be Send or Sync. Sufficient to appeal
 only to data races?
 
 [unsafe traits]: safe-unsafe-meaning.html
+
+[box-doc]: https://doc.rust-lang.org/std/boxed/struct.Box.html
+
+[box-is-special]: https://manishearth.github.io/blog/2017/01/10/rust-tidbits-box-is-special/
+
+[deref-doc]: https://doc.rust-lang.org/core/ops/trait.Deref.html
+
+[deref-mut-doc]: https://doc.rust-lang.org/core/ops/trait.DerefMut.html
