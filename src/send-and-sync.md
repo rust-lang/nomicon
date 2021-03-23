@@ -209,8 +209,8 @@ unsafe impl<T> Send for Carton<T> where Box<T>: Send {}
 Right now Carton<T> has a memory leak, as it never frees the memory it allocates.
 Once we fix that we have a new requirement we have to ensure we meet to be Send:
 we need to know `free` can be called on a pointer that was yielded by an
-allocation done on another thread. This is the case for `libc::free`, so we can
-still be Send.
+allocation done on another thread. We can check this is true in the docs for
+[`libc::free`][libc-free-docs].
 
 ```rust,ignore
 impl<T> Drop for Carton<T> {
@@ -227,7 +227,7 @@ A nice example where this does not happen is with a MutexGuard: notice how
 [uses libraries][mutex-guard-not-send-comment] that require you to ensure you
 don't try to free a lock that you acquired in a different thread. If you were
 able to Send a MutexGuard to another thread the destructor would run in the
-thread you sent it to, violating the requirement. MutexGuard can still be sync
+thread you sent it to, violating the requirement. MutexGuard can still be Sync
 because all you can send to another thread is an `&MutexGuard` and dropping a
 reference does nothing.
 
@@ -241,3 +241,4 @@ only to data races?
 [deref-mut-doc]: https://doc.rust-lang.org/core/ops/trait.DerefMut.html
 [mutex-guard-not-send-docs-rs]: https://doc.rust-lang.org/std/sync/struct.MutexGuard.html#impl-Send
 [mutex-guard-not-send-comment]: https://github.com/rust-lang/rust/issues/23465#issuecomment-82730326
+[libc-free-docs]: https://linux.die.net/man/3/free
