@@ -126,8 +126,10 @@ to access it. [`Box`][box-doc] implements [`Deref`][deref-doc] and
 [`DerefMut`][deref-mut-doc] so that you can access the inner value. Let's do
 that.
 
-```rust,ignore
+```rust
 use std::ops::{Deref, DerefMut};
+
+# struct Carton<T>(std::ptr::NonNull<T>);
 
 impl<T> Deref for Carton<T> {
     type Target = T;
@@ -165,7 +167,8 @@ safely be Send unless it shares mutable state with something else without
 enforcing exclusive access to it. Each `Carton` has a unique pointer, so
 we're good.
 
-```rust,ignore
+```rust
+# struct Carton<T>(std::ptr::NonNull<T>);
 // Safety: No one besides us has the raw pointer, so we can safely transfer the
 // Carton to another thread if T can be safely transferred.
 unsafe impl<T> Send for Carton<T> where T: Send {}
@@ -178,7 +181,8 @@ write to the pointer, and the borrow checker enforces that mutable
 references must be exclusive, there are no soundness issues making `Carton`
 sync either.
 
-```rust,ignore
+```rust
+# struct Carton<T>(std::ptr::NonNull<T>);
 // Safety: Our implementation of DerefMut requires writers to mutably borrow the
 // Carton, so the borrow checker will only let us have references to the Carton
 // on multiple threads if no one has a mutable reference to the Carton. This
