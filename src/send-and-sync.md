@@ -89,19 +89,31 @@ use std::ptr::NonNull;
 struct Carton<T>(NonNull<T>);
 
 impl<T> Carton<T> {
-    pub fn new(mut value: T) -> Self {
-        // Allocate enough memory on the heap to store one T
-        let ptr = unsafe { libc::calloc(1, size_of::<T>()) as *mut T };
+    pub fn new(value: T) -> Self {
+        // Allocate enough memory on the heap to store one T.
+        let memptr = &mut null_mut() as *mut *mut T;
+        unsafe {
+            let ret = libc::posix_memalign(
+                memptr as *mut *mut c_void,
+                align_of::<T>(),
+                size_of::<T>()
+            );
+            assert_eq!(ret, 0, "Failed to allocate or invalid alignment");
+        };
 
         // NonNull is just a wrapper that enforces that the pointer isn't null.
-        // Malloc returns null if it can't allocate.
-        let mut ptr = NonNull::new(ptr).expect("We assume malloc doesn't fail");
+        let mut ptr = unsafe {
+            // Safety: memptr is dereferenceable because we created it from a
+            // reference and have exclusive access.
+            NonNull::new(*memptr)
+                .expect("Guaranteed non-null if posix_memalign returns 0")
+        };
 
-        // Move value from the stack to the location we allocated on the heap
+        // Move value from the stack to the location we allocated on the heap.
         unsafe {
-            // Safety: The pointer returned by calloc is alligned, initialized,
-            // and dereferenceable, and we have exclusive access to the pointer.
-            *ptr.as_mut() = value;
+            // Safety: If non-null, posix_memalign gives us a ptr that is valid
+            // for writes and properly aligned.
+            ptr.as_ptr().write(value);
         }
 
         Self(ptr)
