@@ -74,6 +74,8 @@ of their pervasive use of raw pointers to manage allocations and complex ownersh
 Similarly, most iterators into these collections are Send and Sync because they
 largely behave like an `&` or `&mut` into the collection.
 
+## Example
+
 [`Box`][box-doc] is implemented as it's own special intrinsic type by the
 compiler for [various reasons][box-is-special], but we can implement something
 with similar-ish behavior ourselves to see an example of when it is sound to
