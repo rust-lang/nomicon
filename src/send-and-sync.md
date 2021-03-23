@@ -186,14 +186,16 @@ sync either.
 
 ```rust
 # struct Carton<T>(std::ptr::NonNull<T>);
-// Safety: Our implementation of DerefMut requires writers to mutably borrow the
-// Carton, so the borrow checker will only let us have references to the Carton
-// on multiple threads if no one has a mutable reference to the Carton. This
-// means we are Sync if T is Sync.
+// Safety: Since there exists a public way to go from a `&Carton<T>` to a `&T`
+// in an unsynchronized fashion (such as `Deref`), then `Carton<T>` can't be
+// `Sync` if `T` isn't.
+// Conversely, `Carton` itself does not use any interior mutability whatsoever:
+// all the mutations are performed through an exclusive reference (`&mut`). This
+// means it suffices that `T` be `Sync` for `Carton<T>` to be `Sync`:
 unsafe impl<T> Sync for Carton<T> where T: Sync  {}
 ```
 
-When we assert our type is Send and Sync we need to enforce that every
+When we assert our type is Send and Sync we usually need to enforce that every
 contained type is Send and Sync. When writing custom types that behave like
 standard library types we can assert that we have the same requirements.
 For example, the following code asserts that a Carton is Send if the same
