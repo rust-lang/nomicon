@@ -167,8 +167,8 @@ we're good.
 
 ```rust,ignore
 // Safety: No one besides us has the raw pointer, so we can safely transfer the
-// Carton to another thread.
-unsafe impl<T> Send for Carton<T> {}
+// Carton to another thread if T can be safely transferred.
+unsafe impl<T> Send for Carton<T> where T: Send {}
 ```
 
 What about Sync? For `Carton` to be Sync we have to enforce that you can't
@@ -181,8 +181,20 @@ sync either.
 ```rust,ignore
 // Safety: Our implementation of DerefMut requires writers to mutably borrow the
 // Carton, so the borrow checker will only let us have references to the Carton
-// on multiple threads if no one has a mutable reference to the Carton.
-unsafe impl<T> Sync for Carton<T> {}
+// on multiple threads if no one has a mutable reference to the Carton. This
+// means we are Sync if T is Sync.
+unsafe impl<T> Sync for Carton<T> where T: Sync  {}
+```
+
+When we assert our type is Send and Sync we need to enforce that every
+contained type is Send and Sync. When writing custom types that behave like
+standard library types we can assert that we have the same requirements.
+For example, the following code asserts that a Carton is Send if the same
+sort of Box would be Send, which in this case is the same as saying T is Send.
+
+```rust
+# struct Carton<T>(std::ptr::NonNull<T>);
+unsafe impl<T> Send for Carton<T> where Box<T>: Send {}
 ```
 
 TODO: better explain what can or can't be Send or Sync. Sufficient to appeal
