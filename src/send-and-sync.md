@@ -206,6 +206,31 @@ sort of Box would be Send, which in this case is the same as saying T is Send.
 unsafe impl<T> Send for Carton<T> where Box<T>: Send {}
 ```
 
+Right now Carton<T> has a memory leak, as it never frees the memory it allocates.
+Once we fix that we have a new requirement we have to ensure we meet to be Send:
+we need to know `free` can be called on a pointer that was yielded by an
+allocation done on another thread. This is the case for `libc::free`, so we can
+still be Send.
+
+```rust,ignore
+impl<T> Drop for Carton<T> {
+    fn drop(&mut self) {
+        unsafe {
+            libc::free(self.0.as_ptr().cast());
+        }
+    }
+}
+```
+
+A nice example where this does not happen is with a MutexGuard: notice how
+[it is not Send][mutex-guard-not-send-docs-rs]. The implementation of MutexGuard
+[uses libraries][mutex-guard-not-send-comment] that require you to ensure you
+don't try to free a lock that you acquired in a different thread. If you were
+able to Send a MutexGuard to another thread the destructor would run in the
+thread you sent it to, violating the requirement. MutexGuard can still be sync
+because all you can send to another thread is an `&MutexGuard` and dropping a
+reference does nothing.
+
 TODO: better explain what can or can't be Send or Sync. Sufficient to appeal
 only to data races?
 
@@ -214,3 +239,5 @@ only to data races?
 [box-is-special]: https://manishearth.github.io/blog/2017/01/10/rust-tidbits-box-is-special/
 [deref-doc]: https://doc.rust-lang.org/core/ops/trait.Deref.html
 [deref-mut-doc]: https://doc.rust-lang.org/core/ops/trait.DerefMut.html
+[mutex-guard-not-send-docs-rs]: https://doc.rust-lang.org/std/sync/struct.MutexGuard.html#impl-Send
+[mutex-guard-not-send-comment]: https://github.com/rust-lang/rust/issues/23465#issuecomment-82730326
