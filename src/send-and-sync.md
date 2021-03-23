@@ -205,11 +205,7 @@ TODO: better explain what can or can't be Send or Sync. Sufficient to appeal
 only to data races?
 
 [unsafe traits]: safe-unsafe-meaning.html
-
 [box-doc]: https://doc.rust-lang.org/std/boxed/struct.Box.html
-
 [box-is-special]: https://manishearth.github.io/blog/2017/01/10/rust-tidbits-box-is-special/
-
 [deref-doc]: https://doc.rust-lang.org/core/ops/trait.Deref.html
-
 [deref-mut-doc]: https://doc.rust-lang.org/core/ops/trait.DerefMut.html
