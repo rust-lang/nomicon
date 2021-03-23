@@ -86,9 +86,9 @@ to the heap.
 
 ```rust,ignore
 use std::mem::size_of;
-use std::ptr::NonNull;
+use std::ptr;
 
-struct Carton<T>(NonNull<T>);
+struct Carton<T>(ptr::NonNull<T>);
 
 impl<T> Carton<T> {
     pub fn new(value: T) -> Self {
