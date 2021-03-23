@@ -76,7 +76,7 @@ largely behave like an `&` or `&mut` into the collection.
 
 [`Box`][box-doc] is implemented as it's own special intrinsic type by the
 compiler for [various reasons][box-is-special], but we can implement something
-with similar-ish behaviour ourselves to see an example of when it is sound to
+with similar-ish behavior ourselves to see an example of when it is sound to
 implement Send and Sync. Let's call it a `Carton`.
 
 We start by writing code to take a value allocated on the stack and transfer it
