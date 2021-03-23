@@ -93,7 +93,7 @@ struct Carton<T>(ptr::NonNull<T>);
 impl<T> Carton<T> {
     pub fn new(value: T) -> Self {
         // Allocate enough memory on the heap to store one T.
-        assert_ne!(size_of::<T>(), 0, "Zero-sized types are out of the scope of this example);
+        assert_ne!(size_of::<T>(), 0, "Zero-sized types are out of the scope of this example");
         let memptr: *mut c_void = ptr::null_mut();
         unsafe {
             let ret = libc::posix_memalign(
