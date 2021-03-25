@@ -85,25 +85,27 @@ We start by writing code to take a value allocated on the stack and transfer it
 to the heap.
 
 ```rust
-# mod libc {
-#     pub use ::std::os::raw::{c_int, c_void, size_t};
-#     extern "C" { pub fn posix_memalign(memptr: *mut *mut c_void, align: size_t, size: size_t) -> c_int; }
+# pub mod libc {
+#    pub use ::std::os::raw::{c_int, c_void};
+#    #[allow(non_camel_case_types)]
+#    pub type size_t = usize;
+#    extern "C" { pub fn posix_memalign(memptr: *mut *mut c_void, align: size_t, size: size_t) -> c_int; }
 # }
 use std::{
     mem::{align_of, size_of},
     ptr,
 };
-use libc::c_void;
+
 struct Carton<T>(ptr::NonNull<T>);
 
 impl<T> Carton<T> {
     pub fn new(value: T) -> Self {
         // Allocate enough memory on the heap to store one T.
         assert_ne!(size_of::<T>(), 0, "Zero-sized types are out of the scope of this example");
-        let memptr: *mut c_void = ptr::null_mut();
+        let mut memptr = ptr::null_mut() as *mut T;
         unsafe {
             let ret = libc::posix_memalign(
-                &mut memptr,
+                (&mut memptr).cast(),
                 align_of::<T>(),
                 size_of::<T>()
             );
@@ -218,7 +220,12 @@ we need to know `free` can be called on a pointer that was yielded by an
 allocation done on another thread. We can check this is true in the docs for
 [`libc::free`][libc-free-docs].
 
-```rust,ignore
+```rust
+# struct Carton<T>(std::ptr::NonNull<T>);
+# mod libc {
+#     pub use ::std::os::raw::c_void;
+#     extern "C" { pub fn free(p: *mut c_void); }
+# }
 impl<T> Drop for Carton<T> {
     fn drop(&mut self) {
         unsafe {
