@@ -108,7 +108,7 @@ impl<T> Carton<T> {
         let mut ptr = unsafe {
             // Safety: memptr is dereferenceable because we created it from a
             // reference and have exclusive access.
-            NonNull::new(memptr.cast::<T>())
+            ptr::NonNull::new(memptr.cast::<T>())
                 .expect("Guaranteed non-null if posix_memalign returns 0")
         };
 
