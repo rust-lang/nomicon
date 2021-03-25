@@ -84,10 +84,16 @@ implement Send and Sync. Let's call it a `Carton`.
 We start by writing code to take a value allocated on the stack and transfer it
 to the heap.
 
-```rust,ignore
-use std::mem::size_of;
-use std::ptr;
-
+```rust
+# mod libc {
+#     pub use ::std::os::raw::{c_int, c_void, size_t};
+#     extern "C" { pub fn posix_memalign(memptr: *mut *mut c_void, align: size_t, size: size_t) -> c_int; }
+# }
+use std::{
+    mem::{align_of, size_of},
+    ptr,
+};
+use libc::c_void;
 struct Carton<T>(ptr::NonNull<T>);
 
 impl<T> Carton<T> {
