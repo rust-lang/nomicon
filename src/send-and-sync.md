@@ -214,7 +214,7 @@ sort of Box would be Send, which in this case is the same as saying T is Send.
 unsafe impl<T> Send for Carton<T> where Box<T>: Send {}
 ```
 
-Right now Carton<T> has a memory leak, as it never frees the memory it allocates.
+Right now `Carton<T>` has a memory leak, as it never frees the memory it allocates.
 Once we fix that we have a new requirement we have to ensure we meet to be Send:
 we need to know `free` can be called on a pointer that was yielded by an
 allocation done on another thread. We can check this is true in the docs for
