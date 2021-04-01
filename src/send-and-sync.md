@@ -173,7 +173,7 @@ impl<T> DerefMut for Carton<T> {
 }
 ```
 
-Finally, lets think about whether our `Carton` is Send and Sync. Something can
+Finally, let's think about whether our `Carton` is Send and Sync. Something can
 safely be Send unless it shares mutable state with something else without
 enforcing exclusive access to it. Each `Carton` has a unique pointer, so
 we're good.
