@@ -38,7 +38,7 @@ impl<T> RawVec<T> {
         // !0 is usize::MAX. This branch should be stripped at compile time.
         let cap = if mem::size_of::<T>() == 0 { !0 } else { 0 };
 
-        // NonNull::dangling() doubles as "unallocated" and "zero-sized allocation"
+        // `NonNull::dangling()` doubles as "unallocated" and "zero-sized allocation"
         RawVec {
             ptr: NonNull::dangling(),
             cap: cap,
@@ -57,7 +57,7 @@ impl<T> RawVec<T> {
             // This can't overflow because we ensure self.cap <= isize::MAX.
             let new_cap = 2 * self.cap;
 
-            // Layout::array checks that the number of bytes is <= usize::MAX,
+            // `Layout::array` checks that the number of bytes is <= usize::MAX,
             // but this is redundant since old_layout.size() <= isize::MAX,
             // so the `unwrap` should never fail.
             let new_layout = Layout::array::<T>(new_cap).unwrap();

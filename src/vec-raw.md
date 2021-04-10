@@ -77,7 +77,6 @@ impl<T> Drop for RawVec<T> {
 And change Vec as follows:
 
 ```rust,ignore
-
 pub struct Vec<T> {
     buf: RawVec<T>,
     len: usize,

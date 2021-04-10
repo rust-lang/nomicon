@@ -16,8 +16,8 @@ impl<T> Drop for Vec<T> {
         if self.cap != 0 {
             while let Some(_) = self.pop() { }
             let layout = Layout::array::<T>(self.cap).unwrap();
-            unsafe { 
-                alloc::dealloc(self.ptr.as_ptr() as *mut u8, layout); 
+            unsafe {
+                alloc::dealloc(self.ptr.as_ptr() as *mut u8, layout);
             }
         }
     }

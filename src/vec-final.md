@@ -21,7 +21,7 @@ impl<T> RawVec<T> {
         // !0 is usize::MAX. This branch should be stripped at compile time.
         let cap = if mem::size_of::<T>() == 0 { !0 } else { 0 };
 
-        // NonNull::dangling() doubles as "unallocated" and "zero-sized allocation"
+        // `NonNull::dangling()` doubles as "unallocated" and "zero-sized allocation"
         RawVec {
             ptr: NonNull::dangling(),
             cap: cap,
@@ -40,7 +40,7 @@ impl<T> RawVec<T> {
             // This can't overflow because we ensure self.cap <= isize::MAX.
             let new_cap = 2 * self.cap;
 
-            // Layout::array checks that the number of bytes is <= usize::MAX,
+            // `Layout::array` checks that the number of bytes is <= usize::MAX,
             // but this is redundant since old_layout.size() <= isize::MAX,
             // so the `unwrap` should never fail.
             let new_layout = Layout::array::<T>(new_cap).unwrap();
@@ -248,7 +248,7 @@ impl<T> Iterator for RawValIter<T> {
 
     fn size_hint(&self) -> (usize, Option<usize>) {
         let elem_size = mem::size_of::<T>();
-        let len = (self.end as usize - self.start as usize) / 
+        let len = (self.end as usize - self.start as usize) /
                   if elem_size == 0 { 1 } else { elem_size };
         (len, Some(len))
     }
@@ -336,7 +336,7 @@ impl<'a, T> Drop for Drain<'a, T> {
 #
 # mod tests {
 #     use super::*;
-# 
+#
 #     pub fn create_push_pop() {
 #         let mut v = Vec::new();
 #         v.push(1);
@@ -354,7 +354,7 @@ impl<'a, T> Drop for Drain<'a, T> {
 #         assert_eq!(5, x);
 #         assert_eq!(1, v.len());
 #     }
-# 
+#
 #     pub fn iter_test() {
 #         let mut v = Vec::new();
 #         for i in 0..10 {
@@ -367,7 +367,7 @@ impl<'a, T> Drop for Drain<'a, T> {
 #         assert_eq!(0, *first);
 #         assert_eq!(9, *last);
 #     }
-# 
+#
 #     pub fn test_drain() {
 #         let mut v = Vec::new();
 #         for i in 0..10 {
@@ -384,19 +384,19 @@ impl<'a, T> Drop for Drain<'a, T> {
 #         v.push(Box::new(1));
 #         assert_eq!(1, *v.pop().unwrap());
 #     }
-# 
+#
 #     pub fn test_zst() {
 #         let mut v = Vec::new();
 #         for _i in 0..10 {
 #             v.push(())
 #         }
-# 
+#
 #         let mut count = 0;
-# 
+#
 #         for _ in v.into_iter() {
 #             count += 1
 #         }
-# 
+#
 #         assert_eq!(10, count);
 #     }
 # }

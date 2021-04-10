@@ -51,5 +51,5 @@ pub fn pop(&mut self) -> Option<T> {
             Some(ptr::read(self.ptr.as_ptr().offset(self.len as isize)))
         }
     }
-}    
+}
 ```

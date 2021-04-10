@@ -33,11 +33,11 @@ As a recap, Unique is a wrapper around a raw pointer that declares that:
 * We are Send/Sync if `T` is Send/Sync
 * Our pointer is never null (so `Option<Vec<T>>` is null-pointer-optimized)
 
-We can implement all of the above requirements in stable Rust. To do this, instead 
-of using `Unique<T>` we will use [`NonNull<T>`][NonNull], another wrapper around a 
-raw pointer, which gives us two of the above properties, namely it is covariant 
-over `T` and is declared to never be null. By adding a `PhantomData<T>` (for drop 
-check) and implementing Send/Sync if `T` is, we get the same results as using 
+We can implement all of the above requirements in stable Rust. To do this, instead
+of using `Unique<T>` we will use [`NonNull<T>`][NonNull], another wrapper around a
+raw pointer, which gives us two of the above properties, namely it is covariant
+over `T` and is declared to never be null. By adding a `PhantomData<T>` (for drop
+check) and implementing Send/Sync if `T` is, we get the same results as using
 `Unique<T>`:
 
 ```rust

@@ -1,16 +1,16 @@
 # Allocating Memory
 
-Using NonNull throws a wrench in an important feature of Vec (and indeed all of
-the std collections): creating an empty Vec doesn't actually allocate at all. This 
-is not the same as allocating a zero-sized memory block, which is not allowed by 
-the global allocator (it results in undefined behavior!). So if we can't allocate, 
-but also can't put a null pointer in `ptr`, what do we do in `Vec::new`? Well, we 
+Using `NonNull` throws a wrench in an important feature of Vec (and indeed all of
+the std collections): creating an empty Vec doesn't actually allocate at all. This
+is not the same as allocating a zero-sized memory block, which is not allowed by
+the global allocator (it results in undefined behavior!). So if we can't allocate,
+but also can't put a null pointer in `ptr`, what do we do in `Vec::new`? Well, we
 just put some other garbage in there!
 
 This is perfectly fine because we already have `cap == 0` as our sentinel for no
 allocation. We don't even need to handle it specially in almost any code because
 we usually need to check if `cap > len` or `len > 0` anyway. The recommended
-Rust value to put here is `mem::align_of::<T>()`. NonNull provides a convenience
+Rust value to put here is `mem::align_of::<T>()`. `NonNull` provides a convenience
 for this: `NonNull::dangling()`. There are quite a few places where we'll
 want to use `dangling` because there's no real allocation to talk about but
 `null` would make the compiler do bad things.
@@ -23,11 +23,11 @@ use std::mem;
 impl<T> Vec<T> {
     fn new() -> Self {
         assert!(mem::size_of::<T>() != 0, "We're not ready to handle ZSTs");
-        Vec { 
-            ptr: NonNull::dangling(), 
-            len: 0, 
+        Vec {
+            ptr: NonNull::dangling(),
+            len: 0,
             cap: 0,
-            _marker: PhantomData 
+            _marker: PhantomData,
         }
     }
 }
@@ -45,7 +45,7 @@ and [`dealloc`][dealloc] which are available in stable Rust in
 favor of the methods of [`std::alloc::Global`][Global] after this type is stabilized. 
 
 We'll also need a way to handle out-of-memory (OOM) conditions. The standard
-library provides a function [`alloc::handle_alloc_error`][handle_alloc_error], 
+library provides a function [`alloc::handle_alloc_error`][handle_alloc_error],
 which will abort the program in a platform-specific manner.
 The reason we abort and don't panic is because unwinding can cause allocations
 to happen, and that seems like a bad thing to do when your allocator just came
@@ -171,9 +171,9 @@ impl<T> Vec<T> {
             (1, Layout::array::<T>(1).unwrap())
         } else {
             // This can't overflow since self.cap <= isize::MAX.
-            let new_cap = 2 * self.cap;  
+            let new_cap = 2 * self.cap;
 
-            // Layout::array checks that the number of bytes is <= usize::MAX,
+            // `Layout::array` checks that the number of bytes is <= usize::MAX,
             // but this is redundant since old_layout.size() <= isize::MAX,
             // so the `unwrap` should never fail.
             let new_layout = Layout::array::<T>(new_cap).unwrap();

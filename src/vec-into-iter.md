@@ -137,8 +137,8 @@ impl<T> Drop for IntoIter<T> {
             // drop any remaining elements
             for _ in &mut *self {}
             let layout = Layout::array::<T>(self.cap).unwrap();
-            unsafe { 
-                alloc::dealloc(self.buf.as_ptr() as *mut u8, layout); 
+            unsafe {
+                alloc::dealloc(self.buf.as_ptr() as *mut u8, layout);
             }
         }
     }
