@@ -13,7 +13,7 @@ received some bugfixes since then.)
 Trying to fully explain the model in this book is fairly hopeless. It's defined
 in terms of madness-inducing causality graphs that require a full book to
 properly understand in a practical way. If you want all the nitty-gritty
-details, you should check out the [C++20 draft specification (Section 31)][C++-model].
+details, you should check out the [C++ specification][C++-model].
 Still, we'll try to cover the basics and some of the problems Rust developers
 face.
 
@@ -256,4 +256,4 @@ relaxed operations can be cheaper on weakly-ordered platforms.
 
 
 [C11-busted]: http://plv.mpi-sws.org/c11comp/popl15.pdf
-[C++-model]: http://eel.is/c++draft/atomics.order
+[C++-model]: https://en.cppreference.com/w/cpp/atomic/memory_order
