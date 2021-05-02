@@ -1,41 +1,52 @@
 # Allocating Memory
 
-Using Unique throws a wrench in an important feature of Vec (and indeed all of
-the std collections): an empty Vec doesn't actually allocate at all. So if we
-can't allocate, but also can't put a null pointer in `ptr`, what do we do in
-`Vec::new`? Well, we just put some other garbage in there!
+Using `NonNull` throws a wrench in an important feature of Vec (and indeed all of
+the std collections): creating an empty Vec doesn't actually allocate at all. This
+is not the same as allocating a zero-sized memory block, which is not allowed by
+the global allocator (it results in undefined behavior!). So if we can't allocate,
+but also can't put a null pointer in `ptr`, what do we do in `Vec::new`? Well, we
+just put some other garbage in there!
 
 This is perfectly fine because we already have `cap == 0` as our sentinel for no
 allocation. We don't even need to handle it specially in almost any code because
 we usually need to check if `cap > len` or `len > 0` anyway. The recommended
-Rust value to put here is `mem::align_of::<T>()`. Unique provides a convenience
-for this: `Unique::dangling()`. There are quite a few places where we'll
+Rust value to put here is `mem::align_of::<T>()`. `NonNull` provides a convenience
+for this: `NonNull::dangling()`. There are quite a few places where we'll
 want to use `dangling` because there's no real allocation to talk about but
 `null` would make the compiler do bad things.
 
 So:
 
 ```rust,ignore
+use std::mem;
+
 impl<T> Vec<T> {
     fn new() -> Self {
         assert!(mem::size_of::<T>() != 0, "We're not ready to handle ZSTs");
-        Vec { ptr: Unique::dangling(), len: 0, cap: 0 }
+        Vec {
+            ptr: NonNull::dangling(),
+            len: 0,
+            cap: 0,
+            _marker: PhantomData,
+        }
     }
 }
+# fn main() {}
 ```
 
 I slipped in that assert there because zero-sized types will require some
 special handling throughout our code, and I want to defer the issue for now.
 Without this assert, some of our early drafts will do some Very Bad Things.
 
-Next we need to figure out what to actually do when we *do* want space. For
-that, we'll need to use the rest of the heap APIs. These basically allow us to
-talk directly to Rust's allocator (`malloc` on Unix platforms and `HeapAlloc`
-on Windows by default).
+Next we need to figure out what to actually do when we *do* want space. For that, 
+we use the global allocation functions [`alloc`][alloc], [`realloc`][realloc], 
+and [`dealloc`][dealloc] which are available in stable Rust in 
+[`std::alloc`][std_alloc]. These functions are expected to become deprecated in 
+favor of the methods of [`std::alloc::Global`][Global] after this type is stabilized. 
 
 We'll also need a way to handle out-of-memory (OOM) conditions. The standard
-library calls `std::alloc::oom()`, which in turn calls the `oom` langitem,
-which aborts the program in a platform-specific manner.
+library provides a function [`alloc::handle_alloc_error`][handle_alloc_error],
+which will abort the program in a platform-specific manner.
 The reason we abort and don't panic is because unwinding can cause allocations
 to happen, and that seems like a bad thing to do when your allocator just came
 back with "hey I don't have any more memory".
@@ -152,52 +163,48 @@ such we will guard against this case explicitly.
 Ok with all the nonsense out of the way, let's actually allocate some memory:
 
 ```rust,ignore
-fn grow(&mut self) {
-    // this is all pretty delicate, so let's say it's all unsafe
-    unsafe {
-        let elem_size = mem::size_of::<T>();
+use std::alloc::{self, Layout};
 
-        let (new_cap, ptr) = if self.cap == 0 {
-            let ptr = Global.allocate(Layout::array::<T>(1).unwrap());
-            (1, ptr)
+impl<T> Vec<T> {
+    fn grow(&mut self) {
+        let (new_cap, new_layout) = if self.cap == 0 {
+            (1, Layout::array::<T>(1).unwrap())
         } else {
-            // as an invariant, we can assume that `self.cap < isize::MAX`,
-            // so this doesn't need to be checked.
+            // This can't overflow since self.cap <= isize::MAX.
             let new_cap = 2 * self.cap;
-            // Similarly this can't overflow due to previously allocating this
-            let old_num_bytes = self.cap * elem_size;
 
-            // check that the new allocation doesn't exceed `isize::MAX` at all
-            // regardless of the actual size of the capacity. This combines the
-            // `new_cap <= isize::MAX` and `new_num_bytes <= usize::MAX` checks
-            // we need to make. We lose the ability to allocate e.g. 2/3rds of
-            // the address space with a single Vec of i16's on 32-bit though.
-            // Alas, poor Yorick -- I knew him, Horatio.
-            assert!(old_num_bytes <= (isize::MAX as usize) / 2,
-                    "capacity overflow");
-
-            let c: NonNull<T> = self.ptr.into();
-            let ptr = Global.grow(c.cast(),
-                                  Layout::array::<T>(self.cap).unwrap(),
-                                  Layout::array::<T>(new_cap).unwrap());
-            (new_cap, ptr)
+            // `Layout::array` checks that the number of bytes is <= usize::MAX,
+            // but this is redundant since old_layout.size() <= isize::MAX,
+            // so the `unwrap` should never fail.
+            let new_layout = Layout::array::<T>(new_cap).unwrap();
+            (new_cap, new_layout)
         };
 
-        // If allocate or reallocate fail, oom
-        if ptr.is_err() {
-            handle_alloc_error(Layout::from_size_align_unchecked(
-                new_cap * elem_size,
-                mem::align_of::<T>(),
-            ))
-        }
+        // Ensure that the new allocation doesn't exceed `isize::MAX` bytes.
+        assert!(new_layout.size() <= isize::MAX as usize, "Allocation too large");
 
-        let ptr = ptr.unwrap();
+        let new_ptr = if self.cap == 0 {
+            unsafe { alloc::alloc(new_layout) }
+        } else {
+            let old_layout = Layout::array::<T>(self.cap).unwrap();
+            let old_ptr = self.ptr.as_ptr() as *mut u8;
+            unsafe { alloc::realloc(old_ptr, old_layout, new_layout.size()) }
+        };
 
-        self.ptr = Unique::new_unchecked(ptr.as_ptr() as *mut _);
+        // If allocation fails, `new_ptr` will be null, in which case we abort.
+        self.ptr = match NonNull::new(new_ptr as *mut T) {
+            Some(p) => p,
+            None => alloc::handle_alloc_error(new_layout),
+        };
         self.cap = new_cap;
     }
 }
+# fn main() {}
 ```
 
-Nothing particularly tricky here. Just computing sizes and alignments and doing
-some careful multiplication checks.
+[Global]: ../std/alloc/struct.Global.html
+[handle_alloc_error]: ../alloc/alloc/fn.handle_alloc_error.html
+[alloc]: ../alloc/alloc/fn.alloc.html
+[realloc]: ../alloc/alloc/fn.realloc.html
+[dealloc]: ../alloc/alloc/fn.dealloc.html
+[std_alloc]: ../alloc/alloc/index.html

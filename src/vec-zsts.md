@@ -19,7 +19,7 @@ Thankfully we abstracted out pointer-iterators and allocating handling into
 ## Allocating Zero-Sized Types
 
 So if the allocator API doesn't support zero-sized allocations, what on earth
-do we store as our allocation? `Unique::dangling()` of course! Almost every operation
+do we store as our allocation? `NonNull::dangling()` of course! Almost every operation
 with a ZST is a no-op since ZSTs have exactly one value, and therefore no state needs
 to be considered to store or load them. This actually extends to `ptr::read` and
 `ptr::write`: they won't actually look at the pointer at all. As such we never need
@@ -38,43 +38,49 @@ impl<T> RawVec<T> {
         // !0 is usize::MAX. This branch should be stripped at compile time.
         let cap = if mem::size_of::<T>() == 0 { !0 } else { 0 };
 
-        // Unique::dangling() doubles as "unallocated" and "zero-sized allocation"
-        RawVec { ptr: Unique::dangling(), cap: cap }
+        // `NonNull::dangling()` doubles as "unallocated" and "zero-sized allocation"
+        RawVec {
+            ptr: NonNull::dangling(),
+            cap: cap,
+            _marker: PhantomData,
+        }
     }
 
     fn grow(&mut self) {
-        unsafe {
-            let elem_size = mem::size_of::<T>();
+        // since we set the capacity to usize::MAX when T has size 0,
+        // getting to here necessarily means the Vec is overfull.
+        assert!(mem::size_of::<T>() != 0, "capacity overflow");
 
-            // since we set the capacity to usize::MAX when elem_size is
-            // 0, getting to here necessarily means the Vec is overfull.
-            assert!(elem_size != 0, "capacity overflow");
+        let (new_cap, new_layout) = if self.cap == 0 {
+            (1, Layout::array::<T>(1).unwrap())
+        } else {
+            // This can't overflow because we ensure self.cap <= isize::MAX.
+            let new_cap = 2 * self.cap;
 
-            let (new_cap, ptr) = if self.cap == 0 {
-                let ptr = Global.allocate(Layout::array::<T>(1).unwrap());
-                (1, ptr)
-            } else {
-                let new_cap = 2 * self.cap;
-                let c: NonNull<T> = self.ptr.into();
-                let ptr = Global.grow(c.cast(),
-                                      Layout::array::<T>(self.cap).unwrap(),
-                                      Layout::array::<T>(new_cap).unwrap());
-                (new_cap, ptr)
-            };
+            // `Layout::array` checks that the number of bytes is <= usize::MAX,
+            // but this is redundant since old_layout.size() <= isize::MAX,
+            // so the `unwrap` should never fail.
+            let new_layout = Layout::array::<T>(new_cap).unwrap();
+            (new_cap, new_layout)
+        };
 
-            // If allocate or reallocate fail, oom
-            if ptr.is_err() {
-                handle_alloc_error(Layout::from_size_align_unchecked(
-                    new_cap * elem_size,
-                    mem::align_of::<T>(),
-                ))
-            }
+        // Ensure that the new allocation doesn't exceed `isize::MAX` bytes.
+        assert!(new_layout.size() <= isize::MAX as usize, "Allocation too large");
 
-            let ptr = ptr.unwrap();
+        let new_ptr = if self.cap == 0 {
+            unsafe { alloc::alloc(new_layout) }
+        } else {
+            let old_layout = Layout::array::<T>(self.cap).unwrap();
+            let old_ptr = self.ptr.as_ptr() as *mut u8;
+            unsafe { alloc::realloc(old_ptr, old_layout, new_layout.size()) }
+        };
 
-            self.ptr = Unique::new_unchecked(ptr.as_ptr() as *mut _);
-            self.cap = new_cap;
-        }
+        // If allocation fails, `new_ptr` will be null, in which case we abort.
+        self.ptr = match NonNull::new(new_ptr as *mut T) {
+            Some(p) => p,
+            None => alloc::handle_alloc_error(new_layout),
+        };
+        self.cap = new_cap;
     }
 }
 
@@ -82,12 +88,12 @@ impl<T> Drop for RawVec<T> {
     fn drop(&mut self) {
         let elem_size = mem::size_of::<T>();
 
-        // don't free zero-sized allocations, as they were never allocated.
         if self.cap != 0 && elem_size != 0 {
             unsafe {
-                let c: NonNull<T> = self.ptr.into();
-                Global.deallocate(c.cast(),
-                                  Layout::array::<T>(self.cap).unwrap());
+                alloc::dealloc(
+                    self.ptr.as_ptr() as *mut u8,
+                    Layout::array::<T>(self.cap).unwrap(),
+                );
             }
         }
     }

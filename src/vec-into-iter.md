@@ -44,10 +44,11 @@ So we're going to use the following struct:
 
 ```rust,ignore
 pub struct IntoIter<T> {
-    buf: Unique<T>,
+    buf: NonNull<T>,
     cap: usize,
     start: *const T,
     end: *const T,
+    _marker: PhantomData<T>,
 }
 ```
 
@@ -75,6 +76,7 @@ impl<T> Vec<T> {
                 } else {
                     ptr.as_ptr().offset(len as isize)
                 },
+                _marker: PhantomData,
             }
         }
     }
@@ -134,11 +136,9 @@ impl<T> Drop for IntoIter<T> {
         if self.cap != 0 {
             // drop any remaining elements
             for _ in &mut *self {}
-
+            let layout = Layout::array::<T>(self.cap).unwrap();
             unsafe {
-                let c: NonNull<T> = self.buf.into();
-                Global.deallocate(c.cast(),
-                                  Layout::array::<T>(self.cap).unwrap());
+                alloc::dealloc(self.buf.as_ptr() as *mut u8, layout);
             }
         }
     }

@@ -7,20 +7,17 @@ ask Rust if `T` `needs_drop` and omit the calls to `pop`. However in practice
 LLVM is *really* good at removing simple side-effect free code like this, so I
 wouldn't bother unless you notice it's not being stripped (in this case it is).
 
-We must not call `Global.deallocate` when `self.cap == 0`, as in this case we
+We must not call `alloc::dealloc` when `self.cap == 0`, as in this case we
 haven't actually allocated any memory.
-
 
 ```rust,ignore
 impl<T> Drop for Vec<T> {
     fn drop(&mut self) {
         if self.cap != 0 {
             while let Some(_) = self.pop() { }
-
+            let layout = Layout::array::<T>(self.cap).unwrap();
             unsafe {
-                let c: NonNull<T> = self.ptr.into();
-                Global.deallocate(c.cast(),
-                                  Layout::array::<T>(self.cap).unwrap());
+                alloc::dealloc(self.ptr.as_ptr() as *mut u8, layout);
             }
         }
     }
