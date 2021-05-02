@@ -142,7 +142,7 @@ impl<T> Vec<T> {
 
             IntoIter {
                 start: buf.ptr.as_ptr(),
-                end: buf.ptr.as_ptr().offset(len as isize),
+                end: buf.ptr.as_ptr().add(len),
                 _buf: buf,
             }
         }

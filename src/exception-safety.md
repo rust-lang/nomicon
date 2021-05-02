@@ -48,7 +48,7 @@ impl<T: Clone> Vec<T> {
             self.set_len(self.len() + to_push.len());
 
             for (i, x) in to_push.iter().enumerate() {
-                self.ptr().offset(i as isize).write(x.clone());
+                self.ptr().add(i).write(x.clone());
             }
         }
     }
@@ -58,7 +58,7 @@ impl<T: Clone> Vec<T> {
 We bypass `push` in order to avoid redundant capacity and `len` checks on the
 Vec that we definitely know has capacity. The logic is totally correct, except
 there's a subtle problem with our code: it's not exception-safe! `set_len`,
-`offset`, and `write` are all fine; `clone` is the panic bomb we over-looked.
+`add`, and `write` are all fine; `clone` is the panic bomb we over-looked.
 
 Clone is completely out of our control, and is totally free to panic. If it
 does, our function will exit early with the length of the Vec set too large. If

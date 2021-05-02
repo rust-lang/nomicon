@@ -46,7 +46,7 @@ impl<T> RawValIter<T> {
                 // information to LLVM via GEP.
                 slice.as_ptr()
             } else {
-                slice.as_ptr().offset(slice.len() as isize)
+                slice.as_ptr().add(slice.len())
             }
         }
     }
