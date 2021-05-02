@@ -111,7 +111,7 @@ impl<T> Vec<T> {
         }
 
         unsafe {
-            ptr::write(self.ptr().offset(self.len as isize), elem);
+            ptr::write(self.ptr().add(self.len), elem);
         }
 
         // Can't overflow, we'll OOM first.
@@ -123,7 +123,7 @@ impl<T> Vec<T> {
             None
         } else {
             self.len -= 1;
-            unsafe { Some(ptr::read(self.ptr().offset(self.len as isize))) }
+            unsafe { Some(ptr::read(self.ptr().add(self.len))) }
         }
     }
 
@@ -135,11 +135,11 @@ impl<T> Vec<T> {
 
         unsafe {
             ptr::copy(
-                self.ptr().offset(index as isize),
-                self.ptr().offset(index as isize + 1),
+                self.ptr().add(index),
+                self.ptr().add(index + 1),
                 self.len - index,
             );
-            ptr::write(self.ptr().offset(index as isize), elem);
+            ptr::write(self.ptr().add(index), elem);
             self.len += 1;
         }
     }
@@ -148,10 +148,10 @@ impl<T> Vec<T> {
         assert!(index < self.len, "index out of bounds");
         unsafe {
             self.len -= 1;
-            let result = ptr::read(self.ptr().offset(index as isize));
+            let result = ptr::read(self.ptr().add(index));
             ptr::copy(
-                self.ptr().offset(index as isize + 1),
-                self.ptr().offset(index as isize),
+                self.ptr().add(index + 1),
+                self.ptr().add(index),
                 self.len - index,
             );
             result
@@ -222,7 +222,7 @@ impl<T> RawValIter<T> {
             } else if slice.len() == 0 {
                 slice.as_ptr()
             } else {
-                slice.as_ptr().offset(slice.len() as isize)
+                slice.as_ptr().add(slice.len())
             },
         }
     }

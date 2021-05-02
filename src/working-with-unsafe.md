@@ -71,7 +71,7 @@ impl<T> Vec<T> {
             self.reallocate();
         }
         unsafe {
-            ptr::write(self.ptr.offset(self.len as isize), elem);
+            ptr::write(self.ptr.add(self.len), elem);
             self.len += 1;
         }
     }

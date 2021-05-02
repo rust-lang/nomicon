@@ -74,7 +74,7 @@ impl<T> Vec<T> {
                     // can't offset off this pointer, it's not allocated!
                     ptr.as_ptr()
                 } else {
-                    ptr.as_ptr().offset(len as isize)
+                    ptr.as_ptr().add(len)
                 },
                 _marker: PhantomData,
             }

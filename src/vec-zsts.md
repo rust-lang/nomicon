@@ -123,7 +123,7 @@ impl<T> RawValIter<T> {
             } else if slice.len() == 0 {
                 slice.as_ptr()
             } else {
-                slice.as_ptr().offset(slice.len() as isize)
+                slice.as_ptr().add(slice.len())
             },
         }
     }
