@@ -121,16 +121,19 @@ trait expects. In this situation, the Unsafe Rust in the internals of
 implementation is correct. If it isn't, it's the fault of the unsafe trait
 implementation, which is consistent with Rust's safety guarantees.
 
-The decision of whether to mark a trait `unsafe` is an API design choice.
-Rust has traditionally avoided doing this because it makes Unsafe
-Rust pervasive, which isn't desirable. `Send` and `Sync` are marked unsafe
-because thread safety is a *fundamental property* that unsafe code can't
-possibly hope to defend against in the way it could defend against a buggy
-`Ord` implementation. Similarly, `GlobalAllocator` is keeping accounts of all
-the memory in the program and other things like `Box` or `Vec` build on top of
-it. If it does something weird (giving the same chunk of memory to another
-request when it is still in use), there's no chance to detect that and do
-anything about it.
+The decision of whether to mark a trait `unsafe` is an API design choice. A
+safe trait is easier to implement, but any unsafe code that relies on it must
+defend against incorrect behavior. Marking a trait `unsafe` shifts this
+responsibility to the implementor. Rust has traditionally avoided marking
+traits `unsafe` because it makes Unsafe Rust pervasive, which isn't desirable.
+
+`Send` and `Sync` are marked unsafe because thread safety is a *fundamental
+property* that unsafe code can't possibly hope to defend against in the way it
+could defend against a buggy `Ord` implementation. Similarly, `GlobalAllocator`
+is keeping accounts of all the memory in the program and other things like
+`Box` or `Vec` build on top of it. If it does something weird (giving the same
+chunk of memory to another request when it is still in use), there's no chance
+to detect that and do anything about it.
 
 The decision of whether to mark your own traits `unsafe` depends on the same
 sort of consideration. If `unsafe` code can't reasonably expect to defend
