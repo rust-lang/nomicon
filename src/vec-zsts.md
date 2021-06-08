@@ -13,9 +13,6 @@ zero-sized types. We need to be careful of two things:
 Thankfully we abstracted out pointer-iterators and allocating handling into
 `RawValIter` and `RawVec` respectively. How mysteriously convenient.
 
-
-
-
 ## Allocating Zero-Sized Types
 
 So if the allocator API doesn't support zero-sized allocations, what on earth
@@ -102,9 +99,6 @@ impl<T> Drop for RawVec<T> {
 
 That's it. We support pushing and popping zero-sized types now. Our iterators
 (that aren't provided by slice Deref) are still busted, though.
-
-
-
 
 ## Iterating Zero-Sized Types
 

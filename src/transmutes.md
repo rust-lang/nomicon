@@ -20,9 +20,9 @@ boggling.
   it may produce a surprising type to satisfy inference.
 
 * Transmuting an `&` to `&mut` is UB.
-    * Transmuting an `&` to `&mut` is *always* UB.
-    * No you can't do it.
-    * No you're not special.
+  * Transmuting an `&` to `&mut` is *always* UB.
+  * No you can't do it.
+  * No you're not special.
 
 * Transmuting to a reference without an explicitly provided lifetime
   produces an [unbounded lifetime].
@@ -49,7 +49,6 @@ to be larger than `T`.
 Also of course you can get all of the functionality of these functions using raw
 pointer casts or `union`s, but without any of the lints or other basic sanity
 checks. Raw pointer casts and `union`s do not magically avoid the above rules.
-
 
 [unbounded lifetime]: ./unbounded-lifetimes.md
 [transmute]: ../std/mem/fn.transmute.html

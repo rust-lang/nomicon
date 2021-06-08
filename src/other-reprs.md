@@ -3,10 +3,7 @@
 Rust allows you to specify alternative data layout strategies from the default.
 There's also the [unsafe code guidelines] (note that it's **NOT** normative).
 
-
-
-
-# repr(C)
+## repr(C)
 
 This is the most important `repr`. It has fairly simple intent: do what C does.
 The order, size, and alignment of fields is exactly what you would expect from C
@@ -57,9 +54,7 @@ construct an instance of an enum that does not match one of its
 variants. (This allows exhaustive matches to continue to be written and
 compiled as normal.)
 
-
-
-# repr(transparent)
+## repr(transparent)
 
 This can only be used on structs with a single non-zero-sized field (there may
 be additional zero-sized fields). The effect is that the layout and ABI of the
@@ -75,9 +70,7 @@ Foo(f32)` to always have the same ABI as `f32`.
 
 More details are in the [RFC][rfc-transparent].
 
-
-
-# repr(u*), repr(i*)
+## repr(u*), repr(i*)
 
 These specify the size to make a fieldless enum. If the discriminant overflows
 the integer it has to fit in, it will produce a compile-time error. You can
@@ -101,10 +94,7 @@ optimization.
 
 These reprs have no effect on a struct.
 
-
-
-
-# repr(packed)
+## repr(packed)
 
 `repr(packed)` forces Rust to strip any padding, and only align the type to a
 byte. This may improve the memory footprint, but will likely have other negative
@@ -124,10 +114,7 @@ this should not be used.
 
 This repr is a modifier on `repr(C)` and `repr(Rust)`.
 
-
-
-
-# repr(align(n))
+## repr(align(n))
 
 `repr(align(n))` (where `n` is a power of two) forces the type to have an
 alignment of *at least* n.
@@ -138,10 +125,6 @@ kinds of concurrent code).
 
 This is a modifier on `repr(C)` and `repr(Rust)`. It is incompatible with
 `repr(packed)`.
-
-
-
-
 
 [unsafe code guidelines]: https://rust-lang.github.io/unsafe-code-guidelines/layout.html
 [drop flags]: drop-flags.html

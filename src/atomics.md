@@ -22,10 +22,7 @@ semantics we want, the optimizations compilers want, and the inconsistent chaos
 our hardware wants. *We* would like to just write programs and have them do
 exactly what we said but, you know, fast. Wouldn't that be great?
 
-
-
-
-# Compiler Reordering
+## Compiler Reordering
 
 Compilers fundamentally want to be able to do all sorts of complicated
 transformations to reduce data dependencies and eliminate dead code. In
@@ -54,10 +51,7 @@ able to make these kinds of optimizations, because they can seriously improve
 performance. On the other hand, we'd also like to be able to depend on our
 program *doing the thing we said*.
 
-
-
-
-# Hardware Reordering
+## Hardware Reordering
 
 On the other hand, even if the compiler totally understood what we wanted and
 respected our wishes, our hardware might instead get us in trouble. Trouble
@@ -110,11 +104,7 @@ programming:
   incorrect. If possible, concurrent algorithms should be tested on
   weakly-ordered hardware.
 
-
-
-
-
-# Data Accesses
+## Data Accesses
 
 The C++ memory model attempts to bridge the gap by allowing us to talk about the
 *causality* of our program. Generally, this is by establishing a *happens
@@ -156,9 +146,7 @@ propagated to other threads. The set of orderings Rust exposes are:
 TODO: negative reasoning vs positive reasoning? TODO: "can't forget to
 synchronize"
 
-
-
-# Sequentially Consistent
+## Sequentially Consistent
 
 Sequentially Consistent is the most powerful of all, implying the restrictions
 of all other orderings. Intuitively, a sequentially consistent operation
@@ -182,10 +170,7 @@ mechanically trivial to downgrade atomic operations to have a weaker
 consistency later on. Just change `SeqCst` to `Relaxed` and you're done! Of
 course, proving that this transformation is *correct* is a whole other matter.
 
-
-
-
-# Acquire-Release
+## Acquire-Release
 
 Acquire and Release are largely intended to be paired. Their names hint at their
 use case: they're perfectly suited for acquiring and releasing locks, and
@@ -200,8 +185,8 @@ reordered to occur before it.
 When thread A releases a location in memory and then thread B subsequently
 acquires *the same* location in memory, causality is established. Every write
 (including non-atomic and relaxed atomic writes) that happened before A's
-release will be observed by B after its acquisition. However no causality is 
-established with any other threads. Similarly, no causality is established 
+release will be observed by B after its acquisition. However no causality is
+established with any other threads. Similarly, no causality is established
 if A and B access *different* locations in memory.
 
 Basic use of release-acquire is therefore simple: you acquire a location of
@@ -233,10 +218,7 @@ On strongly-ordered platforms most accesses have release or acquire semantics,
 making release and acquire often totally free. This is not the case on
 weakly-ordered platforms.
 
-
-
-
-# Relaxed
+## Relaxed
 
 Relaxed accesses are the absolute weakest. They can be freely re-ordered and
 provide no happens-before relationship. Still, relaxed operations are still
@@ -250,10 +232,6 @@ synchronize any other accesses.
 There's rarely a benefit in making an operation relaxed on strongly-ordered
 platforms, since they usually provide release-acquire semantics anyway. However
 relaxed operations can be cheaper on weakly-ordered platforms.
-
-
-
-
 
 [C11-busted]: http://plv.mpi-sws.org/c11comp/popl15.pdf
 [C++-model]: https://en.cppreference.com/w/cpp/atomic/memory_order

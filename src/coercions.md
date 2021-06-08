@@ -12,10 +12,10 @@ Coercion is allowed between the following types:
 * Transitivity: `T_1` to `T_3` where `T_1` coerces to `T_2` and `T_2` coerces to
   `T_3`
 * Pointer Weakening:
-    * `&mut T` to `&T`
-    * `*mut T` to `*const T`
-    * `&T` to `*const T`
-    * `&mut T` to `*mut T`
+  * `&mut T` to `&T`
+  * `*mut T` to `*const T`
+  * `&T` to `*const T`
+  * `&mut T` to `*mut T`
 * Unsizing: `T` to `U` if `T` implements `CoerceUnsized<U>`
 * Deref coercion: Expression `&x` of type `&T` to `&*x` of type `&U` if `T` derefs to `U` (i.e. `T: Deref<Target=U>`)
 * Non-capturing closure to a function pointer ([RFC 1558], e.g. `|| 8usize` to `fn() -> usize`)
@@ -29,11 +29,11 @@ only implemented automatically, and enables the following transformations:
 * `[T; n]` => `[T]`
 * `T` => `dyn Trait` where `T: Trait`
 * `Foo<..., T, ...>` => `Foo<..., U, ...>` where:
-    * `T: Unsize<U>`
-    * `Foo` is a struct
-    * Only the last field of `Foo` has type involving `T`
-    * `T` is not part of the type of any other fields
-    * `Bar<T>: Unsize<Bar<U>>`, if the last field of `Foo` has type `Bar<T>`
+  * `T: Unsize<U>`
+  * `Foo` is a struct
+  * Only the last field of `Foo` has type involving `T`
+  * `T` is not part of the type of any other fields
+  * `Bar<T>: Unsize<Bar<U>>`, if the last field of `Foo` has type `Bar<T>`
 
 Coercions occur at a *coercion site*. Any location that is explicitly typed
 will cause a coercion to its type. If inference is necessary, the coercion will

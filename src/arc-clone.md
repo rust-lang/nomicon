@@ -3,15 +3,18 @@
 Now that we've got some basic code set up, we'll need a way to clone the `Arc`.
 
 Basically, we need to:
+
 1. Increment the atomic reference count
 2. Construct a new instance of the `Arc` from the inner pointer
 
 First, we need to get access to the `ArcInner`:
+
 ```rust,ignore
 let inner = unsafe { self.ptr.as_ref() };
 ```
 
 We can update the atomic reference count as follows:
+
 ```rust,ignore
 let old_rc = inner.rc.fetch_add(1, Ordering::???);
 ```
@@ -26,11 +29,13 @@ is described more in [the section on the `Drop` implementation for
 ordering, see [the section on atomics](atomics.md).
 
 Thus, the code becomes this:
+
 ```rust,ignore
 let old_rc = inner.rc.fetch_add(1, Ordering::Relaxed);
 ```
 
 We'll need to add another import to use `Ordering`:
+
 ```rust,ignore
 use std::sync::atomic::Ordering;
 ```
@@ -54,7 +59,8 @@ probably incredibly degenerate) if the reference count reaches `isize::MAX`
 probably not about 2 billion threads (or about **9 quintillion** on some 64-bit
 machines) incrementing the reference count at once. This is what we'll do.
 
-It's pretty simple to implement this behaviour:
+It's pretty simple to implement this behavior:
+
 ```rust,ignore
 if old_rc >= isize::MAX as usize {
     std::process::abort();
@@ -62,6 +68,7 @@ if old_rc >= isize::MAX as usize {
 ```
 
 Then, we need to return a new instance of the `Arc`:
+
 ```rust,ignore
 Self {
     ptr: self.ptr,
@@ -70,6 +77,7 @@ Self {
 ```
 
 Now, let's wrap this all up inside the `Clone` implementation:
+
 ```rust,ignore
 use std::sync::atomic::Ordering;
 

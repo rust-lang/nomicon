@@ -203,7 +203,7 @@ of an inspector's destructor might access that borrowed data.
 Therefore, the drop checker forces all borrowed data in a value to
 strictly outlive that value.
 
-# An Escape Hatch
+## An Escape Hatch
 
 The precise rules that govern drop checking may be less restrictive in
 the future.
@@ -322,13 +322,13 @@ attribute makes the type vulnerable to misuse that the borrower
 checker will not catch, inviting havoc. It is better to avoid adding
 the attribute.
 
-# A related side note about drop order
+## A related side note about drop order
 
 While the drop order of fields inside a struct is defined, relying on it is
 fragile and subtle. When the order matters, it is better to use the
 [`ManuallyDrop`] wrapper.
 
-# Is that all about drop checker?
+## Is that all about drop checker?
 
 It turns out that when writing unsafe code, we generally don't need to
 worry at all about doing the right thing for the drop checker. However there

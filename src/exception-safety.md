@@ -30,10 +30,6 @@ it is not uncommon for Unsafe code to work with arrays of temporarily
 uninitialized data while repeatedly invoking caller-provided code. Such code
 needs to be careful and consider exception safety.
 
-
-
-
-
 ## Vec::push_all
 
 `Vec::push_all` is a temporary hack to get extending a Vec by a slice reliably
@@ -68,10 +64,6 @@ The fix in this case is fairly simple. If we want to guarantee that the values
 we *did* clone are dropped, we can set the `len` every loop iteration. If we
 just want to guarantee that uninitialized memory can't be observed, we can set
 the `len` after the loop.
-
-
-
-
 
 ## BinaryHeap::sift_up
 

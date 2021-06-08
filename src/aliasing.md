@@ -14,10 +14,7 @@ don't happen unless you tell it otherwise. For more details, see the
 With that said, here's our working definition: variables and pointers *alias*
 if they refer to overlapping regions of memory.
 
-
-
-
-# Why Aliasing Matters
+## Why Aliasing Matters
 
 So why should we care about aliasing?
 
@@ -130,6 +127,3 @@ Of course, a full aliasing model for Rust must also take into consideration thin
 function calls (which may mutate things we don't see), raw pointers (which have
 no aliasing requirements on their own), and UnsafeCell (which lets the referent
 of an `&` be mutated).
-
-
-

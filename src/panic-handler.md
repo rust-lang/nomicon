@@ -1,4 +1,4 @@
-## #[panic_handler]
+# #[panic_handler]
 
 `#[panic_handler]` is used to define the behavior of `panic!` in `#![no_std]` applications.
 The `#[panic_handler]` attribute must be applied to a function with signature `fn(&PanicInfo)

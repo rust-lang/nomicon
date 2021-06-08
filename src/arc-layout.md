@@ -21,6 +21,7 @@ pointer to the T's allocation, we might as well put the reference count in that
 same allocation.
 
 Naively, it would look something like this:
+
 ```rust,ignore
 use std::sync::atomic;
 
@@ -45,6 +46,7 @@ all the details on variance and drop check.
 
 To fix the first problem, we can use `NonNull<T>`. Note that `NonNull<T>` is a
 wrapper around a raw pointer that declares that:
+
 * We are variant over `T`
 * Our pointer is never null
 
@@ -53,6 +55,7 @@ To fix the second problem, we can include a `PhantomData` marker containing an
 ownership of a value of `ArcInner<T>` (which itself contains some `T`).
 
 With these changes we get our final structure:
+
 ```rust,ignore
 use std::marker::PhantomData;
 use std::ptr::NonNull;

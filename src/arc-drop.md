@@ -6,13 +6,15 @@ low enough, otherwise the data will live forever on the heap.
 To do this, we can implement `Drop`.
 
 Basically, we need to:
+
 1. Decrement the reference count
 2. If there is only one reference remaining to the data, then:
 3. Atomically fence the data to prevent reordering of the use and deletion of
    the data
-4. Drop the inner data 
+4. Drop the inner data
 
 First, we'll need to get access to the `ArcInner`:
+
 ```rust,ignore
 let inner = unsafe { self.ptr.as_ref() };
 ```
@@ -21,6 +23,7 @@ Now, we need to decrement the reference count. To streamline our code, we can
 also return if the returned value from `fetch_sub` (the value of the reference
 count before decrementing it) is not equal to `1` (which happens when we are not
 the last reference to the data).
+
 ```rust,ignore
 if inner.rc.fetch_sub(1, Ordering::Relaxed) != 1 {
     return;
@@ -53,17 +56,19 @@ implementation of `Arc`][3]:
 > Also note that the Acquire fence here could probably be replaced with an
 > Acquire load, which could improve performance in highly-contended situations.
 > See [2].
-> 
+>
 > [1]: https://www.boost.org/doc/libs/1_55_0/doc/html/atomic/usage_examples.html
 > [2]: https://github.com/rust-lang/rust/pull/41714
 [3]: https://github.com/rust-lang/rust/blob/e1884a8e3c3e813aada8254edfa120e85bf5ffca/library/alloc/src/sync.rs#L1440-L1467
 
 To do this, we do the following:
+
 ```rust,ignore
 atomic::fence(Ordering::Acquire);
 ```
 
 We'll need to import `std::sync::atomic` itself:
+
 ```rust,ignore
 use std::sync::atomic;
 ```
@@ -80,6 +85,7 @@ This is safe as we know we have the last pointer to the `ArcInner` and that its
 pointer is valid.
 
 Now, let's wrap this all up inside the `Drop` implementation:
+
 ```rust,ignore
 impl<T> Drop for Arc<T> {
     fn drop(&mut self) {
