@@ -15,7 +15,7 @@ reinterpreting values as a different type.
 We strongly recommend using [rust-bindgen][] and/or [cbindgen][] to manage your FFI
 boundaries for you. The Rust team works closely with those projects to ensure
 that they work robustly and are compatible with current and future guarantees
-about type layouts and reprs.
+about type layouts and `repr`s.
 
 The interaction of `repr(C)` with Rust's more exotic data layout features must be
 kept in mind. Due to its dual purpose as "for FFI" and "for layout control",
@@ -92,7 +92,7 @@ manipulate its tag and fields. See [the RFC][really-tagged] for details.
 Adding an explicit `repr` to an enum suppresses the null-pointer
 optimization.
 
-These reprs have no effect on a struct.
+These `repr`s have no effect on a struct.
 
 ## repr(packed)
 
@@ -107,7 +107,8 @@ compiler might be able to paper over alignment issues with shifts and masks.
 However if you take a reference to a packed field, it's unlikely that the
 compiler will be able to emit code to avoid an unaligned load.
 
-**[As of Rust 2018, this still can cause undefined behavior.][ub loads]**
+[As this can cause undefined behavior][ub loads], the lint has been implemented
+and it will become a hard error.
 
 `repr(packed)` is not to be used lightly. Unless you have extreme requirements,
 this should not be used.

@@ -137,7 +137,7 @@ also cannot use `&mut base_ptr.field` as that would be creating a
 reference. Thus, it is currently not possible to create a raw pointer to a field
 of a partially initialized struct, and also not possible to initialize a single
 field of a partially initialized struct. (a
-[solution to this problem](https://github.com/rust-lang/rfcs/pull/2582) is being
+[solution to this problem](https://github.com/rust-lang/rust/issues/64490) is being
 worked on).
 
 One last remark: when reading old Rust code, you might stumble upon the

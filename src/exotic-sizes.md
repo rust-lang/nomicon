@@ -172,10 +172,10 @@ of UB.
 There is [an accepted RFC][extern-types] to add proper types with an unknown size,
 called *extern types*, which would let Rust developers model things like C's `void*`
 and other "declared but never defined" types more accurately. However as of
-Rust 2018, the feature is stuck in limbo over how `size_of::<MyExternType>()`
-should behave.
+Rust 2018, [the feature is stuck in limbo over how `size_of_val::<MyExternType>()`
+should behave][extern-types-issue].
 
-[dst-issue]: https://github.com/rust-lang/rust/issues/26403
 [extern-types]: https://github.com/rust-lang/rfcs/blob/master/text/1861-extern-types.md
+[extern-types-issue]: https://github.com/rust-lang/rust/issues/43467
 [`str`]: ../std/primitive.str.html
 [slice]: ../std/primitive.slice.html
