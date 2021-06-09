@@ -31,6 +31,7 @@ fn compute(input: &u32, output: &mut u32) {
     if *input > 5 {
         *output *= 2;
     }
+    // remember that `output` will be `2` if `input > 10`
 }
 ```
 
@@ -38,9 +39,12 @@ We would *like* to be able to optimize it to the following function:
 
 ```rust
 fn compute(input: &u32, output: &mut u32) {
-    let cached_input = *input; // keep *input in a register
+    let cached_input = *input; // keep `*input` in a register
     if cached_input > 10 {
-        *output = 2;  // x > 10 implies x > 5, so double and exit immediately
+        // If the input is greater than 10, the previous code would set the output to 1 and then double it,
+        // resulting in an output of 2 (because `>10` implies `>5`).
+        // Here, we avoid the double assignment and just set it directly to 2.
+        *output = 2;
     } else if cached_input > 5 {
         *output *= 2;
     }
