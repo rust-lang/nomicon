@@ -318,7 +318,7 @@ directly within it.
 
 In all of the above cases where the `&'a u8` is accessed in the
 destructor, adding the `#[may_dangle]`
-attribute makes the type vulnerable to misuse that the borrower
+attribute makes the type vulnerable to misuse that the borrow
 checker will not catch, inviting havoc. It is better to avoid adding
 the attribute.
 
