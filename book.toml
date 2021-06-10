@@ -4,6 +4,7 @@ title = "The Rustonomicon"
 description = "The Dark Arts of Advanced and Unsafe Rust Programming"
 
 [output.html]
+additional-css = ["theme/nomicon.css"]
 git-repository-url = "https://github.com/rust-lang/nomicon"
 
 [output.html.redirect]
