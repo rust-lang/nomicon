@@ -188,6 +188,10 @@ some sense "fundamental". All the others can be understood by analogy to the oth
 * `*const T` follows the logic of `&T`
 * `*mut T` follows the logic of `&mut T` (or `UnsafeCell<T>`)
 
+For more types, see the ["Variance" section][variance-table] on the reference.
+
+[variance-table]: ../reference/subtyping.html#variance
+
 > NOTE: the *only* source of contravariance in the language is the arguments to
 > a function, which is why it really doesn't come up much in practice. Invoking
 > contravariance involves higher-order programming with function pointers that
