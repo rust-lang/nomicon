@@ -13,10 +13,12 @@ struct Iter<'a, T: 'a> {
 ```
 
 However because `'a` is unused within the struct's body, it's *unbounded*.
-Because of the troubles this has historically caused, unbounded lifetimes and
-types are *forbidden* in struct definitions. Therefore we must somehow refer
-to these types in the body. Correctly doing this is necessary to have
-correct variance and drop checking.
+[Because of the troubles this has historically caused][unused-param],
+unbounded lifetimes and types are *forbidden* in struct definitions.
+Therefore we must somehow refer to these types in the body.
+Correctly doing this is necessary to have correct variance and drop checking.
+
+[unused-param]: https://rust-lang.github.io/rfcs/0738-variance.html#the-corner-case-unused-parameters-and-parameters-that-are-only-used-unsafely
 
 We do this using `PhantomData`, which is a special marker type. `PhantomData`
 consumes no space, but simulates a field of the given type for the purpose of
@@ -25,7 +27,7 @@ the type-system the kind of variance that you want, while also providing other
 useful things such as the information needed by drop check.
 
 Iter logically contains a bunch of `&'a T`s, so this is exactly what we tell
-the PhantomData to simulate:
+the `PhantomData` to simulate:
 
 ```rust
 use std::marker;
@@ -63,7 +65,7 @@ soundness. This will in turn allow people to create unsoundness using
 Vec's destructor.
 
 In order to tell dropck that we *do* own values of type T, and therefore may
-drop some T's when *we* drop, we must add an extra PhantomData saying exactly
+drop some T's when *we* drop, we must add an extra `PhantomData` saying exactly
 that:
 
 ```rust
