@@ -188,6 +188,10 @@ some sense "fundamental". All the others can be understood by analogy to the oth
 * `*const T` follows the logic of `&T`
 * `*mut T` follows the logic of `&mut T` (or `UnsafeCell<T>`)
 
+For more types, see the ["Variance" section][variance-table] on the reference.
+
+[variance-table]: ../reference/subtyping.html#variance
+
 > NOTE: the *only* source of contravariance in the language is the arguments to
 > a function, which is why it really doesn't come up much in practice. Invoking
 > contravariance involves higher-order programming with function pointers that
@@ -265,7 +269,7 @@ enough into the place expecting something long-lived.
 
 Here it is:
 
-```rust,ignore
+```rust,compile_fail
 fn evil_feeder<T>(input: &mut T, val: T) {
     *input = val;
 }
@@ -285,15 +289,16 @@ And what do we get when we run this?
 
 ```text
 error[E0597]: `spike` does not live long enough
-  --> src/main.rs:9:32
+  --> src/main.rs:9:31
    |
-9  |         let spike_str: &str = &spike;
-   |                                ^^^^^ borrowed value does not live long enough
-10 |         evil_feeder(&mut mr_snuggles, spike_str);
+6  |     let mut mr_snuggles: &'static str = "meow! :3";  // mr. snuggles forever!!
+   |                          ------------ type annotation requires that `spike` is borrowed for `'static`
+...
+9  |         let spike_str: &str = &spike;                // Only lives for the block
+   |                               ^^^^^^ borrowed value does not live long enough
+10 |         evil_feeder(&mut mr_snuggles, spike_str);    // EVIL!
 11 |     }
-   |     - borrowed value only lives until here
-   |
-   = note: borrowed value must be valid for the static lifetime...
+   |     - `spike` dropped here while still borrowed
 ```
 
 Good, it doesn't compile! Let's break down what's happening here in detail.
