@@ -46,6 +46,7 @@ expression, `e as U2` is not necessarily so.
 For numeric casts, there are quite a few cases to consider:
 
 * casting between two integers of the same size (e.g. i32 -> u32) is a no-op
+  (Rust uses 2's complement for negative values of fixed integers)
 * casting from a larger integer to a smaller integer (e.g. u32 -> u8) will
   truncate
 * casting from a smaller integer to a larger integer (e.g. u8 -> u32) will
