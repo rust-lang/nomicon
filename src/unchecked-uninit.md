@@ -79,11 +79,13 @@ This code proceeds in three steps:
    acknowledge that by providing appropriate methods).
 
 It's worth spending a bit more time on the loop in the middle, and in particular
-the assignment operator and its interaction with `drop`.  If we would have
-written something like
+the assignment operator and its interaction with `drop`. If we would have
+written something like:
+
 ```rust,ignore
 *x[i].as_mut_ptr() = Box::new(i as u32); // WRONG!
 ```
+
 we would actually overwrite a `Box<u32>`, leading to `drop` of uninitialized
 data, which will cause much sadness and pain.
 
@@ -126,6 +128,7 @@ Note that, to use the `ptr` methods, you need to first obtain a *raw pointer* to
 the data you want to initialize. It is illegal to construct a *reference* to
 uninitialized data, which implies that you have to be careful when obtaining
 said raw pointer:
+
 * For an array of `T`, you can use `base_ptr.add(idx)` where `base_ptr: *mut T`
 to compute the address of array index `idx`. This relies on
 how arrays are laid out in memory.
@@ -133,9 +136,9 @@ how arrays are laid out in memory.
 also cannot use `&mut base_ptr.field` as that would be creating a
 reference. Thus, it is currently not possible to create a raw pointer to a field
 of a partially initialized struct, and also not possible to initialize a single
-field of a partially initialized struct.  (A
-[solution to this problem](https://github.com/rust-lang/rfcs/pull/2582) is being
-worked on.)
+field of a partially initialized struct. (a
+[solution to this problem](https://github.com/rust-lang/rust/issues/64490) is being
+worked on).
 
 One last remark: when reading old Rust code, you might stumble upon the
 deprecated `mem::uninitialized` function.  That function used to be the only way

@@ -87,9 +87,7 @@ z = y;
 }
 ```
 
-
-
-# Example: references that outlive referents
+## Example: references that outlive referents
 
 Alright, let's look at some of those examples from before:
 
@@ -169,11 +167,7 @@ we could have returned an `&'a str` would have been if it was in a field of the
 can be considered to reside at the bottom of the stack; though this limits
 our implementation *just a bit*.)
 
-
-
-
-
-# Example: aliasing a mutable reference
+## Example: aliasing a mutable reference
 
 How about the other example:
 
@@ -222,9 +216,7 @@ to the compiler. However it does mean that several programs that are totally
 correct with respect to Rust's *true* semantics are rejected because lifetimes
 are too dumb.
 
-
-
-# The area covered by a lifetime
+## The area covered by a lifetime
 
 The lifetime (sometimes called a *borrow*) is *alive* from the place it is
 created to its last use. The borrowed thing needs to outlive only borrows that

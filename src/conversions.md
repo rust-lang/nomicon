@@ -31,4 +31,3 @@ fn reinterpret(foo: Foo) -> Bar {
 
 But this is, at best, annoying. For common conversions, Rust provides
 more ergonomic alternatives.
-

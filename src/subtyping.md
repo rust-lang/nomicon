@@ -15,7 +15,6 @@ we will then relate it back to how subtyping actually occurs in Rust.
 
 So here's our simple extension, *Objective Rust*, featuring three new types:
 
-
 ```rust
 trait Animal {
     fn snuggle(&self);
@@ -133,10 +132,7 @@ because nothing ever has type `'a`. Lifetimes only occur as part of some larger 
 like `&'a u32` or `IterMut<'a, u32>`. To apply lifetime subtyping, we need to know
 how to compose subtyping. Once again, we need *variance*.
 
-
-
-
-# Variance
+## Variance
 
 Variance is where things get a bit complicated.
 
@@ -447,4 +443,3 @@ struct MyType<'a, 'b, A: 'a, B: 'b, C, D, E, F, G, H, In, Out, Mixed> {
     k2: Mixed,              // invariant over Mixed, because invariance wins all conflicts
 }
 ```
-

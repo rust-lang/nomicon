@@ -1,6 +1,7 @@
 # Final Code
 
 Here's the final code, with some added comments and re-ordered imports:
+
 ```rust
 use std::marker::PhantomData;
 use std::ops::Deref;

@@ -49,8 +49,6 @@ library:
 * `Rc`
 * `thread::scoped::JoinGuard`
 
-
-
 ## Drain
 
 `drain` is a collections API that moves data out of the container without
@@ -104,9 +102,6 @@ mem::forget us in the middle of the iteration, all that does is *leak even more*
 (and possibly leave the Vec in an unexpected but otherwise consistent state).
 Since we've accepted that mem::forget is safe, this is definitely safe. We call
 leaks causing more leaks a *leak amplification*.
-
-
-
 
 ## Rc
 
@@ -176,9 +171,6 @@ we can happily use-after-free the inner data. Bad Bad Not Good.
 This can be solved by just checking the `ref_count` and doing *something*. The
 standard library's stance is to just abort, because your program has become
 horribly degenerate. Also *oh my gosh* it's such a ridiculous corner case.
-
-
-
 
 ## thread::scoped::JoinGuard
 

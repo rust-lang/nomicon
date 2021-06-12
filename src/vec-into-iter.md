@@ -129,7 +129,6 @@ Because IntoIter takes ownership of its allocation, it needs to implement Drop
 to free it. However it also wants to implement Drop to drop any elements it
 contains that weren't yielded.
 
-
 ```rust,ignore
 impl<T> Drop for IntoIter<T> {
     fn drop(&mut self) {

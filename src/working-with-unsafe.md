@@ -117,4 +117,3 @@ it prevents us from having to trust all the safe code in the universe from messi
 with our trusted state.
 
 Safety lives!
-

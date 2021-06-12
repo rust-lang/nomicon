@@ -3,11 +3,7 @@
 Most of the time, we expect types to have a statically known and positive size.
 This isn't always the case in Rust.
 
-
-
-
-
-# Dynamically Sized Types (DSTs)
+## Dynamically Sized Types (DSTs)
 
 Rust supports Dynamically Sized Types (DSTs): types without a statically
 known size or alignment. On the surface, this is a bit nonsensical: Rust *must*
@@ -69,11 +65,7 @@ fn main() {
 
 (Yes, custom DSTs are a largely half-baked feature for now.)
 
-
-
-
-
-# Zero Sized Types (ZSTs)
+## Zero Sized Types (ZSTs)
 
 Rust also allows types to be specified that occupy no space:
 
@@ -121,9 +113,7 @@ type.
 [alloc]: ../std/alloc/trait.GlobalAlloc.html#tymethod.alloc
 [ub]: what-unsafe-does.html
 
-
-
-# Empty Types
+## Empty Types
 
 Rust also enables types to be declared that *cannot even be instantiated*. These
 types can only be talked about at the type level, and never at the value level.
@@ -177,22 +167,15 @@ into a reference without any safety problems. It still doesn't prevent you from
 trying to read or write values, but at least it compiles to a no-op instead
 of UB.
 
-
-
-
-
-# Extern Types
+## Extern Types
 
 There is [an accepted RFC][extern-types] to add proper types with an unknown size,
 called *extern types*, which would let Rust developers model things like C's `void*`
 and other "declared but never defined" types more accurately. However as of
-Rust 2018, the feature is stuck in limbo over how `size_of::<MyExternType>()`
-should behave.
+Rust 2018, [the feature is stuck in limbo over how `size_of_val::<MyExternType>()`
+should behave][extern-types-issue].
 
-
-
-
-[dst-issue]: https://github.com/rust-lang/rust/issues/26403
 [extern-types]: https://github.com/rust-lang/rfcs/blob/master/text/1861-extern-types.md
+[extern-types-issue]: https://github.com/rust-lang/rust/issues/43467
 [`str`]: ../std/primitive.str.html
 [slice]: ../std/primitive.slice.html

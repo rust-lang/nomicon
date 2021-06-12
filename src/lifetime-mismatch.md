@@ -70,9 +70,7 @@ blows up in our face!
 This program is clearly correct according to the reference semantics we actually
 care about, but the lifetime system is too coarse-grained to handle that.
 
-
-
-# Improperly reduced borrows
+## Improperly reduced borrows
 
 The following code fails to compile, because Rust doesn't understand that the borrow
 is no longer needed and conservatively falls back to using a whole scope for it.
@@ -119,6 +117,5 @@ error[E0499]: cannot borrow `*map` as mutable more than once at a time
 15 | |     }
    | |_____- returning this value requires that `*map` is borrowed for `'m`
 ```
-
 
 [ex2]: lifetimes.html#example-aliasing-a-mutable-reference
