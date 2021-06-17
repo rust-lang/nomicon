@@ -2,7 +2,7 @@
 
 Given the following code:
 
-```rust,edition2018,compile_fail
+```rust,compile_fail
 #[derive(Debug)]
 struct Foo;
 
@@ -76,7 +76,7 @@ The following code fails to compile, because Rust doesn't understand that the bo
 is no longer needed and conservatively falls back to using a whole scope for it.
 This will eventually get fixed.
 
-```rust,edition2018,compile_fail
+```rust,compile_fail
 # use std::collections::HashMap;
 # use std::hash::Hash;
 fn get_default<'m, K, V>(map: &'m mut HashMap<K, V>, key: K) -> &'m mut V
