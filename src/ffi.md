@@ -704,15 +704,8 @@ for more information.
 
 # Representing opaque structs
 
-Sometimes, a C library wants to provide a pointer to something, but not let you
-know the internal details of the thing it wants. The simplest way is to use "extern types".
-But it's currently (as of June 2021) unstable and has some unresolved questions,
-see the [RFC page][extern-type-rfc] and the [tracking issue][extern-type-issue] for more details.
-
-[extern-type-issue]: https://github.com/rust-lang/rust/issues/43467
-[extern-type-rfc]: https://rust-lang.github.io/rfcs/1861-extern-types.html
-
-Alternatively, we can use a `void *` argument:
+Sometimes, a C library wants to provide a pointer to something, but not let you know the internal details of the thing it wants.
+A stable and simple way is to use a `void *` argument:
 
 ```c
 void foo(void *arg);
@@ -781,3 +774,9 @@ Notice that it is a really bad idea to use an empty enum as FFI type.
 The compiler relies on empty enums being uninhabited, so handling values of type
 `&Empty` is a huge footgun and can lead to buggy program behavior (by triggering
 undefined behavior).
+
+> **NOTE:** The simplest way would use "extern types".
+But it's currently (as of June 2021) unstable and has some unresolved questions, see the [RFC page][extern-type-rfc] and the [tracking issue][extern-type-issue] for more details.
+
+[extern-type-issue]: https://github.com/rust-lang/rust/issues/43467
+[extern-type-rfc]: https://rust-lang.github.io/rfcs/1861-extern-types.html
