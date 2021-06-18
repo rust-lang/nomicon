@@ -226,7 +226,7 @@ The following snippet compiles, because after printing `x`, it is no longer
 needed, so it doesn't matter if it is dangling or aliased (even though the
 variable `x` *technically* exists to the very end of the scope).
 
-```rust,edition2018
+```rust
 let mut data = vec![1, 2, 3];
 let x = &data[0];
 println!("{}", x);
@@ -238,7 +238,7 @@ However, if the value has a destructor, the destructor is run at the end of the
 scope. And running the destructor is considered a use ‒ obviously the last one.
 So, this will *not* compile.
 
-```rust,edition2018,compile_fail
+```rust,compile_fail
 #[derive(Debug)]
 struct X<'a>(&'a i32);
 
@@ -258,7 +258,7 @@ One way to convince the compiler that `x` is no longer valid is by using `drop(x
 Furthermore, there might be multiple possible last uses of the borrow, for
 example in each branch of a condition.
 
-```rust,edition2018
+```rust
 # fn some_condition() -> bool { true }
 let mut data = vec![1, 2, 3];
 let x = &data[0];
@@ -278,7 +278,7 @@ borrows just being tied to the same local variable. This often happens around
 loops (writing a new value of a variable at the end of the loop and using it for
 the last time at the top of the next iteration).
 
-```rust,edition2018
+```rust
 let mut data = vec![1, 2, 3];
 // This mut allows us to change where the reference points to
 let mut x = &data[0];
