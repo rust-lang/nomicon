@@ -21,5 +21,14 @@ git-repository-url = "https://github.com/rust-lang/nomicon"
 "/vec-zsts.html" = "/vec/vec-zsts.html"
 "/vec.html" = "/vec/vec.html"
 
+# Arc and Mutex related chapters.
+"/arc-and-mutex.html" = "/arc-mutex/arc-and-mutex.html"
+"/arc-base.html" = "/arc-mutex/arc-base.html"
+"/arc-clone.html" = "/arc-mutex/arc-clone.html"
+"/arc-drop.html" = "/arc-mutex/arc-drop.html"
+"/arc-final.html" = "/arc-mutex/arc-final.html"
+"/arc-layout.html" = "/arc-mutex/arc-layout.html"
+"/arc.html" = "/arc-mutex/arc.html"
+
 [rust]
 edition = "2018"
