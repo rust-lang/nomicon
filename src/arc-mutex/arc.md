@@ -1,7 +1,7 @@
 # Implementing Arc
 
 In this section, we'll be implementing a simpler version of `std::sync::Arc`.
-Similarly to [the implementation of `Vec` we made earlier](vec.md), we won't be
+Similarly to [the implementation of `Vec` we made earlier](../vec/vec.md), we won't be
 taking advantage of as many optimizations, intrinsics, or unstable code as the
 standard library may.
 

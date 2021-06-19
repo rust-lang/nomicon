@@ -149,4 +149,4 @@ impl<T> Vec<T> {
 For more details on the `mem::forget` problem, see the
 [section on leaks][leaks].
 
-[leaks]: leaking.html
+[leaks]: ../leaking.html

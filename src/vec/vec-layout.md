@@ -56,5 +56,5 @@ unsafe impl<T: Sync> Sync for Vec<T> {}
 # fn main() {}
 ```
 
-[ownership]: ownership.html
-[NonNull]: ../std/ptr/struct.NonNull.html
+[ownership]: ../ownership.html
+[NonNull]: ../../std/ptr/struct.NonNull.html

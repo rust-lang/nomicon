@@ -34,7 +34,7 @@ impl<T> Arc<T> {
 Since we're building a concurrency primitive, we'll need to be able to send it
 across threads. Thus, we can implement the `Send` and `Sync` marker traits. For
 more information on these, see [the section on `Send` and
-`Sync`](send-and-sync.md).
+`Sync`](../send-and-sync.md).
 
 This is okay because:
 * You can only get a mutable reference to the value inside an `Arc` if and only
