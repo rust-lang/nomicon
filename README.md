@@ -19,14 +19,14 @@ order to write correct Unsafe Rust programs. Due to the nature of this problem,
 it may lead to unleashing untold horrors that shatter your psyche into a billion
 infinitesimal fragments of despair.
 
-### Requirements
+## Requirements
 
 Building the Nomicon requires [mdBook]. To get it:
 
 [mdBook]: https://github.com/rust-lang/mdBook
 
 ```bash
-$ cargo install mdbook
+cargo install mdbook
 ```
 
 ### `mdbook` usage
@@ -34,7 +34,7 @@ $ cargo install mdbook
 To build the Nomicon use the `build` sub-command:
 
 ```bash
-$ mdbook build
+mdbook build
 ```
 
 The output will be placed in the `book` subdirectory. To check it out, open the
@@ -43,13 +43,23 @@ build` and it'll open the index page in your default browser (if the process is
 successful) just like with `cargo doc --open`:
 
 ```bash
-$ mdbook build --open
+mdbook build --open
 ```
 
 There is also a `test` sub-command to test all code samples contained in the book:
 
 ```bash
-$ mdbook test
+mdbook test
+```
+
+### `linkcheck`
+
+We use the `linkcheck` tool to find broken links.
+To run it locally:
+
+```sh
+curl -sSLo linkcheck.sh https://raw.githubusercontent.com/rust-lang/rust/master/src/tools/linkchecker/linkcheck.sh
+sh linkcheck.sh --all nomicon
 ```
 
 ## Contributing
