@@ -202,9 +202,9 @@ impl<T> Vec<T> {
 # fn main() {}
 ```
 
-[Global]: ../std/alloc/struct.Global.html
-[handle_alloc_error]: ../alloc/alloc/fn.handle_alloc_error.html
-[alloc]: ../alloc/alloc/fn.alloc.html
-[realloc]: ../alloc/alloc/fn.realloc.html
-[dealloc]: ../alloc/alloc/fn.dealloc.html
-[std_alloc]: ../alloc/alloc/index.html
+[Global]: ../../std/alloc/struct.Global.html
+[handle_alloc_error]: ../../alloc/alloc/fn.handle_alloc_error.html
+[alloc]: ../../alloc/alloc/fn.alloc.html
+[realloc]: ../../alloc/alloc/fn.realloc.html
+[dealloc]: ../../alloc/alloc/fn.dealloc.html
+[std_alloc]: ../../alloc/alloc/index.html

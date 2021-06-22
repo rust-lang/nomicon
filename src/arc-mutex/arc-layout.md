@@ -41,7 +41,7 @@ be used where an `Arc<&'a str>` was expected. More importantly, it will give
 incorrect ownership information to the drop checker, as it will assume we don't
 own any values of type `T`. As this is a structure providing shared ownership of
 a value, at some point there will be an instance of this structure that entirely
-owns its data. See [the chapter on ownership and lifetimes](ownership.md) for
+owns its data. See [the chapter on ownership and lifetimes](../ownership.md) for
 all the details on variance and drop check.
 
 To fix the first problem, we can use `NonNull<T>`. Note that `NonNull<T>` is a
