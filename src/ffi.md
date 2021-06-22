@@ -310,7 +310,6 @@ referenced Rust object.
 Rust code:
 
 ```rust,no_run
-#[repr(C)]
 struct RustObject {
     a: i32,
     // Other members...
