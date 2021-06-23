@@ -1,5 +1,16 @@
 # The Rustonomicon
 
+<div class="warning">
+
+Warning:
+This book is incomplete.
+Documenting everything and rewriting outdated parts take a while.
+See the [issue tracker] to check what's missing/outdated, and if there are any mistakes or ideas that haven't been reported, feel free to open a new issue there.
+
+</div>
+
+[issue tracker]: https://github.com/rust-lang/nomicon/issues
+
 ## The Dark Arts of Unsafe Rust
 
 > THE KNOWLEDGE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF UNLEASHING INDESCRIBABLE HORRORS THAT SHATTER YOUR PSYCHE AND SET YOUR MIND ADRIFT IN THE UNKNOWABLY INFINITE COSMOS.
