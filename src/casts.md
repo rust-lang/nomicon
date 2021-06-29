@@ -19,47 +19,11 @@ very easily lead to terrible things. However the act of creating the pointer
 itself is safe, because actually using a raw pointer is already marked as
 `unsafe`.
 
-Here's an exhaustive list of all the true casts. For brevity, we will use `*`
-to denote either a `*const` or `*mut`, and `integer` to denote any integral
-primitive:
+Note that lengths are not adjusted when casting raw slices; `*const [u16] as *const [u8]` creates a slice that only includes half of the original memory.
 
-* `*T as *U` where `T, U: Sized`
-* `*T as *U` TODO: explain unsized situation
-* `*T as integer`
-* `integer as *T`
-* `number as number`
-* `field-less enum as integer`
-* `bool as integer`
-* `char as integer`
-* `u8 as char`
-* `&[T; n] as *const T`
-* `fn as *T` where `T: Sized`
-* `fn as integer`
+Casting is not transitive, that is, even if `e as U1 as U2` is a valid expression, `e as U2` is not necessarily so.
 
-Note that lengths are not adjusted when casting raw slices -
-`*const [u16] as *const [u8]` creates a slice that only includes
-half of the original memory.
+You can find an exhaustive list of [all the true casts][cast list] and [casting semantics][semantics list] on the reference.
 
-Casting is not transitive, that is, even if `e as U1 as U2` is a valid
-expression, `e as U2` is not necessarily so.
-
-For numeric casts, there are quite a few cases to consider:
-
-* casting between two integers of the same size (e.g. i32 -> u32) is a no-op
-  (Rust uses 2's complement for negative values of fixed integers)
-* casting from a larger integer to a smaller integer (e.g. u32 -> u8) will
-  truncate
-* casting from a smaller integer to a larger integer (e.g. u8 -> u32) will
-  * zero-extend if the source is unsigned
-  * sign-extend if the source is signed
-* casting from a float to an integer will round the float towards zero and
-  produces a "saturating cast" when the float is outside the integer's range
-  * floats that are too big turn into the largest possible integer
-  * floats that are too small produce the smallest possible integer
-  * NaN produces zero
-* casting from an integer to float will produce the floating point
-  representation of the integer, rounded if necessary (rounding to
-  nearest, ties to even)
-* casting from an f32 to an f64 is perfect and lossless
-* casting from an f64 to an f32 will produce the closest possible value
-  (rounding to nearest, ties to even)
+[cast list]: ../reference/expressions/operator-expr.html#type-cast-expressions
+[semantics list]: ../reference/expressions/operator-expr.html#semantics
