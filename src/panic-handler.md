@@ -17,9 +17,10 @@ Below is shown an example where an application has a different panicking behavio
 whether is compiled using the dev profile (`cargo build`) or using the release profile (`cargo build
 --release`).
 
-``` rust, ignore
-// crate: panic-semihosting -- log panic messages to the host stderr using semihosting
+`panic-semihosting` crate -- log panic messages to the host stderr using semihosting:
 
+<!-- ignore: simplified code -->
+```rust,ignore
 #![no_std]
 
 use core::fmt::{Write, self};
@@ -49,8 +50,10 @@ fn panic(info: &PanicInfo) -> ! {
 }
 ```
 
-``` rust, ignore
-// crate: panic-halt -- halt the thread on panic; messages are discarded
+`panic-halt` crate -- halt the thread on panic; messages are discarded:
+
+<!-- ignore: simplified code -->
+```rust,ignore
 
 #![no_std]
 
@@ -62,8 +65,10 @@ fn panic(_info: &PanicInfo) -> ! {
 }
 ```
 
-``` rust, ignore
-// crate: app
+`app` crate:
+
+<!-- ignore: requires external crate -->
+```rust,ignore
 
 #![no_std]
 

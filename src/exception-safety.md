@@ -35,6 +35,7 @@ needs to be careful and consider exception safety.
 `Vec::push_all` is a temporary hack to get extending a Vec by a slice reliably
 efficient without specialization. Here's a simple implementation:
 
+<!-- ignore: simplified code -->
 ```rust,ignore
 impl<T: Clone> Vec<T> {
     fn push_all(&mut self, to_push: &[T]) {
@@ -75,7 +76,6 @@ bubble_up(heap, index):
     while index != 0 && heap[index] < heap[parent(index)]:
         heap.swap(index, parent(index))
         index = parent(index)
-
 ```
 
 A literal transcription of this code to Rust is totally fine, but has an annoying
@@ -147,6 +147,7 @@ way to do this is to store the algorithm's state in a separate struct with a
 destructor for the "finally" logic. Whether we panic or not, that destructor
 will run and clean up after us.
 
+<!-- ignore: simplified code -->
 ```rust,ignore
 struct Hole<'a, T: 'a> {
     data: &'a mut [T],

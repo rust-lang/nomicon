@@ -28,6 +28,7 @@ and add `extern crate libc;` to your crate root.
 The following is a minimal example of calling a foreign function which will
 compile if snappy is installed:
 
+<!-- ignore: requires libc crate -->
 ```rust,ignore
 extern crate libc;
 use libc::size_t;
@@ -61,6 +62,7 @@ of keeping the binding correct at runtime.
 
 The `extern` block can be extended to cover the entire snappy API:
 
+<!-- ignore: requires libc crate -->
 ```rust,ignore
 extern crate libc;
 use libc::{c_int, size_t};
@@ -96,6 +98,7 @@ vectors as pointers to memory. Rust's vectors are guaranteed to be a contiguous 
 length is the number of elements currently contained, and the capacity is the total size in elements of
 the allocated memory. The length is less than or equal to the capacity.
 
+<!-- ignore: requires libc crate -->
 ```rust,ignore
 # extern crate libc;
 # use libc::{c_int, size_t};
@@ -120,6 +123,7 @@ required capacity to hold the compressed output. The vector can then be passed t
 `snappy_compress` function as an output parameter. An output parameter is also passed to retrieve
 the true length after compression for setting the length.
 
+<!-- ignore: requires libc crate -->
 ```rust,ignore
 # extern crate libc;
 # use libc::{size_t, c_int};
@@ -146,6 +150,7 @@ pub fn compress(src: &[u8]) -> Vec<u8> {
 Decompression is similar, because snappy stores the uncompressed size as part of the compression
 format and `snappy_uncompressed_length` will retrieve the exact buffer size required.
 
+<!-- ignore: requires libc crate -->
 ```rust,ignore
 # extern crate libc;
 # use libc::{size_t, c_int};
@@ -180,6 +185,7 @@ pub fn uncompress(src: &[u8]) -> Option<Vec<u8>> {
 
 Then, we can add some tests to show how to use them.
 
+<!-- ignore: requires libc crate -->
 ```rust,ignore
 # extern crate libc;
 # use libc::{c_int, size_t};
@@ -452,6 +458,7 @@ Foreign APIs often export a global variable which could do something like track
 global state. In order to access these variables, you declare them in `extern`
 blocks with the `static` keyword:
 
+<!-- ignore: requires libc crate -->
 ```rust,ignore
 extern crate libc;
 
@@ -470,6 +477,7 @@ Alternatively, you may need to alter global state provided by a foreign
 interface. To do this, statics can be declared with `mut` so we can mutate
 them.
 
+<!-- ignore: requires libc crate -->
 ```rust,ignore
 extern crate libc;
 
@@ -502,6 +510,7 @@ Most foreign code exposes a C ABI, and Rust uses the platform's C calling conven
 calling foreign functions. Some foreign functions, most notably the Windows API, use other calling
 conventions. Rust provides a way to tell the compiler which convention to use:
 
+<!-- ignore: requires libc crate -->
 ```rust,ignore
 extern crate libc;
 
@@ -582,10 +591,10 @@ fn main() {
 
 Normal Rust functions can *not* be variadic:
 
-```ignore
+```rust,compile_fail
 // This will not compile
 
-fn foo(x: i32, ...) { }
+fn foo(x: i32, ...) {}
 ```
 
 ## The "nullable pointer optimization"
@@ -613,6 +622,7 @@ callback, which gets called in certain situations. The callback is passed a func
 and an integer and it is supposed to run the function with the integer as a parameter. So
 we have function pointers flying across the FFI boundary in both directions.
 
+<!-- ignore: requires libc crate -->
 ```rust,ignore
 extern crate libc;
 use libc::c_int;
@@ -712,6 +722,7 @@ void bar(void *arg);
 
 We can represent this in Rust with the `c_void` type:
 
+<!-- ignore: requires libc crate -->
 ```rust,ignore
 extern crate libc;
 

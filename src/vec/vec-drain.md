@@ -4,6 +4,7 @@ Let's move on to Drain. Drain is largely the same as IntoIter, except that
 instead of consuming the Vec, it borrows the Vec and leaves its allocation
 untouched. For now we'll only implement the "basic" full-range version.
 
+<!-- ignore: simplified code -->
 ```rust,ignore
 use std::marker::PhantomData;
 
@@ -26,6 +27,7 @@ impl<'a, T> Iterator for Drain<'a, T> {
 -- wait, this is seeming familiar. Let's do some more compression. Both
 IntoIter and Drain have the exact same structure, let's just factor it out.
 
+<!-- ignore: simplified code -->
 ```rust,ignore
 struct RawValIter<T> {
     start: *const T,
@@ -57,6 +59,7 @@ impl<T> RawValIter<T> {
 
 And IntoIter becomes the following:
 
+<!-- ignore: simplified code -->
 ```rust,ignore
 pub struct IntoIter<T> {
     _buf: RawVec<T>, // we don't actually care about this. Just need it to live.
@@ -103,6 +106,7 @@ We also take a slice to simplify Drain initialization.
 
 Alright, now Drain is really easy:
 
+<!-- ignore: simplified code -->
 ```rust,ignore
 use std::marker::PhantomData;
 

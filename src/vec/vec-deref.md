@@ -11,6 +11,7 @@ All we need is `slice::from_raw_parts`. It will correctly handle empty slices
 for us. Later once we set up zero-sized type support it will also Just Work
 for those too.
 
+<!-- ignore: simplified code -->
 ```rust,ignore
 use std::ops::Deref;
 
@@ -26,6 +27,7 @@ impl<T> Deref for Vec<T> {
 
 And let's do DerefMut too:
 
+<!-- ignore: simplified code -->
 ```rust,ignore
 use std::ops::DerefMut;
 

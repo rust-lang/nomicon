@@ -3,6 +3,7 @@
 What the language *does* provide is full-blown automatic destructors through the
 `Drop` trait, which provides the following method:
 
+<!-- ignore: function header -->
 ```rust,ignore
 fn drop(&mut self);
 ```

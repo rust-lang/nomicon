@@ -8,6 +8,7 @@ time to perform some logic compression.
 We're going to abstract out the `(ptr, cap)` pair and give them the logic for
 allocating, growing, and freeing:
 
+<!-- ignore: simplified code -->
 ```rust,ignore
 struct RawVec<T> {
     ptr: NonNull<T>,
@@ -76,6 +77,7 @@ impl<T> Drop for RawVec<T> {
 
 And change Vec as follows:
 
+<!-- ignore: simplified code -->
 ```rust,ignore
 pub struct Vec<T> {
     buf: RawVec<T>,
@@ -114,6 +116,7 @@ impl<T> Drop for Vec<T> {
 
 And finally we can really simplify IntoIter:
 
+<!-- ignore: simplified code -->
 ```rust,ignore
 pub struct IntoIter<T> {
     _buf: RawVec<T>, // we don't actually care about this. Just need it to live.

@@ -69,6 +69,7 @@ unwinding-safe! Easy!
 
 Now consider the following:
 
+<!-- ignore: simplified code -->
 ```rust,ignore
 let mut vec = vec![Box::new(0); 4];
 
@@ -116,6 +117,7 @@ Nope.
 
 Let's consider a simplified implementation of Rc:
 
+<!-- ignore: simplified code -->
 ```rust,ignore
 struct Rc<T> {
     ptr: *mut RcBox<T>,
@@ -179,6 +181,7 @@ data on their parent's stack without any synchronization over that data by
 ensuring the parent joins the thread before any of the shared data goes out
 of scope.
 
+<!-- ignore: simplified code -->
 ```rust,ignore
 pub fn scoped<'a, F>(f: F) -> JoinGuard<'a>
     where F: FnOnce() + Send + 'a
@@ -196,6 +199,7 @@ of the closed-over data goes out of scope in the parent.
 
 Usage looked like:
 
+<!-- ignore: simplified code -->
 ```rust,ignore
 let mut data = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
 {
@@ -224,6 +228,7 @@ let mut data = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
 In principle, this totally works! Rust's ownership system perfectly ensures it!
 ...except it relies on a destructor being called to be safe.
 
+<!-- ignore: simplified code -->
 ```rust,ignore
 let mut data = Box::new(0);
 {

@@ -34,6 +34,7 @@ But unlike normal traits, we can use them as concrete and sized types, just like
 
 Now, say we have a very simple function that takes an Animal, like this:
 
+<!-- ignore: simplified code -->
 ```rust,ignore
 fn love(pet: Animal) {
     pet.snuggle();
@@ -43,6 +44,7 @@ fn love(pet: Animal) {
 By default, static types must match *exactly* for a program to compile. As such,
 this code won't compile:
 
+<!-- ignore: simplified code -->
 ```rust,ignore
 let mr_snuggles: Cat = ...;
 love(mr_snuggles);         // ERROR: expected Animal, found Cat
@@ -78,6 +80,7 @@ of our static type system, making it worse than useless (and leading to Undefine
 Here's a simple example of this happening when we apply subtyping in a completely naive
 "find and replace" way.
 
+<!-- ignore: simplified code -->
 ```rust,ignore
 fn evil_feeder(pet: &mut Animal) {
     let spike: Dog = ...;
@@ -199,6 +202,7 @@ and look at some examples.
 
 First off, let's revisit the meowing dog example:
 
+<!-- ignore: simplified code -->
 ```rust,ignore
 fn evil_feeder(pet: &mut Animal) {
     let spike: Dog = ...;
@@ -344,6 +348,7 @@ are guaranteed to be the only one with access to it.
 
 Consider the following code:
 
+<!-- ignore: simplified code -->
 ```rust,ignore
 let mr_snuggles: Box<Cat> = ..;
 let spike: Box<Dog> = ..;
@@ -369,6 +374,7 @@ Only one thing left to explain: function pointers.
 
 To see why `fn(T) -> U` should be covariant over `U`, consider the following signature:
 
+<!-- ignore: simplified code -->
 ```rust,ignore
 fn get_animal() -> Animal;
 ```
@@ -376,6 +382,7 @@ fn get_animal() -> Animal;
 This function claims to produce an Animal. As such, it is perfectly valid to
 provide a function with the following signature instead:
 
+<!-- ignore: simplified code -->
 ```rust,ignore
 fn get_animal() -> Cat;
 ```
@@ -388,12 +395,14 @@ just forget that fact.
 
 However, the same logic does not apply to *arguments*. Consider trying to satisfy:
 
+<!-- ignore: simplified code -->
 ```rust,ignore
 fn handle_animal(Animal);
 ```
 
-with
+with:
 
+<!-- ignore: simplified code -->
 ```rust,ignore
 fn handle_animal(Cat);
 ```

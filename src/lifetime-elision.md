@@ -5,6 +5,7 @@ In order to make common patterns more ergonomic, Rust allows lifetimes to be
 
 A *lifetime position* is anywhere you can write a lifetime in a type:
 
+<!-- ignore: simplified code -->
 ```rust,ignore
 &'a T
 &'a mut T
@@ -38,6 +39,7 @@ Elision rules are as follows:
 
 Examples:
 
+<!-- ignore: simplified code -->
 ```rust,ignore
 fn print(s: &str);                                      // elided
 fn print<'a>(s: &'a str);                               // expanded
@@ -60,5 +62,4 @@ fn args<'a, 'b, T: ToCStr>(&'a mut self, args: &'b [T]) -> &'a mut Command // ex
 
 fn new(buf: &mut [u8]) -> BufWriter;                    // elided
 fn new<'a>(buf: &'a mut [u8]) -> BufWriter<'a>          // expanded
-
 ```

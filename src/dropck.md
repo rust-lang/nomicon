@@ -8,11 +8,15 @@ when we talked about `'a: 'b`, it was ok for `'a` to live _exactly_ as long as
 gets dropped at the same time as another, right? This is why we used the
 following desugaring of `let` statements:
 
+<!-- ignore: simplified code -->
 ```rust,ignore
 let x;
 let y;
 ```
 
+desugaring to:
+
+<!-- ignore: desugared code -->
 ```rust,ignore
 {
     let x;
@@ -29,6 +33,7 @@ definition. There are some more details about order of drop in [RFC 1857][rfc185
 
 Let's do this:
 
+<!-- ignore: simplified code -->
 ```rust,ignore
 let tuple = (vec![], vec![]);
 ```
@@ -259,7 +264,8 @@ lifetime `'b` and that the only uses of `T` will be moves or drops, but omit
 the attribute from `'a` and `U`, because we do access data with that lifetime
 and that type:
 
-```rust,ignore
+```rust
+#![feature(dropck_eyepatch)]
 use std::fmt::Display;
 
 struct Inspector<'a, 'b, T, U: Display>(&'a u8, &'b u8, T, U);
@@ -283,7 +289,7 @@ other avenues for such indirect access.)
 
 Here is an example of invoking a callback:
 
-```rust,ignore
+```rust
 struct Inspector<T>(T, &'static str, Box<for <'r> fn(&'r T) -> String>);
 
 impl<T> Drop for Inspector<T> {
@@ -297,7 +303,7 @@ impl<T> Drop for Inspector<T> {
 
 Here is an example of a trait method call:
 
-```rust,ignore
+```rust
 use std::fmt;
 
 struct Inspector<T: fmt::Display>(T, &'static str);

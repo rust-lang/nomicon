@@ -82,6 +82,7 @@ It's worth spending a bit more time on the loop in the middle, and in particular
 the assignment operator and its interaction with `drop`. If we would have
 written something like:
 
+<!-- ignore: simplified code -->
 ```rust,ignore
 *x[i].as_mut_ptr() = Box::new(i as u32); // WRONG!
 ```

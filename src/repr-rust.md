@@ -104,6 +104,7 @@ Rust lays out the fields in the order specified, we expect it to pad the
 values in the struct to satisfy their alignment requirements. So if Rust
 didn't reorder fields, we would expect it to produce the following:
 
+<!-- ignore: explanation code -->
 ```rust,ignore
 struct Foo<u16, u32> {
     count: u16,

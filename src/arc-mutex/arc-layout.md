@@ -22,7 +22,7 @@ same allocation.
 
 Naively, it would look something like this:
 
-```rust,ignore
+```rust
 use std::sync::atomic;
 
 pub struct Arc<T> {
@@ -31,7 +31,7 @@ pub struct Arc<T> {
 
 pub struct ArcInner<T> {
     rc: atomic::AtomicUsize,
-    data: T
+    data: T,
 }
 ```
 
@@ -56,18 +56,18 @@ ownership of a value of `ArcInner<T>` (which itself contains some `T`).
 
 With these changes we get our final structure:
 
-```rust,ignore
+```rust
 use std::marker::PhantomData;
 use std::ptr::NonNull;
 use std::sync::atomic::AtomicUsize;
 
 pub struct Arc<T> {
     ptr: NonNull<ArcInner<T>>,
-    phantom: PhantomData<ArcInner<T>>
+    phantom: PhantomData<ArcInner<T>>,
 }
 
 pub struct ArcInner<T> {
     rc: AtomicUsize,
-    data: T
+    data: T,
 }
 ```

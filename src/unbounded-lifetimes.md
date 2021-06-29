@@ -17,6 +17,7 @@ boundaries.
 Given a function, any output lifetimes that don't derive from inputs are
 unbounded. For instance:
 
+<!-- ignore: simplified code -->
 ```rust,ignore
 fn get_str<'a>() -> &'a str;
 ```

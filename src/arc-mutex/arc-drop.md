@@ -15,6 +15,7 @@ Basically, we need to:
 
 First, we'll need to get access to the `ArcInner`:
 
+<!-- ignore: simplified code -->
 ```rust,ignore
 let inner = unsafe { self.ptr.as_ref() };
 ```
@@ -24,6 +25,7 @@ also return if the returned value from `fetch_sub` (the value of the reference
 count before decrementing it) is not equal to `1` (which happens when we are not
 the last reference to the data).
 
+<!-- ignore: simplified code -->
 ```rust,ignore
 if inner.rc.fetch_sub(1, Ordering::Relaxed) != 1 {
     return;
@@ -63,20 +65,17 @@ implementation of `Arc`][3]:
 
 To do this, we do the following:
 
-```rust,ignore
-atomic::fence(Ordering::Acquire);
-```
-
-We'll need to import `std::sync::atomic` itself:
-
-```rust,ignore
+```rust
+# use std::sync::atomic::Ordering;
 use std::sync::atomic;
+atomic::fence(Ordering::Acquire);
 ```
 
 Finally, we can drop the data itself. We use `Box::from_raw` to drop the boxed
 `ArcInner<T>` and its data. This takes a `*mut T` and not a `NonNull<T>`, so we
 must convert using `NonNull::as_ptr`.
 
+<!-- ignore: simplified code -->
 ```rust,ignore
 unsafe { Box::from_raw(self.ptr.as_ptr()); }
 ```
@@ -86,6 +85,7 @@ pointer is valid.
 
 Now, let's wrap this all up inside the `Drop` implementation:
 
+<!-- ignore: simplified code -->
 ```rust,ignore
 impl<T> Drop for Arc<T> {
     fn drop(&mut self) {
