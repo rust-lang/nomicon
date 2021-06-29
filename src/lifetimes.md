@@ -218,7 +218,7 @@ are too dumb.
 
 ## The area covered by a lifetime
 
-The lifetime (sometimes called a *borrow*) is *alive* from the place it is
+A reference (sometimes called a *borrow*) is *alive* from the place it is
 created to its last use. The borrowed thing needs to outlive only borrows that
 are alive. This looks simple, but there are few subtleties.
 
