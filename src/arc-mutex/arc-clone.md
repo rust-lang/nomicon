@@ -9,12 +9,14 @@ Basically, we need to:
 
 First, we need to get access to the `ArcInner`:
 
+<!-- ignore: simplified code -->
 ```rust,ignore
 let inner = unsafe { self.ptr.as_ref() };
 ```
 
 We can update the atomic reference count as follows:
 
+<!-- ignore: simplified code -->
 ```rust,ignore
 let old_rc = inner.rc.fetch_add(1, Ordering::???);
 ```
@@ -30,13 +32,14 @@ ordering, see [the section on atomics](../atomics.md).
 
 Thus, the code becomes this:
 
+<!-- ignore: simplified code -->
 ```rust,ignore
 let old_rc = inner.rc.fetch_add(1, Ordering::Relaxed);
 ```
 
 We'll need to add another import to use `Ordering`:
 
-```rust,ignore
+```rust
 use std::sync::atomic::Ordering;
 ```
 
@@ -61,6 +64,7 @@ machines) incrementing the reference count at once. This is what we'll do.
 
 It's pretty simple to implement this behavior:
 
+<!-- ignore: simplified code -->
 ```rust,ignore
 if old_rc >= isize::MAX as usize {
     std::process::abort();
@@ -69,6 +73,7 @@ if old_rc >= isize::MAX as usize {
 
 Then, we need to return a new instance of the `Arc`:
 
+<!-- ignore: simplified code -->
 ```rust,ignore
 Self {
     ptr: self.ptr,
@@ -78,6 +83,7 @@ Self {
 
 Now, let's wrap this all up inside the `Clone` implementation:
 
+<!-- ignore: simplified code -->
 ```rust,ignore
 use std::sync::atomic::Ordering;
 

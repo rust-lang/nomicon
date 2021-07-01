@@ -40,6 +40,7 @@ What happened? Well, we got the exact same reasoning as we did for
 [Example 2 in the previous section][ex2]. We desugar the program and we get
 the following:
 
+<!-- ignore: desugared code -->
 ```rust,ignore
 struct Foo;
 

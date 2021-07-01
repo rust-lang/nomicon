@@ -45,6 +45,7 @@ let z = &y;
 The borrow checker always tries to minimize the extent of a lifetime, so it will
 likely desugar to the following:
 
+<!-- ignore: desugared code -->
 ```rust,ignore
 // NOTE: `'a: {` and `&'b x` is not valid syntax!
 'a: {
@@ -72,6 +73,7 @@ let y = &x;
 z = y;
 ```
 
+<!-- ignore: desugared code -->
 ```rust,ignore
 'a: {
     let x: i32 = 0;
@@ -100,6 +102,7 @@ fn as_str(data: &u32) -> &str {
 
 desugars to:
 
+<!-- ignore: desugared code -->
 ```rust,ignore
 fn as_str<'a>(data: &'a u32) -> &'a str {
     'b: {
@@ -127,6 +130,7 @@ up in our face.
 
 To make this more clear, we can expand the example:
 
+<!-- ignore: desugared code -->
 ```rust,ignore
 fn as_str<'a>(data: &'a u32) -> &'a str {
     'b: {
@@ -178,6 +182,7 @@ data.push(4);
 println!("{}", x);
 ```
 
+<!-- ignore: desugared code -->
 ```rust,ignore
 'a: {
     let mut data: Vec<i32> = vec![1, 2, 3];

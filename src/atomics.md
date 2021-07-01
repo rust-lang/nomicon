@@ -27,16 +27,18 @@ exactly what we said but, you know, fast. Wouldn't that be great?
 Compilers fundamentally want to be able to do all sorts of complicated
 transformations to reduce data dependencies and eliminate dead code. In
 particular, they may radically change the actual order of events, or make events
-never occur! If we write something like
+never occur! If we write something like:
 
+<!-- ignore: simplified code -->
 ```rust,ignore
 x = 1;
 y = 3;
 x = 2;
 ```
 
-The compiler may conclude that it would be best if your program did
+The compiler may conclude that it would be best if your program did:
 
+<!-- ignore: simplified code -->
 ```rust,ignore
 x = 2;
 y = 3;

@@ -56,6 +56,7 @@ and `output` overlap, such as `compute(&x, &mut x)`.
 
 With that input, we could get this execution:
 
+<!-- ignore: expanded code -->
 ```rust,ignore
                     //  input ==  output == 0xabad1dea
                     // *input == *output == 20

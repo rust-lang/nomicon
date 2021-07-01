@@ -10,6 +10,7 @@ wouldn't bother unless you notice it's not being stripped (in this case it is).
 We must not call `alloc::dealloc` when `self.cap == 0`, as in this case we
 haven't actually allocated any memory.
 
+<!-- ignore: simplified code -->
 ```rust,ignore
 impl<T> Drop for Vec<T> {
     fn drop(&mut self) {

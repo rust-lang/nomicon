@@ -29,6 +29,7 @@ overflow for zero-sized types.
 Due to our current architecture, all this means is writing 3 guards, one in each
 method of `RawVec`.
 
+<!-- ignore: simplified code -->
 ```rust,ignore
 impl<T> RawVec<T> {
     fn new() -> Self {
@@ -107,6 +108,7 @@ initialize `start` and `end` as the same value, and our iterators will yield
 nothing. The current solution to this is to cast the pointers to integers,
 increment, and then cast them back:
 
+<!-- ignore: simplified code -->
 ```rust,ignore
 impl<T> RawValIter<T> {
     unsafe fn new(slice: &[T]) -> Self {
@@ -130,6 +132,7 @@ Also, our size_hint computation code will divide by 0 for ZSTs. Since we'll
 basically be treating the two pointers as if they point to bytes, we'll just
 map size 0 to divide by 1.
 
+<!-- ignore: simplified code -->
 ```rust,ignore
 impl<T> Iterator for RawValIter<T> {
     type Item = T;

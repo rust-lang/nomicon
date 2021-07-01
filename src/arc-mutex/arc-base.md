@@ -10,6 +10,7 @@ We'll first need a way to construct an `Arc<T>`.
 This is pretty simple, as we just need to box the `ArcInner<T>` and get a
 `NonNull<T>` pointer to it.
 
+<!-- ignore: simplified code -->
 ```rust,ignore
 impl<T> Arc<T> {
     pub fn new(data: T) -> Arc<T> {
@@ -41,6 +42,7 @@ This is okay because:
   if it is the only `Arc` referencing that data (which only happens in `Drop`)
 * We use atomics for the shared mutable reference counting
 
+<!-- ignore: simplified code -->
 ```rust,ignore
 unsafe impl<T: Sync + Send> Send for Arc<T> {}
 unsafe impl<T: Sync + Send> Sync for Arc<T> {}
@@ -61,6 +63,8 @@ as `Rc` is not thread-safe.
 To dereference the `NonNull<T>` pointer into a `&T`, we can call
 `NonNull::as_ref`. This is unsafe, unlike the typical `as_ref` function, so we
 must call it like this:
+
+<!-- ignore: simplified code -->
 ```rust,ignore
 unsafe { self.ptr.as_ref() }
 ```
@@ -79,11 +83,15 @@ to the data inside?
 What we need now is an implementation of `Deref`.
 
 We'll need to import the trait:
+
+<!-- ignore: simplified code -->
 ```rust,ignore
 use std::ops::Deref;
 ```
 
 And here's the implementation:
+
+<!-- ignore: simplified code -->
 ```rust,ignore
 impl<T> Deref for Arc<T> {
     type Target = T;
@@ -101,6 +109,8 @@ Pretty simple, eh? This simply dereferences the `NonNull` pointer to the
 ## Code
 
 Here's all the code from this section:
+
+<!-- ignore: simplified code -->
 ```rust,ignore
 use std::ops::Deref;
 

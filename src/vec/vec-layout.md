@@ -6,6 +6,7 @@ elements that have been initialized.
 
 Naively, this means we just want this design:
 
+<!-- ignore: simplified code -->
 ```rust,ignore
 pub struct Vec<T> {
     ptr: *mut T,

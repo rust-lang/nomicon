@@ -17,6 +17,7 @@ want to use `dangling` because there's no real allocation to talk about but
 
 So:
 
+<!-- ignore: explanation code -->
 ```rust,ignore
 use std::mem;
 
@@ -83,6 +84,7 @@ compiler to be able to reason about data dependencies and aliasing.
 
 As a simple example, consider the following fragment of code:
 
+<!-- ignore: simplified code -->
 ```rust,ignore
 *x *= 7;
 *y *= 3;
@@ -162,6 +164,7 @@ such we will guard against this case explicitly.
 
 Ok with all the nonsense out of the way, let's actually allocate some memory:
 
+<!-- ignore: simplified code -->
 ```rust,ignore
 use std::alloc::{self, Layout};
 

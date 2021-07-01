@@ -42,6 +42,7 @@ dropped.
 
 So we're going to use the following struct:
 
+<!-- ignore: simplified code -->
 ```rust,ignore
 pub struct IntoIter<T> {
     buf: NonNull<T>,
@@ -54,6 +55,7 @@ pub struct IntoIter<T> {
 
 And this is what we end up with for initialization:
 
+<!-- ignore: simplified code -->
 ```rust,ignore
 impl<T> Vec<T> {
     pub fn into_iter(self) -> IntoIter<T> {
@@ -85,6 +87,7 @@ impl<T> Vec<T> {
 
 Here's iterating forward:
 
+<!-- ignore: simplified code -->
 ```rust,ignore
 impl<T> Iterator for IntoIter<T> {
     type Item = T;
@@ -110,6 +113,7 @@ impl<T> Iterator for IntoIter<T> {
 
 And here's iterating backwards.
 
+<!-- ignore: simplified code -->
 ```rust,ignore
 impl<T> DoubleEndedIterator for IntoIter<T> {
     fn next_back(&mut self) -> Option<T> {
@@ -129,6 +133,7 @@ Because IntoIter takes ownership of its allocation, it needs to implement Drop
 to free it. However it also wants to implement Drop to drop any elements it
 contains that weren't yielded.
 
+<!-- ignore: simplified code -->
 ```rust,ignore
 impl<T> Drop for IntoIter<T> {
     fn drop(&mut self) {

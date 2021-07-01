@@ -12,6 +12,7 @@ definitely happen here).
 If we insert at index `i`, we want to shift the `[i .. len]` to `[i+1 .. len+1]`
 using the old len.
 
+<!-- ignore: simplified code -->
 ```rust,ignore
 pub fn insert(&mut self, index: usize, elem: T) {
     // Note: `<=` because it's valid to insert after everything
@@ -33,6 +34,7 @@ pub fn insert(&mut self, index: usize, elem: T) {
 Remove behaves in the opposite manner. We need to shift all the elements from
 `[i+1 .. len + 1]` to `[i .. len]` using the *new* len.
 
+<!-- ignore: simplified code -->
 ```rust,ignore
 pub fn remove(&mut self, index: usize) -> T {
     // Note: `<` because it's *not* valid to remove after everything

@@ -139,7 +139,7 @@ other is still UB).
 
 The following *could* also compile:
 
-```rust,ignore
+```rust,compile_fail
 enum Void {}
 
 let res: Result<u32, Void> = Ok(0);
