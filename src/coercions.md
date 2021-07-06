@@ -1,19 +1,16 @@
 # Coercions
 
-Types can implicitly be coerced to change in certain contexts. These changes are
-generally just *weakening* of types, largely focused around pointers and
-lifetimes. They mostly exist to make Rust "just work" in more cases, and are
-largely harmless.
+Types can implicitly be coerced to change in certain contexts.
+These changes are generally just *weakening* of types, largely focused around pointers and lifetimes.
+They mostly exist to make Rust "just work" in more cases, and are largely harmless.
 
 For an exhaustive list of all the types of coercions, see the [Coercion types] section on the reference.
 
 ## Cases where coercions do not perform
 
-Note that we do not perform coercions when matching traits (except for
-receivers, see below). If there is an impl for some type `U` and `T` coerces to
-`U`, that does not constitute an implementation for `T`. For example, the
-following will not type check, even though it is OK to coerce `t` to `&T` and
-there is an impl for `&T`:
+Note that we do not perform coercions when matching traits (except for receivers, see below).
+If there is an `impl` for some type `U` and `T` coerces to `U`, that does not constitute an implementation for `T`.
+For example, the following will not type check, even though it is OK to coerce `t` to `&T` and there is an `impl` for `&T`:
 
 ```rust,compile_fail
 trait Trait {}
@@ -27,6 +24,8 @@ fn main() {
     foo(t);
 }
 ```
+
+which fails like the following:
 
 ```text
 error[E0277]: the trait bound `&mut i32: Trait` is not satisfied
