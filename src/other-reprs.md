@@ -12,7 +12,7 @@ or C++. Any type you expect to pass through an FFI boundary should have
 necessary to soundly do more elaborate tricks with data layout such as
 reinterpreting values as a different type.
 
-We strongly recommend using [rust-bindgen][] and/or [cbindgen][] to manage your FFI
+We strongly recommend using [rust-bindgen] and/or [cbindgen] to manage your FFI
 boundaries for you. The Rust team works closely with those projects to ensure
 that they work robustly and are compatible with current and future guarantees
 about type layouts and `repr`s.
@@ -89,10 +89,26 @@ in that there is a defined layout of the type. This makes it possible to
 pass the enum to C code, or access the type's raw representation and directly
 manipulate its tag and fields. See [the RFC][really-tagged] for details.
 
-Adding an explicit `repr` to an enum suppresses the null-pointer
-optimization.
-
 These `repr`s have no effect on a struct.
+
+Adding an explicit `repr(u*)`, `repr(i*)`, or `repr(C)` to an enum suppresses the null-pointer optimization, like:
+
+```rust
+# use std::mem::size_of;
+enum MyOption<T> {
+    Some(T),
+    None,
+}
+
+#[repr(u8)]
+enum MyReprOption<T> {
+    Some(T),
+    None,
+}
+
+assert_eq!(8, size_of::<MyOption<&u16>>());
+assert_eq!(16, size_of::<MyReprOption<&u16>>());
+```
 
 ## repr(packed)
 
