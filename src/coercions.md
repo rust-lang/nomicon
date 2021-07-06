@@ -6,9 +6,7 @@ They mostly exist to make Rust "just work" in more cases, and are largely harmle
 
 For an exhaustive list of all the types of coercions, see the [Coercion types] section on the reference.
 
-## Cases where coercions do not perform
-
-Note that we do not perform coercions when matching traits (except for receivers, see below).
+Note that we do not perform coercions when matching traits (except for receivers, see the [next page][dot-operator]).
 If there is an `impl` for some type `U` and `T` coerces to `U`, that does not constitute an implementation for `T`.
 For example, the following will not type check, even though it is OK to coerce `t` to `&T` and there is an `impl` for `&T`:
 
@@ -25,7 +23,7 @@ fn main() {
 }
 ```
 
-which fails like the following:
+which fails like as follows:
 
 ```text
 error[E0277]: the trait bound `&mut i32: Trait` is not satisfied
@@ -43,3 +41,4 @@ error[E0277]: the trait bound `&mut i32: Trait` is not satisfied
 ```
 
 [Coercion types]: ../reference/type-coercions.html#coercion-types
+[dot-operator]: ./dot-operator.html
