@@ -5,48 +5,9 @@ generally just *weakening* of types, largely focused around pointers and
 lifetimes. They mostly exist to make Rust "just work" in more cases, and are
 largely harmless.
 
-Here's all the kinds of coercion:
+For an exhaustive list of all the types of coercions, see the [Coercion types] section on the reference.
 
-Coercion is allowed between the following types:
-
-* Transitivity: `T_1` to `T_3` where `T_1` coerces to `T_2` and `T_2` coerces to
-  `T_3`
-* Pointer Weakening:
-  * `&mut T` to `&T`
-  * `*mut T` to `*const T`
-  * `&T` to `*const T`
-  * `&mut T` to `*mut T`
-* Unsizing: `T` to `U` if `T` implements `CoerceUnsized<U>`
-* Deref coercion: Expression `&x` of type `&T` to `&*x` of type `&U` if `T` derefs to `U` (i.e. `T: Deref<Target=U>`)
-* Non-capturing closure to a function pointer ([RFC 1558], e.g. `|| 8usize` to `fn() -> usize`)
-
-[RFC 1558]: https://rust-lang.github.io/rfcs/1558-closure-to-fn-coercion.html
-
-`CoerceUnsized<Pointer<U>> for Pointer<T> where T: Unsize<U>` is implemented
-for all pointer types (including smart pointers like Box and Rc). Unsize is
-only implemented automatically, and enables the following transformations:
-
-* `[T; n]` => `[T]`
-* `T` => `dyn Trait` where `T: Trait`
-* `Foo<..., T, ...>` => `Foo<..., U, ...>` where:
-  * `T: Unsize<U>`
-  * `Foo` is a struct
-  * Only the last field of `Foo` has type involving `T`
-  * `T` is not part of the type of any other fields
-  * `Bar<T>: Unsize<Bar<U>>`, if the last field of `Foo` has type `Bar<T>`
-
-Coercions occur at a *coercion site*. Any location that is explicitly typed
-will cause a coercion to its type. If inference is necessary, the coercion will
-not be performed. Exhaustively, the coercion sites for an expression `e` to
-type `U` are:
-
-* let statements, statics, and consts: `let x: U = e`
-* Arguments to functions: `takes_a_U(e)`
-* Any expression that will be returned: `fn foo() -> U { e }`
-* Struct literals: `Foo { some_u: e }`
-* Array literals: `let x: [U; 10] = [e, ..]`
-* Tuple literals: `let x: (U, ..) = (e, ..)`
-* The last expression in a block: `let x: U = { ..; e }`
+## Cases where coercions do not perform
 
 Note that we do not perform coercions when matching traits (except for
 receivers, see below). If there is an impl for some type `U` and `T` coerces to
@@ -69,18 +30,17 @@ fn main() {
 
 ```text
 error[E0277]: the trait bound `&mut i32: Trait` is not satisfied
- --> src/main.rs:9:5
+ --> src/main.rs:9:9
   |
+3 | fn foo<X: Trait>(t: X) {}
+  |           ----- required by this bound in `foo`
+...
 9 |     foo(t);
-  |     ^^^ the trait `Trait` is not implemented for `&mut i32`
+  |         ^ the trait `Trait` is not implemented for `&mut i32`
   |
   = help: the following implementations were found:
             <&'a i32 as Trait>
-note: required by `foo`
- --> src/main.rs:3:1
-  |
-3 | fn foo<X: Trait>(t: X) {}
-  | ^^^^^^^^^^^^^^^^^^^^^^
-
-error: aborting due to previous error
+  = note: `Trait` is implemented for `&i32`, but not for `&mut i32`
 ```
+
+[Coercion types]: ../reference/type-coercions.html#coercion-types
