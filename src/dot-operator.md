@@ -2,7 +2,7 @@
 
 The dot operator will perform a lot of magic to convert types. It will perform
 auto-referencing, auto-dereferencing, and coercion until types match.
-The detailed mechanics of method lookup are defined [here](https://rustc-dev-guide.rust-lang.org/method-lookup.html),
+The detailed mechanics of method lookup are defined [here][method_lookup],
 but here is a brief overview that outlines the main steps.
 
 Suppose we have a function `foo` that has a receiver (a `self`, `&self` or
@@ -10,7 +10,7 @@ Suppose we have a function `foo` that has a receiver (a `self`, `&self` or
 what type `Self` is before it can call the correct implementation of the function.
 For this example, we will say that `value` has type `T`.
 
-We will use [fully-qualified syntax](https://doc.rust-lang.org/nightly/book/ch19-03-advanced-traits.html#fully-qualified-syntax-for-disambiguation-calling-methods-with-the-same-name)
+We will use [fully-qualified syntax][fqs]
 to be more clear about exactly which type we are calling a function on.
 
 - First, the compiler checks if we can call `T::foo(value)` directly.
@@ -33,7 +33,7 @@ let first_entry = array[0];
 ```
 
 How does the compiler actually compute `array[0]` when the array is behind so
-many indirections? First, `array[0]` is really just syntax sugar for the [`Index`](https://doc.rust-lang.org/std/ops/trait.Index.html)
+many indirections? First, `array[0]` is really just syntax sugar for the [`Index`][index]
 trait - the compiler will convert `array[0]` into `array.index(0)`. Now, the
 compiler checks to see if `array` implements `Index`, so that we can call the
 function.
@@ -90,7 +90,7 @@ impl<T> Clone for Container<T> where T: Clone {
 }
 ```
 The derived `Clone` implementation is
-[only defined where `T: Clone`](https://doc.rust-lang.org/std/clone/trait.Clone.html#derivable),
+[only defined where `T: Clone`][clone],
 so there is no implementation for `Container<T>: Clone` for a generic `T`. The
 compiler then looks to see if `&Container<T>` implements `Clone`, which it does.
 So it deduces that `clone` is called by autoref, and so `bar_cloned` has type
@@ -105,3 +105,8 @@ impl<T> Clone for Container<T> {
 }
 ```
 Now, the type checker deduces that `bar_cloned: Container<T>`.
+
+[fqs]: https://doc.rust-lang.org/nightly/book/ch19-03-advanced-traits.html#fully-qualified-syntax-for-disambiguation-calling-methods-with-the-same-name
+[method_lookup]: https://rustc-dev-guide.rust-lang.org/method-lookup.html
+[index]: https://doc.rust-lang.org/std/ops/trait.Index.html
+[clone]: https://doc.rust-lang.org/std/clone/trait.Clone.html#derivable
