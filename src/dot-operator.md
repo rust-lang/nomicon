@@ -2,10 +2,52 @@
 
 The dot operator will perform a lot of magic to convert types. It will perform
 auto-referencing, auto-dereferencing, and coercion until types match.
+The detailed mechanics of method lookup are defined [here](https://rustc-dev-guide.rust-lang.org/method-lookup.html),
+but here is a brief overview that outlines the main steps.
 
-TODO: steal information from http://stackoverflow.com/questions/28519997/what-are-rusts-exact-auto-dereferencing-rules/28552082#28552082
+Suppose we have a function `foo` that has a receiver (a `self`, `&self` or
+`&mut self` parameter). If we call `value.foo()`, the compiler needs to determine
+what type `Self` is before it can call the correct implementation of the function.
+For this example, we will say that `value` has type `T`.
 
-Consider the following example of the dot operator at work.
+We will use [fully-qualified syntax](https://doc.rust-lang.org/nightly/book/ch19-03-advanced-traits.html#fully-qualified-syntax-for-disambiguation-calling-methods-with-the-same-name)
+to be more clear about exactly which type we are calling a function on.
+
+- First, the compiler checks if we can call `T::foo(value)` directly.
+This is called a "by value" method call.
+- If we can't call this function (for example, if the function has the wrong type
+or a trait isn't implemented for `Self`), then the compiler tries to add in an
+automatic reference. This means that the compiler tries `<&T>::foo(value)` and
+`<&mut T>::foo(value)`. This is called an "autoref" method call.
+- If none of these candidates worked, we dereference `T` and try again. This
+uses the `Deref` trait - if `T: Deref<Target = U>` then we try again with type `U`
+instead of `T`. If we can't dereference `T`, we can also try _unsizing_ `T`.
+This just means that if `T` has a size parameter known at compile time, we "forget"
+it for the purpose of resolving methods. For instance, this unsizing step can
+convert `[i32; 2]` into `[i32]` by "forgetting" the size of the array.
+
+Here is an example of the method lookup algorithm.
+```rust.ignore
+let array: Rc<Box<[T; 3]>> = ...;
+let first_entry = array[0];
+```
+
+How does the compiler actually compute `array[0]` when the array is behind so
+many indirections? First, `array[0]` is really just syntax sugar for the [`Index`](https://doc.rust-lang.org/std/ops/trait.Index.html)
+trait - the compiler will convert `array[0]` into `array.index(0)`. Now, the
+compiler checks to see if `array` implements `Index`, so that we can call the
+function.
+
+First, the compiler checks if `Rc<Box<[T; 3]>>` implements `Index`, but it
+does not, and neither do `&Rc<Box<[T; 3]>>` or `&mut Rc<Box<[T; 3]>>`. Since
+none of these worked, the compiler dereferences the `Rc<Box<[T; 3]>>` into
+`Box<[T; 3]>` and tries again. `Box<[T; 3]>`, `&Box<[T; 3]>` and `&mut Box<[T; 3]>`
+do not implement `Index`, so it dereferences again. `[T; 3]` and its autorefs
+also do not implement `Index`. We can't dereference `[T; 3]`, so the compiler
+unsizes it, giving `[T]`. Finally, `[T]` implements `Index`, so we can now call the
+actual `index` function.
+
+Consider the following more complicated example of the dot operator at work.
 ```rust.ignore
 fn do_stuff<T: Clone>(value: &T) {
     let cloned = value.clone();
