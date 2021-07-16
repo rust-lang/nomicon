@@ -1,30 +1,35 @@
 # The Dot Operator
 
-The dot operator will perform a lot of magic to convert types. It will perform
-auto-referencing, auto-dereferencing, and coercion until types match.
+The dot operator will perform a lot of magic to convert types.
+It will perform auto-referencing, auto-dereferencing, and coercion until types
+match.
 The detailed mechanics of method lookup are defined [here][method_lookup],
 but here is a brief overview that outlines the main steps.
 
 Suppose we have a function `foo` that has a receiver (a `self`, `&self` or
-`&mut self` parameter). If we call `value.foo()`, the compiler needs to determine
-what type `Self` is before it can call the correct implementation of the function.
+`&mut self` parameter).
+If we call `value.foo()`, the compiler needs to determine what type `Self` is before
+it can call the correct implementation of the function.
 For this example, we will say that `value` has type `T`.
 
-We will use [fully-qualified syntax][fqs]
-to be more clear about exactly which type we are calling a function on.
+We will use [fully-qualified syntax][fqs] to be more clear about exactly which
+type we are calling a function on.
 
-- First, the compiler checks if we can call `T::foo(value)` directly.
+- First, the compiler checks if it can call `T::foo(value)` directly.
 This is called a "by value" method call.
-- If we can't call this function (for example, if the function has the wrong type
+- If it can't call this function (for example, if the function has the wrong type
 or a trait isn't implemented for `Self`), then the compiler tries to add in an
-automatic reference. This means that the compiler tries `<&T>::foo(value)` and
-`<&mut T>::foo(value)`. This is called an "autoref" method call.
-- If none of these candidates worked, we dereference `T` and try again. This
-uses the `Deref` trait - if `T: Deref<Target = U>` then we try again with type `U`
-instead of `T`. If we can't dereference `T`, we can also try _unsizing_ `T`.
-This just means that if `T` has a size parameter known at compile time, we "forget"
-it for the purpose of resolving methods. For instance, this unsizing step can
-convert `[i32; 2]` into `[i32]` by "forgetting" the size of the array.
+automatic reference.
+This means that the compiler tries `<&T>::foo(value)` and `<&mut T>::foo(value)`.
+This is called an "autoref" method call.
+- If none of these candidates worked, it dereferences `T` and tries again.
+This uses the `Deref` trait - if `T: Deref<Target = U>` then it tries again with
+type `U` instead of `T`.
+If it can't dereference `T`, it can also try _unsizing_ `T`.
+This just means that if `T` has a size parameter known at compile time, it "forgets"
+it for the purpose of resolving methods.
+For instance, this unsizing step can convert `[i32; 2]` into `[i32]` by "forgetting"
+the size of the array.
 
 Here is an example of the method lookup algorithm:
 
@@ -34,19 +39,21 @@ let first_entry = array[0];
 ```
 
 How does the compiler actually compute `array[0]` when the array is behind so
-many indirections? First, `array[0]` is really just syntax sugar for the [`Index`][index]
-trait - the compiler will convert `array[0]` into `array.index(0)`. Now, the
-compiler checks to see if `array` implements `Index`, so that we can call the
-function.
+many indirections?
+First, `array[0]` is really just syntax sugar for the [`Index`][index] trait -
+the compiler will convert `array[0]` into `array.index(0)`.
+Now, the compiler checks to see if `array` implements `Index`, so that it can call
+the function.
 
 Then, the compiler checks if `Rc<Box<[T; 3]>>` implements `Index`, but it
-does not, and neither do `&Rc<Box<[T; 3]>>` or `&mut Rc<Box<[T; 3]>>`. Since
-none of these worked, the compiler dereferences the `Rc<Box<[T; 3]>>` into
-`Box<[T; 3]>` and tries again. `Box<[T; 3]>`, `&Box<[T; 3]>`, and `&mut Box<[T; 3]>`
-do not implement `Index`, so it dereferences again. `[T; 3]` and its autorefs
-also do not implement `Index`. We can't dereference `[T; 3]`, so the compiler
-unsizes it, giving `[T]`. Finally, `[T]` implements `Index`, so we can now call the
-actual `index` function.
+does not, and neither do `&Rc<Box<[T; 3]>>` or `&mut Rc<Box<[T; 3]>>`.
+Since none of these worked, the compiler dereferences the `Rc<Box<[T; 3]>>` into
+`Box<[T; 3]>` and tries again.
+`Box<[T; 3]>`, `&Box<[T; 3]>`, and `&mut Box<[T; 3]>` do not implement `Index`,
+so it dereferences again.
+`[T; 3]` and its autorefs also do not implement `Index`.
+It can't dereference `[T; 3]`, so the compiler unsizes it, giving `[T]`.
+Finally, `[T]` implements `Index`, so it can now call the actual `index` function.
 
 Consider the following more complicated example of the dot operator at work:
 
@@ -56,16 +63,18 @@ fn do_stuff<T: Clone>(value: &T) {
 }
 ```
 
-What type is `cloned`? First, the compiler checks if we can call by value.
+What type is `cloned`?
+First, the compiler checks if it can call by value.
 The type of `value` is `&T`, and so the `clone` function has signature
-`fn clone(&T) -> T`. We know that `T: Clone`, so the compiler finds that
-`cloned: T`.
+`fn clone(&T) -> T`.
+It knows that `T: Clone`, so the compiler finds that `cloned: T`.
 
-What would happen if the `T: Clone` restriction was removed? We would not be able
-to call by value, since there is no implementation of `Clone` for `T`. So the
-compiler tries to call by autoref. In this case, the function has the signature
-`fn clone(&&T) -> &T` since `Self = &T`. The compiler sees that `&T: Clone`, and
-then deduces that `cloned: &T`.
+What would happen if the `T: Clone` restriction was removed? It would not be able
+to call by value, since there is no implementation of `Clone` for `T`.
+So the compiler tries to call by autoref.
+In this case, the function has the signature `fn clone(&&T) -> &T` since
+`Self = &T`.
+The compiler sees that `&T: Clone`, and then deduces that `cloned: &T`.
 
 Here is another example where the autoref behavior is used to create some subtle
 effects:
@@ -82,10 +91,12 @@ fn clone_containers<T>(foo: &Container<i32>, bar: &Container<T>) {
 }
 ```
 
-What types are `foo_cloned` and `bar_cloned`? We know that `Container<i32>: Clone`,
-so the compiler calls `clone` by value to give `foo_cloned: Container<i32>`.
-However, `bar_cloned` actually has type `&Container<T>`. Surely this doesn't make
-sense - we added `#[derive(Clone)]` to `Container`, so it must implement `Clone`!
+What types are `foo_cloned` and `bar_cloned`?
+We know that `Container<i32>: Clone`, so the compiler calls `clone` by value to give
+`foo_cloned: Container<i32>`.
+However, `bar_cloned` actually has type `&Container<T>`.
+Surely this doesn't make sense - we added `#[derive(Clone)]` to `Container`, so it
+must implement `Clone`!
 Looking closer, the code generated by the `derive` macro is (roughly):
 
 ```rust,ignore
@@ -96,10 +107,9 @@ impl<T> Clone for Container<T> where T: Clone {
 }
 ```
 
-The derived `Clone` implementation is
-[only defined where `T: Clone`][clone],
-so there is no implementation for `Container<T>: Clone` for a generic `T`. The
-compiler then looks to see if `&Container<T>` implements `Clone`, which it does.
+The derived `Clone` implementation is [only defined where `T: Clone`][clone],
+so there is no implementation for `Container<T>: Clone` for a generic `T`.
+The compiler then looks to see if `&Container<T>` implements `Clone`, which it does.
 So it deduces that `clone` is called by autoref, and so `bar_cloned` has type
 `&Container<T>`.
 
