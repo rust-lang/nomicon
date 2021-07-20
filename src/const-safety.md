@@ -44,7 +44,7 @@ it requires knowing the actual integer address of `S`.
 The way miri handles this is by treating pointer and integer values separately.
 The most primitive kind of value in miri is a `Scalar`, and a scalar is *either*
 a pointer (`Scalar::Ptr`) *or* a bunch of bits representing an integer
-(`Scalar::Bits`).  Every value of a variable of primitive type is stored as a
+(`Scalar::Bits`), or uninitialized.  Every value of a variable of primitive type is stored as a
 `Scalar`.  In the code above, casting the pointer `&S` to `*const i32` and then
 to `usize` does not actually change the value -- we end up with a local variable
 of type `usize` whose value is a `Scalar::Ptr`.  This is not a problem in
