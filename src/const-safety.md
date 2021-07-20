@@ -73,7 +73,7 @@ is defined as follows:
 
 * Integer and floating point types are const-safe if they are a `Scalar::Bits`.
   This makes sure that we can run `%` and other operations without violating
-  const safety.  In particular, the value must *not* be uninitialized.
+  const safety.  In particular, and just like at run-time, the value must *not* be uninitialized.
 * References are const-safe if they are `Scalar::Ptr` into allocated memory, and
   the data stored there is const-safe.  (Technically, we would also like to
   require `&mut` to be unique and the memory behind a `&` to not be mutable unless there is an
