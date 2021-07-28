@@ -39,5 +39,7 @@ Topics that are within the scope of this book include: the meaning of (un)safety
 
 The Rustonomicon is not a place to exhaustively describe the semantics and guarantees of every single API in the standard library, nor is it a place to exhaustively describe every feature of Rust.
 
+Unless otherwise noted, Rust code in this book uses the Rust 2018 edition.
+
 [trpl]: ../book/index.html
 [ref]: ../reference/index.html
