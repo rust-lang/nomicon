@@ -54,7 +54,6 @@ fn panic(info: &PanicInfo) -> ! {
 
 <!-- ignore: simplified code -->
 ```rust,ignore
-
 #![no_std]
 
 use core::panic::PanicInfo;
@@ -67,9 +66,8 @@ fn panic(_info: &PanicInfo) -> ! {
 
 `app` crate:
 
-<!-- ignore: requires external crate -->
+<!-- ignore: requires the above crates -->
 ```rust,ignore
-
 #![no_std]
 
 // dev profile
@@ -79,8 +77,6 @@ extern crate panic_semihosting;
 // release profile
 #[cfg(not(debug_assertions))]
 extern crate panic_halt;
-
-// omitted: other `extern crate`s
 
 fn main() {
     // ..
