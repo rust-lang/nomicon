@@ -297,7 +297,8 @@ gcc call_rust.c -o call_rust -lrust_from_c -L./target/debug
 Finally, we can call Rust code from C with `LD_LIBRARY_PATH` specified:
 
 ```sh
-LD_LIBRARY_PATH=./target/debug ./call_rust
+$ LD_LIBRARY_PATH=./target/debug ./call_rust
+Hello from Rust!
 ```
 
 That's it!
