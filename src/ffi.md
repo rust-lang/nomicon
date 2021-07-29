@@ -21,8 +21,6 @@ libc = "0.2.0"
 
 [libc]: https://crates.io/crates/libc
 
-and add `extern crate libc;` to your crate root.
-
 ## Calling foreign functions
 
 The following is a minimal example of calling a foreign function which will
@@ -30,7 +28,6 @@ compile if snappy is installed:
 
 <!-- ignore: requires libc crate -->
 ```rust,ignore
-extern crate libc;
 use libc::size_t;
 
 #[link(name = "snappy")]
@@ -64,7 +61,6 @@ The `extern` block can be extended to cover the entire snappy API:
 
 <!-- ignore: requires libc crate -->
 ```rust,ignore
-extern crate libc;
 use libc::{c_int, size_t};
 
 #[link(name = "snappy")]
@@ -100,7 +96,6 @@ the allocated memory. The length is less than or equal to the capacity.
 
 <!-- ignore: requires libc crate -->
 ```rust,ignore
-# extern crate libc;
 # use libc::{c_int, size_t};
 # unsafe fn snappy_validate_compressed_buffer(_: *const u8, _: size_t) -> c_int { 0 }
 # fn main() {}
@@ -125,7 +120,6 @@ the true length after compression for setting the length.
 
 <!-- ignore: requires libc crate -->
 ```rust,ignore
-# extern crate libc;
 # use libc::{size_t, c_int};
 # unsafe fn snappy_compress(a: *const u8, b: size_t, c: *mut u8,
 #                           d: *mut size_t) -> c_int { 0 }
@@ -152,7 +146,6 @@ format and `snappy_uncompressed_length` will retrieve the exact buffer size requ
 
 <!-- ignore: requires libc crate -->
 ```rust,ignore
-# extern crate libc;
 # use libc::{size_t, c_int};
 # unsafe fn snappy_uncompress(compressed: *const u8,
 #                             compressed_length: size_t,
@@ -187,7 +180,6 @@ Then, we can add some tests to show how to use them.
 
 <!-- ignore: requires libc crate -->
 ```rust,ignore
-# extern crate libc;
 # use libc::{c_int, size_t};
 # unsafe fn snappy_compress(input: *const u8,
 #                           input_length: size_t,
@@ -208,7 +200,7 @@ Then, we can add some tests to show how to use them.
 #                                             compressed_length: size_t)
 #                                             -> c_int { 0 }
 # fn main() { }
-
+#
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -460,8 +452,6 @@ blocks with the `static` keyword:
 
 <!-- ignore: requires libc crate -->
 ```rust,ignore
-extern crate libc;
-
 #[link(name = "readline")]
 extern {
     static rl_readline_version: libc::c_int;
@@ -479,8 +469,6 @@ them.
 
 <!-- ignore: requires libc crate -->
 ```rust,ignore
-extern crate libc;
-
 use std::ffi::CString;
 use std::ptr;
 
@@ -512,8 +500,6 @@ conventions. Rust provides a way to tell the compiler which convention to use:
 
 <!-- ignore: requires libc crate -->
 ```rust,ignore
-extern crate libc;
-
 #[cfg(all(target_os = "win32", target_arch = "x86"))]
 #[link(name = "kernel32")]
 #[allow(non_snake_case)]
@@ -624,7 +610,6 @@ we have function pointers flying across the FFI boundary in both directions.
 
 <!-- ignore: requires libc crate -->
 ```rust,ignore
-extern crate libc;
 use libc::c_int;
 
 # #[cfg(hidden)]
@@ -724,8 +709,6 @@ We can represent this in Rust with the `c_void` type:
 
 <!-- ignore: requires libc crate -->
 ```rust,ignore
-extern crate libc;
-
 extern "C" {
     pub fn foo(arg: *mut libc::c_void);
     pub fn bar(arg: *mut libc::c_void);
