@@ -145,7 +145,12 @@ impl<T> Vec<T> {
 
             IntoIter {
                 start: buf.ptr.as_ptr(),
-                end: buf.ptr.as_ptr().add(len),
+                end: if buf.cap == 0 {
+                    // can't offset off of a pointer unless it's part of an allocation
+                    buf.ptr.as_ptr()
+                } else {
+                    buf.ptr.as_ptr().add(len)
+                },
                 _buf: buf,
             }
         }
