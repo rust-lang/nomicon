@@ -63,5 +63,6 @@ fn args<T: ToCStr>(&mut self, args: &[T]) -> &mut Command                  // el
 fn args<'a, 'b, T: ToCStr>(&'a mut self, args: &'b [T]) -> &'a mut Command // expanded
 
 fn new(buf: &mut [u8]) -> BufWriter;                    // elided
+fn new(buf: &mut [u8]) -> BufWriter<'_>;                // elided (with `rust_2018_idioms`)
 fn new<'a>(buf: &'a mut [u8]) -> BufWriter<'a>          // expanded
 ```
