@@ -102,7 +102,7 @@ impl<T> Carton<T> {
     pub fn new(value: T) -> Self {
         // Allocate enough memory on the heap to store one T.
         assert_ne!(size_of::<T>(), 0, "Zero-sized types are out of the scope of this example");
-        let mut memptr = ptr::null_mut() as *mut T;
+        let mut memptr: *mut T = ptr::null_mut();
         unsafe {
             let ret = libc::posix_memalign(
                 (&mut memptr).cast(),
@@ -113,10 +113,10 @@ impl<T> Carton<T> {
         };
 
         // NonNull is just a wrapper that enforces that the pointer isn't null.
-        let mut ptr = unsafe {
+        let ptr = {
             // Safety: memptr is dereferenceable because we created it from a
             // reference and have exclusive access.
-            ptr::NonNull::new(memptr.cast::<T>())
+            ptr::NonNull::new(memptr)
                 .expect("Guaranteed non-null if posix_memalign returns 0")
         };
 
