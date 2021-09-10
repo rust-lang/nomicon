@@ -224,8 +224,8 @@ are too dumb.
 ## The area covered by a lifetime
 
 A reference (sometimes called a *borrow*) is *alive* from the place it is
-created to its last use. The borrowed thing needs to outlive only borrows that
-are alive. This looks simple, but there are few subtleties.
+created to its last use. The borrowed value needs to outlive only borrows that
+are alive. This looks simple, but there are a few subtleties.
 
 The following snippet compiles, because after printing `x`, it is no longer
 needed, so it doesn't matter if it is dangling or aliased (even though the
