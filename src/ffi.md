@@ -259,7 +259,7 @@ pub extern "C" fn hello_from_rust() {
 ```
 
 The `extern "C"` makes this function adhere to the C calling convention, as discussed above in "[Foreign Calling Conventions]".
-The `no_mangle` attribute turns off Rust's name mangling, so that it is easier to link to.
+The `no_mangle` attribute turns off Rust's name mangling, so that it has a well defined symbol to link to.
 
 Then, to compile Rust code as a shared library that can be called from C, add the following to your `Cargo.toml`:
 
@@ -268,9 +268,11 @@ Then, to compile Rust code as a shared library that can be called from C, add th
 crate-type = ["cdylib"]
 ```
 
+(NOTE: We could also use the `staticlib` crate type but it needs to tweak some linking flags.)
+
 Run `cargo build` and you're ready to go on the Rust side.
 
-[Foreign Calling Conventions]: ffi.html#foreign-calling-conventions
+[Foreign Calling Conventions]: ffi.md#foreign-calling-conventions
 
 ### C side
 
