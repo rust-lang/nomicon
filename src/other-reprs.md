@@ -91,7 +91,7 @@ manipulate its tag and fields. See [the RFC][really-tagged] for details.
 
 These `repr`s have no effect on a struct.
 
-Adding an explicit `repr(u*)`, `repr(i*)`, or `repr(C)` to an enum suppresses the null-pointer optimization, like:
+Adding an explicit `repr(u*)`, `repr(i*)`, or `repr(C)` to an enum with fields suppresses the null-pointer optimization, like:
 
 ```rust
 # use std::mem::size_of;
@@ -109,6 +109,8 @@ enum MyReprOption<T> {
 assert_eq!(8, size_of::<MyOption<&u16>>());
 assert_eq!(16, size_of::<MyReprOption<&u16>>());
 ```
+
+This optimization still applies to fieldless enums with an explicit `repr(u*)`, `repr(i*)`, or `repr(C)`.
 
 ## repr(packed)
 
