@@ -27,7 +27,7 @@ the last reference to the data).
 
 <!-- ignore: simplified code -->
 ```rust,ignore
-if inner.rc.fetch_sub(1, Ordering::Relaxed) != 1 {
+if inner.rc.fetch_sub(1, Ordering::Release) != 1 {
     return;
 }
 ```
