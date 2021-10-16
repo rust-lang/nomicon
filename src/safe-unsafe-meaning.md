@@ -63,7 +63,7 @@ of Safe Rust, the *soundness property*:
 The design of the safe/unsafe split means that there is an asymmetric trust
 relationship between Safe and Unsafe Rust. Safe Rust inherently has to
 trust that any Unsafe Rust it touches has been written correctly.
-On the other hand, Unsafe Rust has to be very careful about trusting Safe Rust.
+On the other hand, Unsafe Rust cannot trust Safe Rust without care.
 
 As an example, Rust has the [`PartialOrd`] and [`Ord`] traits to differentiate
 between types which can "just" be compared, and those that provide a "total"
