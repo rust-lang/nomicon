@@ -240,6 +240,74 @@ the release of these resources (especially in the case of panic).
 
 For more about destructors, see the [Drop trait](../std/ops/trait.Drop.html).
 
+## Calling Rust code from C
+
+You may wish to compile Rust code in a way so that it can be called from C.
+This is fairly easy, but requires a few things.
+
+### Rust side
+
+First, we assume you have a lib crate named as `rust_from_c`.
+`lib.rs` should have Rust code as following:
+
+```rust
+#[no_mangle]
+pub extern "C" fn hello_from_rust() {
+    println!("Hello from Rust!");
+}
+# fn main() {}
+```
+
+The `extern "C"` makes this function adhere to the C calling convention, as discussed above in "[Foreign Calling Conventions]".
+The `no_mangle` attribute turns off Rust's name mangling, so that it has a well defined symbol to link to.
+
+Then, to compile Rust code as a shared library that can be called from C, add the following to your `Cargo.toml`:
+
+```toml
+[lib]
+crate-type = ["cdylib"]
+```
+
+(NOTE: We could also use the `staticlib` crate type but it needs to tweak some linking flags.)
+
+Run `cargo build` and you're ready to go on the Rust side.
+
+[Foreign Calling Conventions]: ffi.md#foreign-calling-conventions
+
+### C side
+
+We'll create a C file to call the `hello_from_rust` function and compile it by `gcc`.
+
+C file should look like:
+
+```c
+int main() {
+    hello_from_rust();
+    return 0;
+}
+```
+
+We name the file as `call_rust.c` and place it on the crate root.
+Run the following to compile:
+
+```sh
+gcc call_rust.c -o call_rust -lrust_from_c -L./target/debug
+```
+
+`-l` and `-L` tell gcc to find our Rust library.
+
+Finally, we can call Rust code from C with `LD_LIBRARY_PATH` specified:
+
+```sh
+$ LD_LIBRARY_PATH=./target/debug ./call_rust
+Hello from Rust!
+```
+
+That's it!
+For more realistic example, check the [`cbindgen`].
+
+[`cbindgen`]: https://github.com/eqrion/cbindgen
+
 ## Callbacks from C code to Rust functions
 
 Some external libraries require the usage of callbacks to report back their
@@ -647,24 +715,6 @@ void register(void (*f)(int (*)(int), int)) {
 ```
 
 No `transmute` required!
-
-## Calling Rust code from C
-
-You may wish to compile Rust code in a way so that it can be called from C. This is
-fairly easy, but requires a few things:
-
-```rust
-#[no_mangle]
-pub extern "C" fn hello_rust() -> *const u8 {
-    "Hello, world!\0".as_ptr()
-}
-# fn main() {}
-```
-
-The `extern "C"` makes this function adhere to the C calling convention, as
-discussed above in "[Foreign Calling
-Conventions](ffi.html#foreign-calling-conventions)". The `no_mangle`
-attribute turns off Rust's name mangling, so that it is easier to link to.
 
 ## FFI and panics
 
