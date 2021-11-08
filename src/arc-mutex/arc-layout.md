@@ -47,7 +47,7 @@ all the details on variance and drop check.
 To fix the first problem, we can use `NonNull<T>`. Note that `NonNull<T>` is a
 wrapper around a raw pointer that declares that:
 
-* We are variant over `T`
+* We are covariant over `T`
 * Our pointer is never null
 
 To fix the second problem, we can include a `PhantomData` marker containing an

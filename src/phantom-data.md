@@ -39,7 +39,7 @@ struct Iter<'a, T: 'a> {
 }
 ```
 
-and that's it. The lifetime will be bounded, and your iterator will be variant
+and that's it. The lifetime will be bounded, and your iterator will be covariant
 over `'a` and `T`. Everything Just Works.
 
 Another important example is Vec, which is (approximately) defined as follows:

@@ -443,7 +443,7 @@ struct MyType<'a, 'b, A: 'a, B: 'b, C, D, E, F, G, H, In, Out, Mixed> {
     f: Vec<F>,    // covariant over F
     g: Cell<G>,   // invariant over G
 
-    h1: H,        // would also be variant over H except...
+    h1: H,        // would also be covariant over H except...
     h2: Cell<H>,  // invariant over H, because invariance wins all conflicts
 
     i: fn(In) -> Out,       // contravariant over In, covariant over Out
