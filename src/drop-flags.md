@@ -79,5 +79,5 @@ if condition {
 }
 ```
 
-The drop flags are tracked on the stack and no longer stashed in types that
-implement drop.
+The drop flags are tracked on the stack.
+In old Rust versions, drop flags were stashed in a hidden field of types that implement `Drop`.
