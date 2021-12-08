@@ -135,11 +135,24 @@ to compute the address of array index `idx`. This relies on
 how arrays are laid out in memory.
 * For a struct, however, in general we do not know how it is laid out, and we
 also cannot use `&mut base_ptr.field` as that would be creating a
-reference. Thus, it is currently not possible to create a raw pointer to a field
-of a partially initialized struct, and also not possible to initialize a single
-field of a partially initialized struct. (a
-[solution to this problem](https://github.com/rust-lang/rust/issues/64490) is being
-worked on).
+reference. So, you must carefully use the [`addr_of_mut`] macro. This creates
+a raw pointer to the field without creating an intermediate reference:
+
+```rust
+use std::{ptr, mem::MaybeUninit};
+
+struct Demo {
+    field: bool,
+}
+
+let mut uninit = MaybeUninit::<Demo>::uninit();
+// `&uninit.as_mut().field` would create a reference to an uninitialized `bool`,
+// and thus be Undefined Behavior!
+let f1_ptr = unsafe { ptr::addr_of_mut!((*uninit.as_mut_ptr()).field) };
+unsafe { f1_ptr.write(true); }
+
+let init = unsafe { uninit.assume_init() };
+```
 
 One last remark: when reading old Rust code, you might stumble upon the
 deprecated `mem::uninitialized` function.  That function used to be the only way
@@ -155,6 +168,7 @@ it around at all, be sure to be *really* careful.
 [`MaybeUninit`]: ../core/mem/union.MaybeUninit.html
 [assume_init]: ../core/mem/union.MaybeUninit.html#method.assume_init
 [`ptr`]: ../core/ptr/index.html
+[`addr_of_mut`]: ../core/ptr/macro.addr_of_mut.html
 [`write`]: ../core/ptr/fn.write.html
 [`copy`]: ../std/ptr/fn.copy.html
 [`copy_nonoverlapping`]: ../std/ptr/fn.copy_nonoverlapping.html
