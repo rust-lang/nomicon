@@ -119,26 +119,65 @@ assert_eq!(16, size_of::<MyReprOption<&u16>>());
 
 This optimization still applies to fieldless enums with an explicit `repr(u*)`, `repr(i*)`, or `repr(C)`.
 
-## repr(packed)
+## repr(packed(n))
 
-`repr(packed)` forces Rust to strip any padding, and only align the type to a
-byte. This may improve the memory footprint, but will likely have other negative
+`repr(packed(n))` can lower the alignment of every single struct member and thus 
+the alignment of the struct itself. The final alignment of each struct member is 
+`min(n, normal_alignment)`. Hence, `packed`/`packed(1)` aligns each field to a 
+one-byte boundary. Effectively, this strips any padding between member fields, 
+which may improve the memory footprint, but will likely have other negative 
 side-effects.
 
-In particular, most architectures *strongly* prefer values to be aligned. This
-may mean the unaligned loads are penalized (x86), or even fault (some ARM
-chips). For simple cases like directly loading or storing a packed field, the
-compiler might be able to paper over alignment issues with shifts and masks.
-However if you take a reference to a packed field, it's unlikely that the
-compiler will be able to emit code to avoid an unaligned load.
+In particular, most architectures *strongly* prefer values to be aligned. This 
+may mean the unaligned loads are penalized (x86), or even fault (some ARM chips). 
+For simple cases like directly loading or storing a packed field, the compiler 
+might be able to paper over alignment issues with shifts and masks. However, if 
+you take a reference to a packed field, it's unlikely that the compiler will be 
+able to emit code to avoid an unaligned load.
 
-[As this can cause undefined behavior][ub loads], the lint has been implemented
-and it will become a hard error.
+[As this can cause undefined behavior][ub loads], the lint has been implemented.
+With Rust 1.57 stable it is still a warning, but will become a hard error in the 
+future.
 
 `repr(packed)` is not to be used lightly. Unless you have extreme requirements,
 this should not be used.
 
-This repr is a modifier on `repr(C)` and `repr(Rust)`.
+This repr is a modifier on `repr(C)` and `repr(Rust)`. A typical use case is 
+`repr(C, packed)`, which gives you full control over the exact type layout in 
+memory.
+
+### Example
+
+The example down below shows how you can mutate data in a packed struct and safely
+handle unaligned pointers.
+
+```rust
+#[derive(Default)]
+#[repr(packed)]
+struct Foo {
+    a: u8,
+    b: u64,
+}
+
+impl Foo {
+    // safe way of creating an unaligned pointer to the field
+    fn b_mut_ptr(&mut self) -> *mut u64 {
+        core::ptr::addr_of_mut!(self.b)
+    }
+}
+
+fn main() {
+    println!("{:?}", {
+        let mut foo = Foo::default();
+        let ptr = foo.b_mut_ptr();
+        unsafe {
+            // safely write to the unaligned ptr
+            core::ptr::write_unaligned(ptr, *ptr + 1);
+            *ptr
+        }
+    });
+}
+```
 
 ## repr(align(n))
 
@@ -150,7 +189,7 @@ never share the same cache line with each other (which may speed up certain
 kinds of concurrent code).
 
 This is a modifier on `repr(C)` and `repr(Rust)`. It is incompatible with
-`repr(packed)`.
+`repr(packed)`, but a struct with `align(n)` can wrap a struct that is `packed`.
 
 [unsafe code guidelines]: https://rust-lang.github.io/unsafe-code-guidelines/layout.html
 [drop flags]: drop-flags.html
