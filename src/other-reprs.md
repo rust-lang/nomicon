@@ -63,7 +63,7 @@ whole struct is guaranteed to be the same as that one field.
 The goal is to make it possible to transmute between the single field and the
 struct. An example of that is [`UnsafeCell`], which can be transmuted into
 the type it wraps ([`UnsafeCell`] also uses the unstable [no_niche][no-niche-pull],
-so it's ABI is not actually guaranteed to be the same when nested in other types).
+so its ABI is not actually guaranteed to be the same when nested in other types).
 
 Also, passing the struct through FFI where the inner field type is expected on
 the other side is guaranteed to work. In particular, this is necessary for `struct
