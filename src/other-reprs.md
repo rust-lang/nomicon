@@ -70,7 +70,7 @@ the other side is guaranteed to work. In particular, this is necessary for `stru
 Foo(f32)` to always have the same ABI as `f32`.
 
 This repr is only considered part of the public ABI of a type if either the single
-field is pub, or if it's layout is documented in prose. Otherwise, the layout should
+field is `pub`, or if its layout is documented in prose. Otherwise, the layout should
 not be relied upon by other crates.
 
 More details are in the [RFC][rfc-transparent].
