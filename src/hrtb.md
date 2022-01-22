@@ -26,10 +26,11 @@ fn main() {
 ```
 
 If we try to naively desugar this code in the same way that we did in the
-lifetimes section, we run into some trouble:
+[lifetimes section][lt], we run into some trouble:
 
 <!-- ignore: desugared code -->
 ```rust,ignore
+// NOTE: `&'b data.0` and `'x: {` is not valid syntax!
 struct Closure<F> {
     data: (u8, u16),
     func: F,
@@ -66,6 +67,13 @@ desugar this is as follows:
 where for<'a> F: Fn(&'a (u8, u16)) -> &'a u8,
 ```
 
+Alternatively:
+
+<!-- ignore: simplified code -->
+```rust,ignore
+where F: for<'a> Fn(&'a (u8, u16)) -> &'a u8,
+```
+
 (Where `Fn(a, b, c) -> d` is itself just sugar for the unstable *real* `Fn`
 trait)
 
@@ -73,3 +81,29 @@ trait)
 *infinite list* of trait bounds that F must satisfy. Intense. There aren't many
 places outside of the `Fn` traits where we encounter HRTBs, and even for
 those we have a nice magic sugar for the common cases.
+
+In summary, we can rewrite the original code more explicitly as:
+
+```rust
+struct Closure<F> {
+    data: (u8, u16),
+    func: F,
+}
+
+impl<F> Closure<F>
+    where for<'a> F: Fn(&'a (u8, u16)) -> &'a u8,
+{
+    fn call(&self) -> &u8 {
+        (self.func)(&self.data)
+    }
+}
+
+fn do_it(data: &(u8, u16)) -> &u8 { &data.0 }
+
+fn main() {
+    let clo = Closure { data: (0, 1), func: do_it };
+    println!("{}", clo.call());
+}
+```
+
+[lt]: lifetimes.html
