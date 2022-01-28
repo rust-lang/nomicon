@@ -187,10 +187,20 @@ impl<T> Vec<T> {
         assert!(new_layout.size() <= isize::MAX as usize, "Allocation too large");
 
         let new_ptr = if self.cap == 0 {
+            // Safety: alloc::alloc requires new_layout to be non-zero size.
+            //
+            // Since we would have panicked in new for a ZST, this would only
+            // be the case if the value passed to Layout::array() was non-zero
+            // which is never the case.
             unsafe { alloc::alloc(new_layout) }
         } else {
             let old_layout = Layout::array::<T>(self.cap).unwrap();
             let old_ptr = self.ptr.as_ptr() as *mut u8;
+            // Safety: alloc::realloc requires old_ptr be allocated with old_layout,
+            // and new_layout.size() not be zero or overflow to above usize::MAX
+            //
+            // new_layout.size() being zero is covered by the above safety comment
+            // and the overflow is covered by the "Allocation too large" assertion above.
             unsafe { alloc::realloc(old_ptr, old_layout, new_layout.size()) }
         };
 

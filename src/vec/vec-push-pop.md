@@ -22,6 +22,9 @@ to the 0th index. So we should offset by the old len.
 pub fn push(&mut self, elem: T) {
     if self.len == self.cap { self.grow(); }
 
+    // Safety: cap must be more than len, since we grew the vec.
+    // Therefore, self.ptr must point to at least self.len + 1 items, which
+    // means self.ptr.as_ptr().add(self.len) is in-bounds of the allocation.
     unsafe {
         ptr::write(self.ptr.as_ptr().add(self.len), elem);
     }
@@ -50,6 +53,9 @@ pub fn pop(&mut self) -> Option<T> {
     } else {
         self.len -= 1;
         unsafe {
+            // Safety: By invariant 1, 2 on vec, the pointer here is 
+            // in bounds and points to a valid T. We decrease the len
+            // so that we won't return it twice.
             Some(ptr::read(self.ptr.as_ptr().add(self.len)))
         }
     }

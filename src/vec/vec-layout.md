@@ -46,16 +46,38 @@ use std::ptr::NonNull;
 use std::marker::PhantomData;
 
 pub struct Vec<T> {
+    // Invariant 1: Either cap is 0, or ptr is a Layout::array of cap T's
+    // Invariant 2: from ptr onwards is `len` amount of initialized T's
     ptr: NonNull<T>,
     cap: usize,
     len: usize,
     _marker: PhantomData<T>,
 }
 
+// Safety: Semantically we own T's, so Send if T: Send, Sync if T: Sync is correct
 unsafe impl<T: Send> Send for Vec<T> {}
 unsafe impl<T: Sync> Sync for Vec<T> {}
 # fn main() {}
 ```
 
+## Safety Comments and Invariants
+
+Before going on, it's worth explaining the comment above the impls of
+`Send`/`Sync` for `Vec<T>`.
+
+These are known as safety comments, and are good practice to get into doing if
+you are writing any unsafe code. They help any reader understand why the
+`unsafe` blocks are sound.
+
+Additionally, making yourself write them encourages you to think harder about
+the safety of your code, possibly leading you to discover bugs.
+
+There is [a clippy lint][undocumented_unsafe_blocks] to warn when you forget to
+do this, which you may wish to enable.
+
+The rest of the section on implementing `Vec` will use safety comments to
+explain why its use of `unsafe` is correct.
+
 [ownership]: ../ownership.html
 [NonNull]: ../../std/ptr/struct.NonNull.html
+[undocumented_unsafe_blocks]: https://rust-lang.github.io/rust-clippy/master/index.html#undocumented_unsafe_blocks
