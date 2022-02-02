@@ -209,7 +209,7 @@ Usage looked like:
 ```rust,ignore
 let mut data = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
 {
-    let guards = vec![];
+    let mut guards = vec![];
     for x in &mut data {
         // Move the mutable reference into the closure, and execute
         // it on a different thread. The closure has a lifetime bound
