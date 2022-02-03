@@ -22,7 +22,7 @@ So:
 use std::mem;
 
 impl<T> Vec<T> {
-    fn new() -> Self {
+    pub fn new() -> Self {
         assert!(mem::size_of::<T>() != 0, "We're not ready to handle ZSTs");
         Vec {
             ptr: NonNull::dangling(),
@@ -39,11 +39,11 @@ I slipped in that assert there because zero-sized types will require some
 special handling throughout our code, and I want to defer the issue for now.
 Without this assert, some of our early drafts will do some Very Bad Things.
 
-Next we need to figure out what to actually do when we *do* want space. For that, 
-we use the global allocation functions [`alloc`][alloc], [`realloc`][realloc], 
-and [`dealloc`][dealloc] which are available in stable Rust in 
-[`std::alloc`][std_alloc]. These functions are expected to become deprecated in 
-favor of the methods of [`std::alloc::Global`][Global] after this type is stabilized. 
+Next we need to figure out what to actually do when we *do* want space. For that,
+we use the global allocation functions [`alloc`][alloc], [`realloc`][realloc],
+and [`dealloc`][dealloc] which are available in stable Rust in
+[`std::alloc`][std_alloc]. These functions are expected to become deprecated in
+favor of the methods of [`std::alloc::Global`][Global] after this type is stabilized.
 
 We'll also need a way to handle out-of-memory (OOM) conditions. The standard
 library provides a function [`alloc::handle_alloc_error`][handle_alloc_error],
