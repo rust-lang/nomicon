@@ -241,127 +241,9 @@ So the compiler decides that `&'static str` can become `&'b str` if and only if
 `&'static str` is a subtype of `&'b str`, which will hold if `'static: 'b`.
 This is true, so the compiler is happy to continue compiling this code.
 
----
-
-First off, let's revisit the meowing dog example:
-
-<!-- ignore: simplified code -->
-```rust,ignore
-fn evil_feeder(pet: &mut Animal) {
-    let spike: Dog = ...;
-
-    // `pet` is an Animal, and Dog is a subtype of Animal,
-    // so this should be fine, right..?
-    *pet = spike;
-}
-
-fn main() {
-    let mut mr_snuggles: Cat = ...;
-    evil_feeder(&mut mr_snuggles);  // Replaces mr_snuggles with a Dog
-    mr_snuggles.meow();             // OH NO, MEOWING DOG!
-}
-```
-
-If we look at our table of variances, we see that `&mut T` is *invariant* over `T`.
-As it turns out, this completely fixes the issue! With invariance, the fact that
-Cat is a subtype of Animal doesn't matter; `&mut Cat` still won't be a subtype of
-`&mut Animal`. The static type checker will then correctly stop us from passing
-a Cat into `evil_feeder`.
-
-The soundness of subtyping is based on the idea that it's ok to forget unnecessary
-details. But with references, there's always someone that remembers those details:
-the value being referenced. That value expects those details to keep being true,
-and may behave incorrectly if its expectations are violated.
-
-The problem with making `&mut T` covariant over `T` is that it gives us the power
-to modify the original value *when we don't remember all of its constraints*.
-And so, we can make someone have a Dog when they're certain they still have a Cat.
-
-With that established, we can easily see why `&T` being covariant over `T` *is*
-sound: it doesn't let you modify the value, only look at it. Without any way to
-mutate, there's no way for us to mess with any details. We can also see why
-`UnsafeCell` and all the other interior mutability types must be invariant: they
-make `&T` work like `&mut T`!
-
-Now what about the lifetime on references? Why is it ok for both kinds of references
-to be covariant over their lifetimes? Well, here's a two-pronged argument:
-
-First and foremost, subtyping references based on their lifetimes is *the entire point
-of subtyping in Rust*. The only reason we have subtyping is so we can pass
-long-lived things where short-lived things are expected. So it better work!
-
-Second, and more seriously, lifetimes are only a part of the reference itself. The
-type of the referent is shared knowledge, which is why adjusting that type in only
-one place (the reference) can lead to issues. But if you shrink down a reference's
-lifetime when you hand it to someone, that lifetime information isn't shared in
-any way. There are now two independent references with independent lifetimes.
-There's no way to mess with the original reference's lifetime using the other one.
-
-Or rather, the only way to mess with someone's lifetime is to build a meowing dog.
-But as soon as you try to build a meowing dog, the lifetime should be wrapped up
-in an invariant type, preventing the lifetime from being shrunk. To understand this
-better, let's port the meowing dog problem over to real Rust.
-
-In the meowing dog problem we take a subtype (Cat), convert it into a supertype
-(Animal), and then use that fact to overwrite the subtype with a value that satisfies
-the constraints of the supertype but not the subtype (Dog).
-
-So with lifetimes, we want to take a long-lived thing, convert it into a
-short-lived thing, and then use that to write something that doesn't live long
-enough into the place expecting something long-lived.
-
-Here it is:
-
-
-The other argument is only an `&'a str`, which *is* covariant over `'a`. So the compiler
-adopts a constraint: `&'spike_str str` must be a subtype of `&'static str` (inclusive),
-which in turn implies `'spike_str` must be a subtype of `'static` (inclusive). Which is to say,
-`'spike_str` must contain `'static`. But only one thing contains `'static` -- `'static` itself!
-
-This is why we get an error when we try to assign `&spike` to `spike_str`. The
-compiler has worked backwards to conclude `spike_str` must live forever, and `&spike`
-simply can't live that long.
-
-So even though references are covariant over their lifetimes, they "inherit" invariance
-whenever they're put into a context that could do something bad with that. In this case,
-we inherited invariance as soon as we put our reference inside an `&mut T`.
-
-As it turns out, the argument for why it's ok for Box (and Vec, Hashmap, etc.) to
-be covariant is pretty similar to the argument for why it's ok for
-references to be covariant: as soon as you try to stuff them in something like a
-mutable reference, they inherit invariance and you're prevented from doing anything
-bad.
-
-However, Box makes it easier to focus on the by-value aspect of references that we
-partially glossed over.
-
-Unlike a lot of languages which allow values to be freely aliased at all times,
-Rust has a very strict rule: if you're allowed to mutate or move a value, you
-are guaranteed to be the only one with access to it.
-
-Consider the following code:
-
-<!-- ignore: simplified code -->
-```rust,ignore
-let mr_snuggles: Box<Cat> = ..;
-let spike: Box<Dog> = ..;
-
-let mut pet: Box<Animal>;
-pet = mr_snuggles;
-pet = spike;
-```
-
-There is no problem at all with the fact that we have forgotten that `mr_snuggles` was a Cat,
-or that we overwrote him with a Dog, because as soon as we moved mr_snuggles to a variable
-that only knew he was an Animal, **we destroyed the only thing in the universe that
-remembered he was a Cat**!
-
-In contrast to the argument about immutable references being soundly covariant because they
-don't let you change anything, owned values can be covariant because they make you
-change *everything*. There is no connection between old locations and new locations.
-Applying by-value subtyping is an irreversible act of knowledge destruction, and
-without any memory of how things used to be, no one can be tricked into acting on
-that old information!
+`Box<T>` is also *covariant* over `T`. This would make sense, since it's supposed to be
+usable the same as `&T`. If you try to mutate the box, you'll need a `&mut Box<T>` and the
+invariance of `&mut` will kick in here.
 
 Only one thing left to explain: function pointers.
 
@@ -369,43 +251,40 @@ To see why `fn(T) -> U` should be covariant over `U`, consider the following sig
 
 <!-- ignore: simplified code -->
 ```rust,ignore
-fn get_animal() -> Animal;
+fn get_str() -> &'a str;
 ```
 
-This function claims to produce an Animal. As such, it is perfectly valid to
+This function claims to produce a `str` bound by some liftime `'a`. As such, it is perfectly valid to
 provide a function with the following signature instead:
 
 <!-- ignore: simplified code -->
 ```rust,ignore
-fn get_animal() -> Cat;
+fn get_static() -> &'static str;
 ```
 
-After all, Cats are Animals, so always producing a Cat is a perfectly valid way
-to produce Animals. Or to relate it back to real Rust: if we need a function
-that is supposed to produce something that lives for `'short`, it's perfectly
-fine for it to produce something that lives for `'long`. We don't care, we can
-just forget that fact.
+So when the function is called, all it's expecting is a `&str` which lives at least the lifetime of `'a`,
+it doesn't matter if the value actually lives longer.
 
 However, the same logic does not apply to *arguments*. Consider trying to satisfy:
 
 <!-- ignore: simplified code -->
 ```rust,ignore
-fn handle_animal(Animal);
+fn store_ref(&'a str);
 ```
 
 with:
 
 <!-- ignore: simplified code -->
 ```rust,ignore
-fn handle_animal(Cat);
+fn store_static(&'static str);
 ```
 
-The first function can accept Dogs, but the second function absolutely can't.
+The first function can accept any string reference as long as it lives at least for `'a`,
+but the second cannot accept a string reference that lives for any duration less than `'static`,
+which would cause a conflict.
 Covariance doesn't work here. But if we flip it around, it actually *does*
-work! If we need a function that can handle Cats, a function that can handle *any*
-Animal will surely work fine. Or to relate it back to real Rust: if we need a
-function that can handle anything that lives for at least `'long`, it's perfectly
-fine for it to be able to handle anything that lives for at least `'short`.
+work! If we need a function that can handle `&'static str`, a function that can handle *any* reference lifetime
+will surely work fine.
 
 And that's why function types, unlike anything else in the language, are
 **contra**variant over their arguments.
