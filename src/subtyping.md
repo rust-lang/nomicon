@@ -1,5 +1,45 @@
 # Subtyping and Variance
 
+Rust uses lifetimes to track the relationships between borrows and ownership.
+However, a naive implementation of lifetimes would be either too restrictive,
+or permit undefined behaviour. Let's see a few examples:
+
+```rust,ignore
+fn debug<'a>(a: &'a str, b: &'a str) {
+    println!("a = {:?} b = {:?}", a, b)
+}
+
+fn main() {
+    let a: &'static str = "hello";
+    {
+        let b = String::from("world");
+        let b = &b; // 'b has a shorter lifetime than 'static
+        debug(a, b);
+    }
+}
+```
+
+In an overly restrictive implementation of lifetimes, since `a` and `b` have differeing lifetimes,
+we might see the following error:
+
+```text
+error[E0308]: mismatched types
+ --> src/main.rs:6:16
+  |
+6 |         debug(a, b);
+  |                  ^
+  |                  |
+  |                  expected `&'static str`, found struct `&'b str`
+```
+
+This is over-restrictive. In this case, what we want is to accept any type that lives "at least as long" as `<'a>`.
+This is what subtyping is intended to fix.
+
+Let's define lifetime `'a` to be a `subtype` of lifetime `'b`, if and only if `'a` lives _at least as long_ as `'b`.
+We will denote this as `'a: 'b`
+
+---
+
 Subtyping is a relationship between types that allows statically typed
 languages to be a bit more flexible and permissive.
 
