@@ -42,11 +42,11 @@ fn debug<T: std::fmt::Debug>(a: T, b: T) {
 }
 
 fn main() {
-    let a: &'static str = "hello";
+    let hello: &'static str = "hello";
     {
-        let b = String::from("world");
-        let b = &b; // 'b has a shorter lifetime than 'static
-        debug(a, b);
+        let world = String::from("world");
+        let world = &world; // 'b has a shorter lifetime than 'static
+        debug(hello, world);
     }
 }
 ```
@@ -58,10 +58,10 @@ we might see the following error:
 error[E0308]: mismatched types
  --> src/main.rs:10:16
    |
-10 |         debug(a, b);
-   |                  ^
-   |                  |
-   |                  expected `&'static str`, found struct `&'b str`
+10 |         debug(hello, world);
+   |                      ^
+   |                      |
+   |                      expected `&'static str`, found struct `&'b str`
 ```
 
 This is over-restrictive. In this case, what we want is to accept any type that lives *at least as long* as `'b`.
@@ -83,11 +83,11 @@ fn debug<T: std::fmt::Debug>(a: T, b: T) {
 }
 
 fn main() {
-    let a: &'static str = "hello";
+    let hello: &'static str = "hello";
     {
-        let b = String::from("world");
-        let b = &b; // 'b has a shorter lifetime than 'static
-        debug(a, b); // a silently converts from `&'static str` into `&'b str`
+        let world = String::from("world");
+        let world = &world; // 'b has a shorter lifetime than 'static
+        debug(hello, world); // a silently converts from `&'static str` into `&'b str`
     }
 }
 ```
@@ -98,26 +98,25 @@ Above, we glossed over the fact that `'static: 'b` implied that `&'static T: &'b
 It's not always as simple as this example though, to understand that let's try extend this example a bit
 
 ```rust,compile_fail
-fn debug<T>(a: &mut T, b: T) {
-    *a = b;
+fn assign<T>(input: &mut T, val: T) {
+    *input = val;
 }
 
 fn main() {
-    let mut a: &'static str = "hello";
+    let mut hello: &'static str = "hello";
     {
-        let b = String::from("world");
-        let b = &b;
-        debug(&mut a, b);
+        let world = String::from("world");
+        assign(&mut hello, &world);
     }
 }
 ```
 
-This has a memory bug in it.
+If this were to compile, this would have a memory bug.
 
 If we were to expand this out, we'd see that we're trying to assign a `&'b str` into a `&'static str`,
 but the problem is that as soon as `b` goes out of scope, `a` is now invalid, even though it's supposed to have a `'static` lifetime.
 
-However, the implementation of `debug` is valid.
+However, the implementation of `assign` is valid.
 Therefore, this must mean that `&mut &'static str` should **not** a *subtype* of `&mut &'b str`,
 even if `'static` is a subtype of `'b`.
 
@@ -149,21 +148,21 @@ Here is a table of some other type constructors and their variances:
 
 |   |                 |     'a    |         T         |     U     |
 |---|-----------------|:---------:|:-----------------:|:---------:|
-| * | `&'a T `        | covariant | covariant         |           |
-| * | `&'a mut T`     | covariant | invariant         |           |
-| * | `Box<T>`        |           | covariant         |           |
+|   | `&'a T `        | covariant | covariant         |           |
+|   | `&'a mut T`     | covariant | invariant         |           |
+|   | `Box<T>`        |           | covariant         |           |
 |   | `Vec<T>`        |           | covariant         |           |
-| * | `UnsafeCell<T>` |           | invariant         |           |
+|   | `UnsafeCell<T>` |           | invariant         |           |
 |   | `Cell<T>`       |           | invariant         |           |
-| * | `fn(T) -> U`    |           | **contra**variant | covariant |
+|   | `fn(T) -> U`    |           | **contra**variant | covariant |
 |   | `*const T`      |           | covariant         |           |
 |   | `*mut T`        |           | invariant         |           |
 
-The types with \*'s are the ones we will be focusing on, as they are in
-some sense "fundamental". All the others can be understood by analogy to the others:
+Some of these can be explained simply in relation to the others:
 
 * `Vec<T>` and all other owning pointers and collections follow the same logic as `Box<T>`
 * `Cell<T>` and all other interior mutability types follow the same logic as `UnsafeCell<T>`
+* `UnsafeCell<T>` having interior mutability gives it the same variance properties as `&mut T`
 * `*const T` follows the logic of `&T`
 * `*mut T` follows the logic of `&mut T` (or `UnsafeCell<T>`)
 
@@ -177,8 +176,72 @@ For more types, see the ["Variance" section][variance-table] on the reference.
 > take references with specific lifetimes (as opposed to the usual "any lifetime",
 > which gets into higher rank lifetimes, which work independently of subtyping).
 
-Ok, that's enough type theory! Let's try to apply the concept of variance to Rust
-and look at some examples.
+Now that we have some more formal understanding of variance,
+let's go through some more examples in more detail.
+
+```rust,compile_fail
+fn assign<T>(input: &mut T, val: T) {
+    *input = val;
+}
+
+fn main() {
+    let mut hello: &'static str = "hello";
+    {
+        let world = String::from("world");
+        assign(&mut hello, &world);
+    }
+}
+```
+
+And what do we get when we run this?
+
+```text
+error[E0597]: `world` does not live long enough
+  --> src/main.rs:9:28
+   |
+6  |     let mut hello: &'static str = "hello";
+   |                    ------------ type annotation requires that `world` is borrowed for `'static`
+...
+9  |         assign(&mut hello, &world);
+   |                            ^^^^^^ borrowed value does not live long enough
+10 |     }
+   |     - `world` dropped here while still borrowed
+```
+
+Good, it doesn't compile! Let's break down what's happening here in detail.
+
+First let's look at the `assign` function:
+
+```rust
+fn assign<T>(input: &mut T, val: T) {
+    *input = val;
+}
+```
+
+All it does is take a mutable reference and a value and overwrite the referent with it.
+What's important about this function is that it creates a type equality constraint. It
+clearly says in its signature the referent and the value must be the *exact same* type.
+
+Meanwhile, in the caller we pass in `&mut &'static str` and `&'spike_str str`.
+
+Because `&mut T` is invariant over `T`, the compiler concludes it can't apply any subtyping
+to the first argument, and so `T` must be exactly `&'static str`.
+
+This is counter to the `&T` case
+
+```rust
+fn debug<T: std::fmt::Debug>(a: T, b: T) {
+    println!("a = {:?} b = {:?}", a, b);
+}
+```
+
+Where similarly `a` and `b` must have the same type `T`.
+But since `&'a T` *is* covariant over `'a`, we are allowed to perform subtyping.
+So the compiler decides that `&'static str` can become `&'b str` if and only if
+`&'static str` is a subtype of `&'b str`, which will hold if `'static: 'b`.
+This is true, so the compiler is happy to continue compiling this code.
+
+---
 
 First off, let's revisit the meowing dog example:
 
@@ -249,56 +312,6 @@ enough into the place expecting something long-lived.
 
 Here it is:
 
-```rust,compile_fail
-fn evil_feeder<T>(input: &mut T, val: T) {
-    *input = val;
-}
-
-fn main() {
-    let mut mr_snuggles: &'static str = "meow! :3";  // mr. snuggles forever!!
-    {
-        let spike = String::from("bark! >:V");
-        let spike_str: &str = &spike;                // Only lives for the block
-        evil_feeder(&mut mr_snuggles, spike_str);    // EVIL!
-    }
-    println!("{}", mr_snuggles);                     // Use after free?
-}
-```
-
-And what do we get when we run this?
-
-```text
-error[E0597]: `spike` does not live long enough
-  --> src/main.rs:9:31
-   |
-6  |     let mut mr_snuggles: &'static str = "meow! :3";  // mr. snuggles forever!!
-   |                          ------------ type annotation requires that `spike` is borrowed for `'static`
-...
-9  |         let spike_str: &str = &spike;                // Only lives for the block
-   |                               ^^^^^^ borrowed value does not live long enough
-10 |         evil_feeder(&mut mr_snuggles, spike_str);    // EVIL!
-11 |     }
-   |     - `spike` dropped here while still borrowed
-```
-
-Good, it doesn't compile! Let's break down what's happening here in detail.
-
-First let's look at the new `evil_feeder` function:
-
-```rust
-fn evil_feeder<T>(input: &mut T, val: T) {
-    *input = val;
-}
-```
-
-All it does is take a mutable reference and a value and overwrite the referent with it.
-What's important about this function is that it creates a type equality constraint. It
-clearly says in its signature the referent and the value must be the *exact same* type.
-
-Meanwhile, in the caller we pass in `&mut &'static str` and `&'spike_str str`.
-
-Because `&mut T` is invariant over `T`, the compiler concludes it can't apply any subtyping
-to the first argument, and so `T` must be exactly `&'static str`.
 
 The other argument is only an `&'a str`, which *is* covariant over `'a`. So the compiler
 adopts a constraint: `&'spike_str str` must be a subtype of `&'static str` (inclusive),
