@@ -2,11 +2,41 @@
 
 Rust uses lifetimes to track the relationships between borrows and ownership.
 However, a naive implementation of lifetimes would be either too restrictive,
-or permit undefined behaviour. Let's see a few examples:
+or permit undefined behavior.
 
-```rust,ignore
-fn debug<'a>(a: &'a str, b: &'a str) {
-    println!("a = {:?} b = {:?}", a, b)
+In order to allow flexible usage of lifetimes
+while also preventing mis-use, Rust uses a combination of **Subtyping** and **Variance**.
+
+## Subtyping
+
+Subtyping is the idea that one type can be a *subtype* of another.
+Let's define that `A: B` is equivalent to saying '`A` is a subtype of `B`'.
+What this is suggesting to us is that the set of *requirements* that `B` defines
+are completely satisfied by `A`. `A` may then have more requirements.
+
+An example of simple subtyping that exists in the language are [supertraits](https://doc.rust-lang.org/stable/book/ch19-03-advanced-traits.html?highlight=supertraits#using-supertraits-to-require-one-traits-functionality-within-another-trait)
+
+```rust
+use std::fmt;
+
+trait OutlinePrint: fmt::Display {
+    fn outline_print(&self) {
+        todo!()
+    }
+}
+```
+
+Here, we have that `OutlinePrint: fmt::Display` (`OutlinePrint` is a *subtype* of `Display`),
+because it has all the requirements of `fmt::Display`, plus the `outline_print` function.
+
+However, subtyping in traits is not that interesting in the case of Rust.
+Here in the nomicon, we're going to focus more with how subtyping interacts with **lifetimes**
+
+Take this example
+
+```rust
+fn debug<T: std::fmt::Debug>(a: T, b: T) {
+    println!("a = {:?} b = {:?}", a, b);
 }
 
 fn main() {
@@ -24,163 +54,73 @@ we might see the following error:
 
 ```text
 error[E0308]: mismatched types
- --> src/main.rs:6:16
-  |
-6 |         debug(a, b);
-  |                  ^
-  |                  |
-  |                  expected `&'static str`, found struct `&'b str`
+ --> src/main.rs:10:16
+   |
+10 |         debug(a, b);
+   |                  ^
+   |                  |
+   |                  expected `&'static str`, found struct `&'b str`
 ```
 
-This is over-restrictive. In this case, what we want is to accept any type that lives "at least as long" as `<'a>`.
-This is what subtyping is intended to fix.
+This is over-restrictive. In this case, what we want is to accept any type that lives *at least as long* as `'b`.
+Let's try using subtyping with our lifetimes.
 
-Let's define lifetime `'a` to be a `subtype` of lifetime `'b`, if and only if `'a` lives _at least as long_ as `'b`.
-We will denote this as `'a: 'b`
+Let's define a lifetime to have the a simple set of requirements: `'a` defines a region of code in which a value will be alive.
+Now that we have a defined set of requirements for lifetimes, we can define how they relate to each other.
+`'a: 'b` if and only if `'a` defines a region of code that **completely contains** `'b`.
 
----
+`'a` may define a region larger than `'b`, but that still fits our definition.
+Going back to our example above, we can say that `'static: 'b`.
 
-Subtyping is a relationship between types that allows statically typed
-languages to be a bit more flexible and permissive.
-
-Subtyping in Rust is a bit different from subtyping in other languages. This
-makes it harder to give simple examples, which is a problem since subtyping,
-and especially variance, is already hard to understand properly. As in,
-even compiler writers mess it up all the time.
-
-To keep things simple, this section will consider a small extension to the
-Rust language that adds a new and simpler subtyping relationship. After
-establishing concepts and issues under this simpler system,
-we will then relate it back to how subtyping actually occurs in Rust.
-
-So here's our simple extension, *Objective Rust*, featuring three new types:
+For now, let's accept the idea that subtypes of lifetimes can be transitive (more on this in [Variance](#variance>)),
+eg. `&'static str` is a subtype of `&'b str`, then we can let them coerce, and then the example above will compile
 
 ```rust
-trait Animal {
-    fn snuggle(&self);
-    fn eat(&mut self);
-}
-
-trait Cat: Animal {
-    fn meow(&self);
-}
-
-trait Dog: Animal {
-    fn bark(&self);
-}
-```
-
-But unlike normal traits, we can use them as concrete and sized types, just like structs.
-
-Now, say we have a very simple function that takes an Animal, like this:
-
-<!-- ignore: simplified code -->
-```rust,ignore
-fn love(pet: Animal) {
-    pet.snuggle();
-}
-```
-
-By default, static types must match *exactly* for a program to compile. As such,
-this code won't compile:
-
-<!-- ignore: simplified code -->
-```rust,ignore
-let mr_snuggles: Cat = ...;
-love(mr_snuggles);         // ERROR: expected Animal, found Cat
-```
-
-Mr. Snuggles is a Cat, and Cats aren't *exactly* Animals, so we can't love him! 😿
-
-This is annoying because Cats *are* Animals. They support every operation
-an Animal supports, so intuitively `love` shouldn't care if we pass it a `Cat`.
-We should be able to just **forget** the non-animal parts of our `Cat`, as they
-aren't necessary to love it.
-
-This is exactly the problem that *subtyping* is intended to fix. Because Cats are just
-Animals **and more**, we say Cat is a *subtype* of Animal (because Cats are a *subset*
-of all the Animals). Equivalently, we say that Animal is a *supertype* of Cat.
-With subtypes, we can tweak our overly strict static type system
-with a simple rule: anywhere a value of type `T` is expected, we will also
-accept values that are subtypes of `T`.
-
-Or more concretely: anywhere an Animal is expected, a Cat or Dog will also work.
-
-As we will see throughout the rest of this section, subtyping is a lot more complicated
-and subtle than this, but this simple rule is a very good 99% intuition. And unless you
-write unsafe code, the compiler will automatically handle all the corner cases for you.
-
-But this is the Rustonomicon. We're writing unsafe code, so we need to understand how
-this stuff really works, and how we can mess it up.
-
-The core problem is that this rule, naively applied, will lead to *meowing Dogs*. That is,
-we can convince someone that a Dog is actually a Cat. This completely destroys the fabric
-of our static type system, making it worse than useless (and leading to Undefined Behavior).
-
-Here's a simple example of this happening when we apply subtyping in a completely naive
-"find and replace" way.
-
-<!-- ignore: simplified code -->
-```rust,ignore
-fn evil_feeder(pet: &mut Animal) {
-    let spike: Dog = ...;
-
-    // `pet` is an Animal, and Dog is a subtype of Animal,
-    // so this should be fine, right..?
-    *pet = spike;
+fn debug<T: std::fmt::Debug>(a: T, b: T) {
+    println!("a = {:?} b = {:?}", a, b);
 }
 
 fn main() {
-    let mut mr_snuggles: Cat = ...;
-    evil_feeder(&mut mr_snuggles);  // Replaces mr_snuggles with a Dog
-    mr_snuggles.meow();             // OH NO, MEOWING DOG!
+    let a: &'static str = "hello";
+    {
+        let b = String::from("world");
+        let b = &b; // 'b has a shorter lifetime than 'static
+        debug(a, b); // a silently converts from `&'static str` into `&'b str`
+    }
 }
 ```
 
-Clearly, we need a more robust system than "find and replace". That system is *variance*,
-which is a set of rules governing how subtyping should compose. Most importantly, variance
-defines situations where subtyping should be disabled.
-
-But before we get into variance, let's take a quick peek at where subtyping actually occurs in
-Rust: *lifetimes*!
-
-> NOTE: The typed-ness of lifetimes is a fairly arbitrary construct that some
-> disagree with. However it simplifies our analysis to treat lifetimes
-> and types uniformly.
-
-Lifetimes are just regions of code, and regions can be partially ordered with the *contains*
-(outlives) relationship. Subtyping on lifetimes is in terms of that relationship:
-if `'big: 'small` ("big contains small" or "big outlives small"), then `'big` is a subtype
-of `'small`. This is a large source of confusion, because it seems backwards
-to many: the bigger region is a *subtype* of the smaller region. But it makes
-sense if you consider our Animal example: Cat is an Animal *and more*,
-just as `'big` is `'small` *and more*.
-
-Put another way, if someone wants a reference that lives for `'small`,
-usually what they actually mean is that they want a reference that lives
-for *at least* `'small`. They don't actually care if the lifetimes match
-exactly. So it should be ok for us to **forget** that something lives for
-`'big` and only remember that it lives for `'small`.
-
-The meowing dog problem for lifetimes will result in us being able to
-store a short-lived reference in a place that expects a longer-lived one,
-creating a dangling reference and letting us use-after-free.
-
-It will be useful to note that `'static`, the forever lifetime, is a subtype of
-every lifetime because by definition it outlives everything. We will be using
-this relationship in later examples to keep them as simple as possible.
-
-With all that said, we still have no idea how to actually *use* subtyping of lifetimes,
-because nothing ever has type `'a`. Lifetimes only occur as part of some larger type
-like `&'a u32` or `IterMut<'a, u32>`. To apply lifetime subtyping, we need to know
-how to compose subtyping. Once again, we need *variance*.
-
 ## Variance
 
-Variance is where things get a bit complicated.
+Above, we glossed over the fact that `'static: 'b` implied that `&'static T: &'b T`. This uses a property known as variance.
+It's not always as simple as this example though, to understand that let's try extend this example a bit
 
-Variance is a property that *type constructors* have with respect to their
-arguments. A type constructor in Rust is any generic type with unbound arguments.
+```rust,compile_fail
+fn debug<T>(a: &mut T, b: T) {
+    *a = b;
+}
+
+fn main() {
+    let mut a: &'static str = "hello";
+    {
+        let b = String::from("world");
+        let b = &b;
+        debug(&mut a, b);
+    }
+}
+```
+
+This has a memory bug in it.
+
+If we were to expand this out, we'd see that we're trying to assign a `&'b str` into a `&'static str`,
+but the problem is that as soon as `b` goes out of scope, `a` is now invalid, even though it's supposed to have a `'static` lifetime.
+
+However, the implementation of `debug` is valid.
+Therefore, this must mean that `&mut &'static str` should **not** a *subtype* of `&mut &'b str`,
+even if `'static` is a subtype of `'b`.
+
+Variance is the way that Rust defines the transitivity of subtypes through their *type constructor*.
+A type constructor in Rust is any generic type with unbound arguments.
 For instance `Vec` is a type constructor that takes a type `T` and returns
 `Vec<T>`. `&` and `&mut` are type constructors that take two inputs: a
 lifetime, and a type to point to.
@@ -192,20 +132,18 @@ A type constructor F's *variance* is how the subtyping of its inputs affects the
 subtyping of its outputs. There are three kinds of variance in Rust. Given two
 types `Sub` and `Super`, where `Sub` is a subtype of `Super`:
 
-* `F` is *covariant* if `F<Sub>` is a subtype of `F<Super>` (subtyping "passes through")
-* `F` is *contravariant* if `F<Super>` is a subtype of `F<Sub>` (subtyping is "inverted")
-* `F` is *invariant* otherwise (no subtyping relationship exists)
+* F is **covariant** if `F<Sub>` is a subtype of `F<Super>` (the subtype property is passed through)
+* F is **contravariant** if `F<Super>` is a subtype of `F<Sub>` (the subtype property is "inverted")
+* F is **invariant** otherwise (no subtyping relationship exists)
 
-If `F` has multiple type parameters, we can talk about the individual variances
-by saying that, for example, `F<T, U>` is covariant over `T` and invariant over `U`.
+If we remember from the above examples,
+it was ok for us to treat `&'a T` as a subtype of `&'b T` if `'a: 'b`,
+therefore we can say that `&'a T` is *covariant* over `'a`.
 
-It is very useful to keep in mind that covariance is, in practical terms, "the"
-variance. Almost all consideration of variance is in terms of whether something
-should be covariant or invariant. Actually witnessing contravariance is quite difficult
-in Rust, though it does in fact exist.
+Also, we saw that it was not ok for us to treat `&mut &'a T` as a subtype of `&mut &'b T`,
+therefore we can say that `&mut T` is *invariant* over `T`
 
-Here is a table of important variances which the rest of this section will be devoted
-to trying to explain:
+Here is a table of some other type constructors and their variances:
 
 |   |                 |     'a    |         T         |     U     |
 |---|-----------------|:---------:|:-----------------:|:---------:|
