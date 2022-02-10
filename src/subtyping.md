@@ -74,7 +74,7 @@ Now that we have a defined set of requirements for lifetimes, we can define how 
 `'a` may define a region larger than `'b`, but that still fits our definition.
 Going back to our example above, we can say that `'static: 'b`.
 
-For now, let's accept the idea that subtypes of lifetimes can be transitive (more on this in [Variance](#variance)),
+For now, let's accept the idea that subtypes of lifetimes can be passed through references (more on this in [Variance](#variance)),
 eg. `&'static str` is a subtype of `&'b str`, then we can let them coerce, and then the example above will compile
 
 ```rust
@@ -120,7 +120,7 @@ However, the implementation of `assign` is valid.
 Therefore, this must mean that `&mut &'static str` should **not** a *subtype* of `&mut &'b str`,
 even if `'static` is a subtype of `'b`.
 
-Variance is the way that Rust defines the transitivity of subtypes through their *type constructor*.
+Variance is the way that Rust defines the relationships of subtypes through their *type constructor*.
 A type constructor in Rust is any generic type with unbound arguments.
 For instance `Vec` is a type constructor that takes a type `T` and returns
 `Vec<T>`. `&` and `&mut` are type constructors that take two inputs: a
