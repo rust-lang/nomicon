@@ -5,14 +5,16 @@ However, a naive implementation of lifetimes would be either too restrictive,
 or permit undefined behavior.
 
 In order to allow flexible usage of lifetimes
-while also preventing mis-use, Rust uses a combination of **Subtyping** and **Variance**.
+while also preventing their misuse, Rust uses a combination of **Subtyping** and **Variance**.
 
 ## Subtyping
 
 Subtyping is the idea that one type can be a *subtype* of another.
-Let's define that `A: B` is equivalent to saying '`A` is a subtype of `B`'.
-What this is suggesting to us is that the set of *requirements* that `B` defines
-are completely satisfied by `A`. `A` may then have more requirements.
+
+Let's define that `Sub` is a subtype of `Super` (we'll be using the notation `Sub: Super` throughout this chapter)
+
+What this is suggesting to us is that the set of *requirements* that `Super` defines
+are completely satisfied by `Sub`. `Sub` may then have more requirements.
 
 An example of simple subtyping that exists in the language are [supertraits](https://doc.rust-lang.org/stable/book/ch19-03-advanced-traits.html?highlight=supertraits#using-supertraits-to-require-one-traits-functionality-within-another-trait)
 
@@ -72,7 +74,7 @@ Now that we have a defined set of requirements for lifetimes, we can define how 
 `'a` may define a region larger than `'b`, but that still fits our definition.
 Going back to our example above, we can say that `'static: 'b`.
 
-For now, let's accept the idea that subtypes of lifetimes can be transitive (more on this in [Variance](#variance>)),
+For now, let's accept the idea that subtypes of lifetimes can be transitive (more on this in [Variance](#variance)),
 eg. `&'static str` is a subtype of `&'b str`, then we can let them coerce, and then the example above will compile
 
 ```rust
