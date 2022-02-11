@@ -7,34 +7,7 @@ or permit undefined behavior.
 In order to allow flexible usage of lifetimes
 while also preventing their misuse, Rust uses a combination of **Subtyping** and **Variance**.
 
-## Subtyping
-
-Subtyping is the idea that one type can be used in place of another.
-
-Let's define that `Sub` is a subtype of `Super` (we'll be using the notation `Sub: Super` throughout this chapter)
-
-What this is suggesting to us is that the set of *requirements* that `Super` defines
-are completely satisfied by `Sub`. `Sub` may then have more requirements.
-
-An example of simple subtyping that exists in the language are [supertraits](https://doc.rust-lang.org/stable/book/ch19-03-advanced-traits.html?highlight=supertraits#using-supertraits-to-require-one-traits-functionality-within-another-trait)
-
-```rust
-use std::fmt;
-
-pub trait Error: fmt::Display {
-    fn source(&self) -> Option<&(dyn Error + 'static)>;
-    fn description(&self) -> &str;
-    fn cause(&self) -> Option<&dyn Error>;
-}
-```
-
-Here, we have that `Error: fmt::Display` (`Error` is a *subtype* of `Display`),
-because it has all the requirements of `fmt::Display`, plus the `source`/`description`/`cause` functions.
-
-However, subtyping in traits is not that interesting in the case of Rust.
-Here in the nomicon, we're going to focus more with how subtyping interacts with **lifetimes**
-
-Take this example
+Let's start with a example.
 
 ```rust
 fn debug<T: std::fmt::Debug>(a: T, b: T) {
@@ -68,16 +41,53 @@ This would be rather unfortunate. In this case,
 what we want is to accept any type that lives *at least as long* as `'b`.
 Let's try using subtyping with our lifetimes.
 
-Let's define a lifetime to have the a simple set of requirements:
+## Subtyping
+
+Subtyping is the idea that one type can be used in place of another.
+
+Let's define that `Sub` is a subtype of `Super` (we'll be using the notation `Sub: Super` throughout this chapter)
+
+What this is suggesting to us is that the set of *requirements* that `Super` defines
+are completely satisfied by `Sub`. `Sub` may then have more requirements.
+
+An example of simple subtyping that exists in the language are [supertraits](https://doc.rust-lang.org/stable/book/ch19-03-advanced-traits.html?highlight=supertraits#using-supertraits-to-require-one-traits-functionality-within-another-trait)
+
+```rust
+use std::fmt;
+
+pub trait Error: fmt::Display {
+    fn source(&self) -> Option<&(dyn Error + 'static)>;
+    fn description(&self) -> &str;
+    fn cause(&self) -> Option<&dyn Error>;
+}
+```
+
+Here, we have that `Error: fmt::Display` (`Error` is a *subtype* of `Display`),
+because it has all the requirements of `fmt::Display`, plus the `source`/`description`/`cause` functions.
+
+However, subtyping in traits is not that interesting.
+Here in the nomicon, we're going to focus more with how subtyping interacts with lifetimes
+
+Let's define a lifetime to be the simple requirement:
 `'a` defines a region of code in which a value will be alive.
 Now that we have a defined set of requirements for lifetimes, we can define how they relate to each other.
-`'a: 'b` if and only if `'a` defines a region of code that **completely contains** `'b`.
+`'long: 'short` if and only if `'long` defines a region of code that **completely contains** `'short`.
 
-`'a` may define a region larger than `'b`, but that still fits our definition.
+`'long` may define a region larger than `'short`, but that still fits our definition.
+
+> As we will see throughout the rest of this chapter,
+subtyping is a lot more complicated and subtle than this,
+but this simple rule is a very good 99% intuition.
+And unless you write unsafe code, the compiler will automatically handle all the corner cases for you.
+
+> But this is the Rustonomicon. We're writing unsafe code,
+so we need to understand how this stuff really works, and how we can mess it up.
+
 Going back to our example above, we can say that `'static: 'b`.
-
-For now, let's accept the idea that subtypes of lifetimes can be passed through references (more on this in [Variance](#variance)),
-eg. `&'static str` is a subtype of `&'b str`, then we can let them coerce, and then the example above will compile
+For now, let's also accept the idea that subtypes of lifetimes can be passed through references
+(more on this in [Variance](#variance)),
+eg. `&'static str` is a subtype of `&'b str`, then we can let them coerce,
+and then the example above will compile
 
 ```rust
 fn debug<T: std::fmt::Debug>(a: T, b: T) {
