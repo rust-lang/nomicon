@@ -120,7 +120,7 @@ fn main() {
         let world = String::from("world");
         assign(&mut hello, &world);
     }
-    println!("{}", hello);
+    println!("{}", hello); // use after free 😿
 }
 ```
 
@@ -258,9 +258,24 @@ So the compiler decides that `&'static str` can become `&'b str` if and only if
 `&'static str` is a subtype of `&'b str`, which will hold if `'static: 'b`.
 This is true, so the compiler is happy to continue compiling this code.
 
-`Box<T>` is also *covariant* over `T`. This would make sense, since it's supposed to be
-usable the same as `&T`. If you try to mutate the box, you'll need a `&mut Box<T>` and the
-invariance of `&mut` will kick in here.
+As it turns out, the argument for why it's ok for Box (and Vec, Hashmap, etc.) to be covariant is pretty similar to the argument for why it's ok for lifetimes to be covariant: as soon as you try to stuff them in something like a mutable reference, they inherit invariance and you're prevented from doing anything bad.
+
+However Box makes it easier to focus on by-value aspect of references that we partially glossed over.
+
+Unlike a lot of languages which allow values to be freely aliased at all times, Rust has a very strict rule: if you're allowed to mutate or move a value, you are guaranteed to be the only one with access to it.
+
+Consider the following code:
+
+```rust,ignore
+let hello: Box<&'static str> = Box::new("hello");
+
+let mut world: Box<&'b str>;
+world = hello;
+```
+
+There is no problem at all with the fact that we have forgotten that `hello` was alive for `'static`,
+because as soon as we moved `hello` to a variable that only knew he it was alive for `'b`,
+**we destroyed the only thing in the universe that remembered it lived for longer**!
 
 Only one thing left to explain: function pointers.
 
@@ -302,6 +317,44 @@ which would cause a conflict.
 Covariance doesn't work here. But if we flip it around, it actually *does*
 work! If we need a function that can handle `&'static str`, a function that can handle *any* reference lifetime
 will surely work fine.
+
+Let's see this in practice
+
+```rust,compile_fail
+# use std::cell::RefCell;
+thread_local! {
+    pub static StaticVecs: RefCell<Vec<&'static str>> = RefCell::new(Vec::new());
+}
+
+/// saves the input given into a thread local `Vec<&'static str>`
+fn store(input: &'static str) {
+    StaticVecs.with(|v| {
+        v.borrow_mut().push(input);
+    })
+}
+
+/// Calls the function with it's input (must have the same lifetime!)
+fn demo<'a>(input: &'a str, f: fn(&'a str)) {
+    f(input);
+}
+
+fn main() {
+    demo("hello", store); // "hello" is 'static. Can call `store` fine
+
+    {
+        let smuggle = String::from("smuggle");
+
+        // `&smuggle` is not static. If we were to call `store` with `&smuggle`,
+        // we would have pushed an invalid lifetime into the `StaticVecs`.
+        // Therefore, `fn(&'static str)` cannot be a subtype of `fn(&'a str)`
+        demo(&smuggle, store);
+    }
+
+    StaticVecs.with(|v| {
+        println!("{:?}", v.borrow()); // use after free 😿
+    });
+}
+```
 
 And that's why function types, unlike anything else in the language, are
 **contra**variant over their arguments.
