@@ -9,7 +9,7 @@ while also preventing their misuse, Rust uses a combination of **Subtyping** and
 
 ## Subtyping
 
-Subtyping is the idea that one type can be a *subtype* of another.
+Subtyping is the idea that one type can be used in place of another.
 
 Let's define that `Sub` is a subtype of `Super` (we'll be using the notation `Sub: Super` throughout this chapter)
 
@@ -21,15 +21,15 @@ An example of simple subtyping that exists in the language are [supertraits](htt
 ```rust
 use std::fmt;
 
-trait OutlinePrint: fmt::Display {
-    fn outline_print(&self) {
-        todo!()
-    }
+pub trait Error: fmt::Display {
+    fn source(&self) -> Option<&(dyn Error + 'static)>;
+    fn description(&self) -> &str;
+    fn cause(&self) -> Option<&dyn Error>;
 }
 ```
 
-Here, we have that `OutlinePrint: fmt::Display` (`OutlinePrint` is a *subtype* of `Display`),
-because it has all the requirements of `fmt::Display`, plus the `outline_print` function.
+Here, we have that `Error: fmt::Display` (`Error` is a *subtype* of `Display`),
+because it has all the requirements of `fmt::Display`, plus the `source`/`description`/`cause` functions.
 
 However, subtyping in traits is not that interesting in the case of Rust.
 Here in the nomicon, we're going to focus more with how subtyping interacts with **lifetimes**
@@ -51,7 +51,7 @@ fn main() {
 }
 ```
 
-In an overly restrictive implementation of lifetimes, since `a` and `b` have differeing lifetimes,
+In a conservative implementation of lifetimes, since `a` and `b` have differeing lifetimes,
 we might see the following error:
 
 ```text
@@ -64,10 +64,12 @@ error[E0308]: mismatched types
    |                      expected `&'static str`, found struct `&'b str`
 ```
 
-This is over-restrictive. In this case, what we want is to accept any type that lives *at least as long* as `'b`.
+This would be rather unfortunate. In this case,
+what we want is to accept any type that lives *at least as long* as `'b`.
 Let's try using subtyping with our lifetimes.
 
-Let's define a lifetime to have the a simple set of requirements: `'a` defines a region of code in which a value will be alive.
+Let's define a lifetime to have the a simple set of requirements:
+`'a` defines a region of code in which a value will be alive.
 Now that we have a defined set of requirements for lifetimes, we can define how they relate to each other.
 `'a: 'b` if and only if `'a` defines a region of code that **completely contains** `'b`.
 
@@ -108,20 +110,24 @@ fn main() {
         let world = String::from("world");
         assign(&mut hello, &world);
     }
+    println!("{}", hello);
 }
 ```
 
-If this were to compile, this would have a memory bug.
+In `assign`, we are setting the `hello` reference to point to `world`.
+But then `world` goes out of scope, before the later use of `hello` in the println!
 
-If we were to expand this out, we'd see that we're trying to assign a `&'b str` into a `&'static str`,
-but the problem is that as soon as `b` goes out of scope, `a` is now invalid, even though it's supposed to have a `'static` lifetime.
+This is a classic use-after-free bug!
 
-However, the implementation of `assign` is valid.
-Therefore, this must mean that `&mut &'static str` should **not** a *subtype* of `&mut &'b str`,
+Our first instinct might be to blame the `assign` impl, but there's really nothing wrong here.
+It shouldn't be surprising that we might want to assign a `T` into a `T`.
+
+The problem is that we cannot assume that `&mut &'static str` and `&mut &'b str` are compatible.
+This must mean that `&mut &'static str` should **not** be a *subtype* of `&mut &'b str`,
 even if `'static` is a subtype of `'b`.
 
 Variance is the way that Rust defines the relationships of subtypes through their *type constructor*.
-A type constructor in Rust is any generic type with unbound arguments.
+A type constructor is any generic type with unbound arguments.
 For instance `Vec` is a type constructor that takes a type `T` and returns
 `Vec<T>`. `&` and `&mut` are type constructors that take two inputs: a
 lifetime, and a type to point to.
@@ -190,6 +196,7 @@ fn main() {
         let world = String::from("world");
         assign(&mut hello, &world);
     }
+    println!("{}", hello);
 }
 ```
 
