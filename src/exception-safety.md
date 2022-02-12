@@ -140,7 +140,7 @@ The basic idea is simple: if the comparison panics, we just toss the loose
 element in the logically uninitialized index and bail out. Anyone who observes
 the heap will see a potentially *inconsistent* heap, but at least it won't
 cause any double-drops! If the algorithm terminates normally, then this
-operation happens to coincide precisely with the how we finish up regardless.
+operation happens to coincide precisely with how we finish up regardless.
 
 Sadly, Rust has no such construct, so we're going to need to roll our own! The
 way to do this is to store the algorithm's state in a separate struct with a
