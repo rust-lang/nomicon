@@ -158,19 +158,6 @@ impl<T> Vec<T> {
         }
     }
 
-    pub fn into_iter(self) -> IntoIter<T> {
-        unsafe {
-            let iter = RawValIter::new(&self);
-            let buf = ptr::read(&self.buf);
-            mem::forget(self);
-
-            IntoIter {
-                iter: iter,
-                _buf: buf,
-            }
-        }
-    }
-
     pub fn drain(&mut self) -> Drain<T> {
         unsafe {
             let iter = RawValIter::new(&self);
@@ -205,6 +192,23 @@ impl<T> Deref for Vec<T> {
 impl<T> DerefMut for Vec<T> {
     fn deref_mut(&mut self) -> &mut [T] {
         unsafe { std::slice::from_raw_parts_mut(self.ptr(), self.len) }
+    }
+}
+
+impl<T> IntoIterator for Vec<T> {
+    type Item = T;
+    type IntoIter = IntoIter<T>;
+    fn into_iter(self) -> IntoIter<T> {
+        unsafe {
+            let iter = RawValIter::new(&self);
+            let buf = ptr::read(&self.buf);
+            mem::forget(self);
+
+            IntoIter {
+                iter: iter,
+                _buf: buf,
+            }
+        }
     }
 }
 

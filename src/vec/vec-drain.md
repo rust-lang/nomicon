@@ -82,8 +82,10 @@ impl<T> Drop for IntoIter<T> {
     }
 }
 
-impl<T> Vec<T> {
-    pub fn into_iter(self) -> IntoIter<T> {
+impl<T> IntoIterator for Vec<T> {
+    type Item = T;
+    type IntoIter = IntoIter<T>;
+    fn into_iter(self) -> IntoIter<T> {
         unsafe {
             let iter = RawValIter::new(&self);
 

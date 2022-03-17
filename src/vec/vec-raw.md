@@ -134,8 +134,10 @@ impl<T> Drop for IntoIter<T> {
     }
 }
 
-impl<T> Vec<T> {
-    pub fn into_iter(self) -> IntoIter<T> {
+impl<T> IntoIterator for Vec<T> {
+    type Item = T;
+    type IntoIter = IntoIter<T>;
+    fn into_iter(self) -> IntoIter<T> {
         unsafe {
             // need to use ptr::read to unsafely move the buf out since it's
             // not Copy, and Vec implements Drop (so we can't destructure it).
