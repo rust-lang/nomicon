@@ -19,7 +19,10 @@ boggling.
 * Transmute has an overloaded return type. If you do not specify the return type
   it may produce a surprising type to satisfy inference.
 
-* Transmuting an `&` to `&mut` is UB.
+* Transmuting an `&` to `&mut` is UB. While certain usages may *appear* safe,
+  note that the Rust optimizer is free to assume that a shared reference won't
+  change through its lifetime and thus such transmutation will run afoul of those
+  assumptions. So:
   * Transmuting an `&` to `&mut` is *always* UB.
   * No you can't do it.
   * No you're not special.
