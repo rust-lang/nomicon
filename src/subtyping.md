@@ -244,7 +244,7 @@ All it does is take a mutable reference and a value and overwrite the referent w
 What's important about this function is that it creates a type equality constraint. It
 clearly says in its signature the referent and the value must be the *exact same* type.
 
-Meanwhile, in the caller we pass in `&mut &'static str` and `&'spike_str str`.
+Meanwhile, in the caller we pass in `&mut &'static str` and `&'world str`.
 
 Because `&mut T` is invariant over `T`, the compiler concludes it can't apply any subtyping
 to the first argument, and so `T` must be exactly `&'static str`.
@@ -263,9 +263,9 @@ So the compiler decides that `&'static str` can become `&'b str` if and only if
 `&'static str` is a subtype of `&'b str`, which will hold if `'static: 'b`.
 This is true, so the compiler is happy to continue compiling this code.
 
-As it turns out, the argument for why it's ok for Box (and Vec, Hashmap, etc.) to be covariant is pretty similar to the argument for why it's ok for lifetimes to be covariant: as soon as you try to stuff them in something like a mutable reference, they inherit invariance and you're prevented from doing anything bad.
+As it turns out, the argument for why it's ok for Box (and Vec, HashMap, etc.) to be covariant is pretty similar to the argument for why it's ok for lifetimes to be covariant: as soon as you try to stuff them in something like a mutable reference, they inherit invariance and you're prevented from doing anything bad.
 
-However Box makes it easier to focus on by-value aspect of references that we partially glossed over.
+However Box makes it easier to focus on the by-value aspect of references that we partially glossed over.
 
 Unlike a lot of languages which allow values to be freely aliased at all times, Rust has a very strict rule: if you're allowed to mutate or move a value, you are guaranteed to be the only one with access to it.
 
@@ -279,7 +279,7 @@ world = hello;
 ```
 
 There is no problem at all with the fact that we have forgotten that `hello` was alive for `'static`,
-because as soon as we moved `hello` to a variable that only knew he it was alive for `'b`,
+because as soon as we moved `hello` to a variable that only knew it was alive for `'b`,
 **we destroyed the only thing in the universe that remembered it lived for longer**!
 
 Only one thing left to explain: function pointers.
