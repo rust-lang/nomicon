@@ -148,7 +148,7 @@ impl<T> Deref for Carton<T> {
     fn deref(&self) -> &Self::Target {
         unsafe {
             // Safety: The pointer is aligned, initialized, and dereferenceable
-            //   by the logic in [`Self::new`]. We require writers to borrow the
+            //   by the logic in [`Self::new`]. We require readers to borrow the
             //   Carton, and the lifetime of the return value is elided to the
             //   lifetime of the input. This means the borrow checker will
             //   enforce that no one can mutate the contents of the Carton until
