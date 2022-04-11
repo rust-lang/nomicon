@@ -10,6 +10,7 @@ while also preventing their misuse, Rust uses **subtyping** and **variance**.
 Let's start with an example.
 
 ```rust
+// Note: debug expects two parameters with the *same* lifetime
 fn debug<'a>(a: &'a str, b: &'a str) {
     println!("a = {:?} b = {:?}", a, b);
 }
@@ -45,38 +46,18 @@ Let's try using subtyping with our lifetimes.
 
 Subtyping is the idea that one type can be used in place of another.
 
-Let's define that `Sub` is a subtype of `Super` (we'll be using the notation `Sub: Super` throughout this chapter).
+Let's define that `Sub` is a subtype of `Super` (we'll be using the notation `Sub <: Super` throughout this chapter).
 
 What this is suggesting to us is that the set of *requirements* that `Super` defines
 are completely satisfied by `Sub`. `Sub` may then have more requirements.
 
-An example of simple subtyping that exists in the language is [supertraits][supertraits]:
-
-[supertraits]: https://doc.rust-lang.org/book/ch19-03-advanced-traits.html#using-supertraits-to-require-one-traits-functionality-within-another-trait
-
-```rust
-use std::fmt;
-
-pub trait Error: fmt::Display {
-    fn source(&self) -> Option<&(dyn Error + 'static)>;
-    fn description(&self) -> &str;
-    fn cause(&self) -> Option<&dyn Error>;
-}
-```
-
-Here, we have that `Error: fmt::Display` (`Error` is a *subtype* of `Display`),
-because it has all the requirements of `fmt::Display`, plus the `source`/`description`/`cause` functions.
-
-However, subtyping in traits is not that interesting.
-Here in the Rustonomicon, we're going to focus more with how subtyping interacts with lifetimes.
-
-Let's define a lifetime to be the simple requirement:
+Now, in order to use subtyping with lifetimes, we need to define the requirement of a lifetime:
 
 > `'a` defines a region of code.
 
 Now that we have a defined set of requirements for lifetimes, we can define how they relate to each other:
 
-> `'long : 'short` if and only if `'long` defines a region of code that **completely contains** `'short`.
+> `'long <: 'short` if and only if `'long` defines a region of code that **completely contains** `'short`.
 
 `'long` may define a region larger than `'short`, but that still fits our definition.
 
@@ -88,7 +69,7 @@ And unless you write unsafe code, the compiler will automatically handle all the
 > But this is the Rustonomicon. We're writing unsafe code,
 so we need to understand how this stuff really works, and how we can mess it up.
 
-Going back to our example above, we can say that `'static : 'world`.
+Going back to our example above, we can say that `'static <: 'world`.
 For now, let's also accept the idea that subtypes of lifetimes can be passed through references
 (more on this in [Variance](#variance)),
 _e.g._ `&'static str` is a subtype of `&'world str`, then we can let a `&'static str` "downgrade" into a `&'world str`.
@@ -111,7 +92,7 @@ fn main() {
 
 ## Variance
 
-Above, we glossed over the fact that `'static : 'b` implied that `&'static T : &'b T`. This uses a property known as _variance_.
+Above, we glossed over the fact that `'static <: 'b` implied that `&'static T <: &'b T`. This uses a property known as _variance_.
 It's not always as simple as this example, though. To understand that, let's try to extend this example a bit:
 
 ```rust,compile_fail
@@ -141,43 +122,39 @@ The problem is that we cannot assume that `&mut &'static str` and `&mut &'b str`
 This means that `&mut &'static str` **cannot** be a *subtype* of `&mut &'b str`,
 even if `'static` is a subtype of `'b`.
 
-Variance is the  concept that Rust borrows to define relationships about subtypes through their *type constructor*s.
-A type constructor is any generic item in Rust.
-For instance `Vec` is a type constructor that takes a type `T` and returns
-`Vec<T>`. `&` and `&mut` are type constructors that take two inputs: a
-lifetime, and a type to point to.
+Variance is the concept that Rust borrows to define relationships about subtypes through their generic parameters.
 
-> NOTE: For convenience we will often refer to `F<T>` as a type constructor just so
+> NOTE: For convenience we will define a generic type `F<T>` so
 > that we can easily talk about `T`. Hopefully this is clear in context.
 
-A type constructor F's *variance* is how the subtyping of its inputs affects the
+The type `F`'s *variance* is how the subtyping of its inputs affects the
 subtyping of its outputs. There are three kinds of variance in Rust. Given two
 types `Sub` and `Super`, where `Sub` is a subtype of `Super`:
 
-* F is **covariant** if `F<Sub>` is a subtype of `F<Super>` (the subtype property is passed through)
-* F is **contravariant** if `F<Super>` is a subtype of `F<Sub>` (the subtype property is "inverted")
-* F is **invariant** otherwise (no subtyping relationship exists)
+* `F` is **covariant** if `F<Sub>` is a subtype of `F<Super>` (the subtype property is passed through)
+* `F` is **contravariant** if `F<Super>` is a subtype of `F<Sub>` (the subtype property is "inverted")
+* `F` is **invariant** otherwise (no subtyping relationship exists)
 
 If we remember from the above examples,
-it was ok for us to treat `&'a T` as a subtype of `&'b T` if `'a: 'b`,
+it was ok for us to treat `&'a T` as a subtype of `&'b T` if `'a <: 'b`,
 therefore we can say that `&'a T` is *covariant* over `'a`.
 
-Also, we saw that it was not ok for us to treat `&mut &'a T` as a subtype of `&mut &'b T`,
+Also, we saw that it was not ok for us to treat `&mut &'a U` as a subtype of `&mut &'b U`,
 therefore we can say that `&mut T` is *invariant* over `T`
 
-Here is a table of some other type constructors and their variances:
+Here is a table of some other generic types and their variances:
 
-|   |                 |     'a    |         T         |     U     |
-|---|-----------------|:---------:|:-----------------:|:---------:|
-|   | `&'a T `        | covariant | covariant         |           |
-|   | `&'a mut T`     | covariant | invariant         |           |
-|   | `Box<T>`        |           | covariant         |           |
-|   | `Vec<T>`        |           | covariant         |           |
-|   | `UnsafeCell<T>` |           | invariant         |           |
-|   | `Cell<T>`       |           | invariant         |           |
-|   | `fn(T) -> U`    |           | **contra**variant | covariant |
-|   | `*const T`      |           | covariant         |           |
-|   | `*mut T`        |           | invariant         |           |
+|                 |     'a    |         T         |     U     |
+|-----------------|:---------:|:-----------------:|:---------:|
+| `&'a T `        | covariant | covariant         |           |
+| `&'a mut T`     | covariant | invariant         |           |
+| `Box<T>`        |           | covariant         |           |
+| `Vec<T>`        |           | covariant         |           |
+| `UnsafeCell<T>` |           | invariant         |           |
+| `Cell<T>`       |           | invariant         |           |
+| `fn(T) -> U`    |           | **contra**variant | covariant |
+| `*const T`      |           | covariant         |           |
+| `*mut T`        |           | invariant         |           |
 
 Some of these can be explained simply in relation to the others:
 
@@ -260,7 +237,7 @@ fn debug<T: std::fmt::Debug>(a: T, b: T) {
 where similarly `a` and `b` must have the same type `T`.
 But since `&'a T` *is* covariant over `'a`, we are allowed to perform subtyping.
 So the compiler decides that `&'static str` can become `&'b str` if and only if
-`&'static str` is a subtype of `&'b str`, which will hold if `'static: 'b`.
+`&'static str` is a subtype of `&'b str`, which will hold if `'static <: 'b`.
 This is true, so the compiler is happy to continue compiling this code.
 
 As it turns out, the argument for why it's ok for Box (and Vec, HashMap, etc.) to be covariant is pretty similar to the argument for why it's ok for lifetimes to be covariant: as soon as you try to stuff them in something like a mutable reference, they inherit invariance and you're prevented from doing anything bad.
