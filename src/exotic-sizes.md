@@ -135,7 +135,7 @@ In principle, Rust can do some interesting analyses and optimizations based
 on this fact. For instance, `Result<T, Void>` is represented as just `T`,
 because the `Err` case doesn't actually exist (strictly speaking, this is only
 an optimization that is not guaranteed, so for example transmuting one into the
-other is still UB).
+other is still Undefined Behavior).
 
 The following *could* also compile:
 
@@ -165,7 +165,7 @@ construct.
 `*const ()` (or equivalent) works reasonably well for `void*`, and can be made
 into a reference without any safety problems. It still doesn't prevent you from
 trying to read or write values, but at least it compiles to a no-op instead
-of UB.
+of Undefined Behavior.
 
 ## Extern Types
 
