@@ -80,8 +80,8 @@ z = y;
     'b: {
         let z: &'b i32;
         'c: {
-            // Must use 'b here because this reference is
-            // being passed to that scope.
+            // Must use 'b here because the reference to x is
+            // being passed to the scope 'b.
             let y: &'b i32 = &'b x;
             z = y;
         }
@@ -208,11 +208,12 @@ violate the *second* rule of references.
 
 However this is *not at all* how Rust reasons that this program is bad. Rust
 doesn't understand that `x` is a reference to a subpath of `data`. It doesn't
-understand `Vec` at all. What it *does* see is that `x` has to live for `'b` to
-be printed. The signature of `Index::index` subsequently demands that the
-reference we take to `data` has to survive for `'b`. When we try to call `push`,
-it then sees us try to make an `&'c mut data`. Rust knows that `'c` is contained
-within `'b`, and rejects our program because the `&'b data` must still be alive!
+understand `Vec` at all. What it *does* see is that `x` has to live for `'b` in
+order to be printed. The signature of `Index::index` subsequently demands that
+the reference we take to `data` has to survive for `'b`. When we try to call
+`push`, it then sees us try to make an `&'c mut data`. Rust knows that `'c` is
+contained within `'b`, and rejects our program because the `&'b data` must still
+be alive!
 
 Here we see that the lifetime system is much more coarse than the reference
 semantics we're actually interested in preserving. For the most part, *that's
