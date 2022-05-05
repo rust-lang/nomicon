@@ -32,9 +32,10 @@ explicitly is *extremely noisy*. All Rust code relies on aggressive inference
 and elision of "obvious" things.
 
 One particularly interesting piece of sugar is that each `let` statement
-implicitly introduces a scope. For the most part, this doesn't really matter.
-However it does matter for variables that refer to each other. As a simple
-example, let's completely desugar this simple piece of Rust code:
+implicitly introduces a scope immediately after the stateme. For the most part,
+this doesn't really matter.  However it does matter for variables that refer to
+each other. As a simple example, let's completely desugar this simple piece of
+Rust code:
 
 ```rust
 let x = 0;
@@ -47,21 +48,24 @@ likely desugar to the following:
 
 <!-- ignore: desugared code -->
 ```rust,ignore
-// NOTE: `'a: {` and `&'b x` is not valid syntax!
-'a: {
+// NOTE: `'global_lifetime: {` and `&'x_lifetime x` is not valid syntax!
+'global_lifetime: {
     let x: i32 = 0;
-    'b: {
-        // lifetime used is 'b because that's good enough.
-        let y: &'b i32 = &'b x;
-        'c: {
-            // ditto on 'c
-            let z: &'c &'b i32 = &'c y;
+    'x_lifetime: {
+        // lifetime used is 'x_lifetime because that's good enough.
+        let y: &'x_lifetime i32 = &'x_lifetime x;
+        'y_lifetime: {
+            // ditto on 'y_lifetime
+            let z: &'y_lifetime &'x_lifetime i32 = &'y_lifetime y;
         }
     }
 }
 ```
 
-Wow. That's... awful. Let's all take a moment to thank Rust for making this easier.
+Wow. That's... awful. Let's all take a moment to thank Rust for making this
+easier. To make matter worse, traditionally, lifetimes are not as descriptive
+and simply called `'a`, `'b`, and so on. We will respect this tradition going
+forward.
 
 Actually passing references to outer scopes will cause Rust to infer
 a larger lifetime:
