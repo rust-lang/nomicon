@@ -179,8 +179,8 @@ horribly degenerate. Also *oh my gosh* it's such a ridiculous corner case.
 > Note: This API has already been removed from std, for more information
 > you may refer [issue #24292](https://github.com/rust-lang/rust/issues/24292).
 >
-> We still remain this chapter here because we think this example is still
-> important, regardless of if it is still in std.
+> This section remains here because we think this example is still
+> important, regardless of whether it is part of std or not.
 
 The thread::scoped API intended to allow threads to be spawned that reference
 data on their parent's stack without any synchronization over that data by
