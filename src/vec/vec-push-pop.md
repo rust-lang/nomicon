@@ -39,8 +39,8 @@ interprets it as a value of type T. This will leave the memory at this address
 logically uninitialized, even though there is in fact a perfectly good instance
 of T there.
 
-For `pop`, if the old len is 1, we want to read out of the 0th index. So we
-should offset by the new len.
+For `pop`, if the old len is 1, for example, we want to read out of the 0th
+index. So we should offset by the new len.
 
 <!-- ignore: simplified code -->
 ```rust,ignore
