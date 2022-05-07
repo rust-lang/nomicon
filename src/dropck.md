@@ -121,9 +121,9 @@ Interestingly, only generic types need to worry about this. If they aren't
 generic, then the only lifetimes they can harbor are `'static`, which will truly
 live _forever_. This is why this problem is referred to as _sound generic drop_.
 Sound generic drop is enforced by the _drop checker_. As of this writing, some
-of the finer details of how the drop checker validates types is totally up in
-the air. However The Big Rule is the subtlety that we have focused on this whole
-section:
+of the finer details of how the drop checker (also called dropck) validates
+types is totally up in the air. However The Big Rule is the subtlety that we
+have focused on this whole section:
 
 **For a generic type to soundly implement drop, its generics arguments must
 strictly outlive it.**

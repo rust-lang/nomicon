@@ -64,9 +64,9 @@ about Vec dropping any T's in its destructor for determining drop check
 soundness. This will in turn allow people to create unsoundness using
 Vec's destructor.
 
-In order to tell dropck that we *do* own values of type T, and therefore may
-drop some T's when *we* drop, we must add an extra `PhantomData` saying exactly
-that:
+In order to tell the drop checker that we *do* own values of type T, and
+therefore may drop some T's when *we* drop, we must add an extra `PhantomData`
+saying exactly that:
 
 ```rust
 use std::marker;
