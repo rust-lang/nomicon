@@ -18,7 +18,10 @@ fn main() {
 ```
 
 This is based off of a basic branch analysis: every branch must assign a value
-to `x` before it is first used. Interestingly, Rust doesn't require the variable
+to `x` before it is first used. For short, we also say that "`x` is init" or
+"`x` is uninit".
+
+Interestingly, Rust doesn't require the variable
 to be mutable to perform a delayed initialization if every branch assigns
 exactly once. However the analysis does not take advantage of constant analysis
 or anything like that. So this compiles:
