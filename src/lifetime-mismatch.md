@@ -73,9 +73,10 @@ care about, but the lifetime system is too coarse-grained to handle that.
 
 ## Improperly reduced borrows
 
-The following code fails to compile, because Rust doesn't understand that the borrow
-is no longer needed and conservatively falls back to using a whole scope for it.
-This will eventually get fixed.
+The following code fails to compile, because Rust sees that a variable, `map`,
+is borrowed twice, and can not infer that the first borrow stops to be needed
+before the second one occurs. This is caused by Rust conservatively falling back
+to using a whole scope for the first borow. This will eventually get fixed.
 
 ```rust,compile_fail
 # use std::collections::HashMap;
