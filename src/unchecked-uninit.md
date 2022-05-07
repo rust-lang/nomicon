@@ -98,11 +98,11 @@ us to assign bytes to a location in memory without dropping the old value:
 * `ptr::write(ptr, val)` takes a `val` and moves it into the address pointed
   to by `ptr`.
 * `ptr::copy(src, dest, count)` copies the bits that `count` T's would occupy
-  from src to dest. (this is equivalent to memmove -- note that the argument
+  from src to dest. (this is equivalent to C's memmove -- note that the argument
   order is reversed!)
 * `ptr::copy_nonoverlapping(src, dest, count)` does what `copy` does, but a
   little faster on the assumption that the two ranges of memory don't overlap.
-  (this is equivalent to memcpy -- note that the argument order is reversed!)
+  (this is equivalent to C's memcpy -- note that the argument order is reversed!)
 
 It should go without saying that these functions, if misused, will cause serious
 havoc or just straight up Undefined Behavior. The only things that these
