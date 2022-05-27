@@ -119,7 +119,7 @@ standard library uses an unstable and `unsafe` attribute to opt back into the ol
 
 This section can be skipped if you are only writing your own library code; but if you are
 curious about what the standard library does with the actual `Vec` definition, you'll notice
-that it still needs to use a `_marker: PhantomData<T>` field for soundness.
+that it still needs to use a `_owns_T: PhantomData<T>` field for soundness.
 
 <details><summary>Click here to see why</summary>
 
