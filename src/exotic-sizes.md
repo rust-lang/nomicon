@@ -157,9 +157,9 @@ because that wouldn't make sense.
 We recommend against modelling C's `void*` type with `*const Void`.
 A lot of people started doing that but quickly ran into trouble because
 Rust doesn't really have any safety guards against trying to instantiate
-empty types with unsafe code, and if you do it, it's Undefined Behaviour.
+empty types with unsafe code, and if you do it, it's Undefined Behavior.
 This was especially problematic because developers had a habit of converting
-raw pointers to references and `&Void` is *also* Undefined Behaviour to
+raw pointers to references and `&Void` is *also* Undefined Behavior to
 construct.
 
 `*const ()` (or equivalent) works reasonably well for `void*`, and can be made
