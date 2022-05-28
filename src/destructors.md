@@ -120,7 +120,7 @@ Next variant.
 
 In general this works really nicely because you don't need to worry about
 adding/removing drops when you refactor your data layout. Still there's
-certainly many valid usecases for needing to do trickier things with
+certainly many valid use cases for needing to do trickier things with
 destructors.
 
 The classic safe solution to overriding recursive drop and allowing moving out

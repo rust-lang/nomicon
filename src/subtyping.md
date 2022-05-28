@@ -75,7 +75,7 @@ this stuff really works, and how we can mess it up.
 
 The core problem is that this rule, naively applied, will lead to *meowing Dogs*. That is,
 we can convince someone that a Dog is actually a Cat. This completely destroys the fabric
-of our static type system, making it worse than useless (and leading to Undefined Behaviour).
+of our static type system, making it worse than useless (and leading to Undefined Behavior).
 
 Here's a simple example of this happening when we apply subtyping in a completely naive
 "find and replace" way.
