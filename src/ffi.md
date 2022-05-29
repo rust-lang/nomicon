@@ -723,19 +723,19 @@ No `transmute` required!
 It’s important to be mindful of unwinding when working with FFI. Each
 non-`Rust` ABI comes in two variants, one with `-unwind` and one without. If
 you expect Rust `panic`s or foreign (e.g. C++) exceptions to cross an FFI
-boundary, that boundary must use the appropriate `-unwind` ABI string, and you
-must not compile with `panic=abort`.
+boundary, that boundary must use the appropriate `-unwind` ABI string. (Note
+that compiling with `panic=abort` will still cause `panic!` to immediately
+abort the process, regardless of which ABI is specified by the function that
+`panic`s.)
 
 Conversely, if you do not expect unwinding to cross an ABI boundary, use one of
 the non-`unwind` ABI strings (other than `Rust`, which always permits
 unwinding). If an unwinding operation does encounter an ABI boundary that is
-not permitted to unwind, the behavior depends on whether the Rust code was
-compiled with `panic=abort`:
+not permitted to unwind, the behavior depends on the source of the unwinding
+(Rust `panic` or a foreign exception):
 
-* With `panic=unwind`, the process will safely abort.
-* With `panic=abort`, the behavior is undefined. This is only possible with
-  foreign exceptions, since `panic` will always abort rather than unwind in
-  this case.
+* `panic` will cause the process to safely abort.
+* A foreign exception entering Rust will cause undefined behavior.
 
 Note that the interaction of `catch_unwind` with foreign exceptions **is
 undefined**, as is the interaction of `panic` with foreign exception-catching
@@ -841,7 +841,7 @@ fn main() {}
 ```
 
 Please note that [`catch_unwind`] will only catch unwinding panics, not
-those who abort the process. See the documentation of [`catch_unwind`]
+those that abort the process. See the documentation of [`catch_unwind`]
 for more information.
 
 [`catch_unwind`]: ../std/panic/fn.catch_unwind.html
