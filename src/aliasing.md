@@ -118,8 +118,8 @@ fn compute(input: &u32, output: &mut u32) {
 }
 ```
 
-We're still relying on alias analysis to assume that `temp` doesn't alias
-`input`, but the proof is much simpler: the value of a local variable can't be
+We're still relying on alias analysis to assume that `input` doesn't alias
+`temp`, but the proof is much simpler: the value of a local variable can't be
 aliased by things that existed before it was declared. This is an assumption
 every language freely makes, and so this version of the function could be
 optimized the way we want in any language.
