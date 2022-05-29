@@ -32,7 +32,7 @@ explicitly is *extremely noisy*. All Rust code relies on aggressive inference
 and elision of "obvious" things.
 
 One particularly interesting piece of sugar is that each `let` statement
-implicitly introduces a scope immediately after the stateme. For the most part,
+implicitly introduces a scope immediately after the declaration. For the most part,
 this doesn't really matter.  However it does matter for variables that refer to
 each other. As a simple example, let's completely desugar this simple piece of
 Rust code:
