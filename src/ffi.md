@@ -753,7 +753,7 @@ extern "C-unwind" fn example() {
 This function (when compiled with `panic=unwind`) is permitted to unwind C++
 stack frames.
 
-```
+```text
 [Rust function with `catch_unwind`, which stops the unwinding]
       |
      ...
@@ -789,7 +789,7 @@ extern "C-unwind" fn rust_passthrough() {
 A C++ function with a `try` block may invoke `rust_passthrough` and `catch` an
 exception thrown by `may_throw`.
 
-```
+```text
 [C++ function with `try` block that invokes `rust_passthrough`]
       |
      ...
