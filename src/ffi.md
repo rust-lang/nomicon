@@ -743,7 +743,8 @@ mechanisms (notably C++'s `try`/`catch`).
 
 ### Rust `panic` with `"C-unwind"`
 
-```rust
+<!-- ignore: using unstable feature -->
+```rust,ignore
 #[no_mangle]
 extern "C-unwind" fn example() {
     panic!("Uh oh");
@@ -771,7 +772,8 @@ If the C++ frames have objects, their destructors will be called.
 
 ### C++ `throw` with `"C-unwind"`
 
-```rust
+<!-- ignore: using unstable feature -->
+```rust,ignore
 #[link(...)]
 extern "C-unwind" {
     // A C++ function that may throw an exception
