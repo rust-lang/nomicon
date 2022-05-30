@@ -718,17 +718,118 @@ void register(int (*f)(int (*)(int), int)) {
 
 No `transmute` required!
 
-## FFI and panics
+## FFI and unwinding
 
-It’s important to be mindful of `panic!`s when working with FFI. A `panic!`
-across an FFI boundary is undefined behavior. If you’re writing code that may
-panic, you should run it in a closure with [`catch_unwind`]:
+It’s important to be mindful of unwinding when working with FFI. Each
+non-`Rust` ABI comes in two variants, one with `-unwind` suffix and one without. If
+you expect Rust `panic`s or foreign (e.g. C++) exceptions to cross an FFI
+boundary, that boundary must use the appropriate `-unwind` ABI string (note
+that compiling with `panic=abort` will still cause `panic!` to immediately
+abort the process, regardless of which ABI is specified by the function that
+`panic`s).
+
+Conversely, if you do not expect unwinding to cross an ABI boundary, use one of
+the non-`unwind` ABI strings (other than `Rust`, which always permits
+unwinding). If an unwinding operation does encounter an ABI boundary that is
+not permitted to unwind, the behavior depends on the source of the unwinding
+(Rust `panic` or a foreign exception):
+
+* `panic` will cause the process to safely abort.
+* A foreign exception entering Rust will cause undefined behavior.
+
+Note that the interaction of `catch_unwind` with foreign exceptions **is
+undefined**, as is the interaction of `panic` with foreign exception-catching
+mechanisms (notably C++'s `try`/`catch`).
+
+### Rust `panic` with `"C-unwind"`
+
+<!-- ignore: using unstable feature -->
+```rust,ignore
+#[no_mangle]
+extern "C-unwind" fn example() {
+    panic!("Uh oh");
+}
+```
+
+This function (when compiled with `panic=unwind`) is permitted to unwind C++
+stack frames.
+
+```text
+[Rust function with `catch_unwind`, which stops the unwinding]
+      |
+     ...
+      |
+[C++ frames]
+      |                           ^
+      | (calls)                   | (unwinding
+      v                           |  goes this
+[Rust function `example`]         |  way)
+      |                           |
+      +--- rust function panics --+
+```
+
+If the C++ frames have objects, their destructors will be called.
+
+### C++ `throw` with `"C-unwind"`
+
+<!-- ignore: using unstable feature -->
+```rust,ignore
+#[link(...)]
+extern "C-unwind" {
+    // A C++ function that may throw an exception
+    fn may_throw();
+}
+
+#[no_mangle]
+extern "C-unwind" fn rust_passthrough() {
+    let b = Box::new(5);
+    unsafe { may_throw(); }
+    println!("{:?}", &b);
+}
+```
+
+A C++ function with a `try` block may invoke `rust_passthrough` and `catch` an
+exception thrown by `may_throw`.
+
+```text
+[C++ function with `try` block that invokes `rust_passthrough`]
+      |
+     ...
+      |
+[Rust function `rust_passthrough`]
+      |                            ^
+      | (calls)                    | (unwinding
+      v                            |  goes this
+[C++ function `may_throw`]         |  way)
+      |                            |
+      +--- C++ function throws ----+
+```
+
+If `may_throw` does throw an exception, `b` will be dropped. Otherwise, `5`
+will be printed.
+
+### `panic` can be stopped at an ABI boundary
+
+```rust
+#[no_mangle]
+extern "C" fn assert_nonzero(input: u32) {
+    assert!(input != 0)
+}
+```
+
+If `assert_nonzero` is called with the argument `0`, the runtime is guaranteed
+to (safely) abort the process, whether or not compiled with `panic=abort`.
+
+### Catching `panic` preemptively
+
+If you are writing Rust code that may panic, and you don't wish to abort the
+process if it panics, you must use [`catch_unwind`]:
 
 ```rust
 use std::panic::catch_unwind;
 
 #[no_mangle]
-pub extern fn oh_no() -> i32 {
+pub extern "C" fn oh_no() -> i32 {
     let result = catch_unwind(|| {
         panic!("Oops!");
     });
@@ -742,7 +843,7 @@ fn main() {}
 ```
 
 Please note that [`catch_unwind`] will only catch unwinding panics, not
-those who abort the process. See the documentation of [`catch_unwind`]
+those that abort the process. See the documentation of [`catch_unwind`]
 for more information.
 
 [`catch_unwind`]: ../std/panic/fn.catch_unwind.html
