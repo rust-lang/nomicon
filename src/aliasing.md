@@ -88,7 +88,7 @@ These optimizations also tend to prove the soundness of bigger optimizations
 such as loop vectorization, constant propagation, and dead code elimination.
 
 In the previous example, we used the fact that `&mut u32` can't be aliased to prove
-that writes to `*output` can't possibly affect `*input`. This let us cache `*input`
+that writes to `*output` can't possibly affect `*input`. This lets us cache `*input`
 in a register, eliminating a read.
 
 By caching this read, we knew that the write in the `> 10` branch couldn't
@@ -118,8 +118,8 @@ fn compute(input: &u32, output: &mut u32) {
 }
 ```
 
-We're still relying on alias analysis to assume that `temp` doesn't alias
-`input`, but the proof is much simpler: the value of a local variable can't be
+We're still relying on alias analysis to assume that `input` doesn't alias
+`temp`, but the proof is much simpler: the value of a local variable can't be
 aliased by things that existed before it was declared. This is an assumption
 every language freely makes, and so this version of the function could be
 optimized the way we want in any language.
