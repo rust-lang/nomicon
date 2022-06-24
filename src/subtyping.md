@@ -452,3 +452,5 @@ struct MyType<'a, 'b, A: 'a, B: 'b, C, D, E, F, G, H, In, Out, Mixed> {
     k2: Mixed,              // invariant over Mixed, because invariance wins all conflicts
 }
 ```
+
+To debug variance of custom struct, see `src/test/ui/variance/variance-types.rs`.
