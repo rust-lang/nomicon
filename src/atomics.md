@@ -136,7 +136,43 @@ specifies what kind of relationship it establishes with other accesses. In
 practice, this boils down to telling the compiler and hardware certain things
 they *can't* do. For the compiler, this largely revolves around re-ordering of
 instructions. For the hardware, this largely revolves around how writes are
-propagated to other threads. The set of orderings Rust exposes are:
+propagated to other threads.
+
+First of all, a primer on what orderings are for: memory orderings are about
+ordering accesses (reads/writes) _across memory locations_.
+
+They have an effect at both:
+
+ * Compile-time: preventing the compiler from re-ordering reads/writes.
+ * Run-time: preventing the CPU from re-ordering reads/writes.
+
+The most important part there is _across memory locations_. That is, orderings
+only matter if you need to coordinate access to multiple memory locations.
+
+A simple example with A and B denoting memory locations:
+
+* Thread 1: Writes to A, Writes to B.
+* Thread 2: Reads from B, Reads from A.
+
+If there is a specific *constraint* in the algorithm, which requires that if
+Thread 2 witness the Write to B, then it also *must* witness the Write to A,
+then memory orderings can be used to express this constraint in terms the
+compiler and CPU will understand.
+
+This is not the only way, by the way, there are other ways to express such
+constraints. It is just the one standardized way offered by C and C++, which
+Rust chose to go along with.
+
+It is also worth mentioning, that if there are no accesses (reads/writes) to
+memory across memory locations, e.g.:
+
+* Thread 1: Writes to A, Writes to B.
+* Thread 2: Reads from A.
+
+it is perfectly fine that the reads and writes to A use the weakest constraint
+on ordering which is called _Relaxed_.
+
+The set of orderings Rust exposes are:
 
 * Sequentially Consistent (SeqCst)
 * Release
