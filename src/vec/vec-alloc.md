@@ -10,7 +10,7 @@ just put some other garbage in there!
 This is perfectly fine because we already have `cap == 0` as our sentinel for no
 allocation. We don't even need to handle it specially in almost any code because
 we usually need to check if `cap > len` or `len > 0` anyway. The recommended
-Rust value to put here is `mem::size_of::<T>()`. `NonNull` provides a convenience
+Rust value to put here is `mem::align_of::<T>()`. `NonNull` provides a convenience
 for this: `NonNull::dangling()`. There are quite a few places where we'll
 want to use `dangling` because there's no real allocation to talk about but
 `null` would make the compiler do bad things.
