@@ -56,24 +56,27 @@ compiled as normal.)
 
 ## repr(transparent)
 
-This can only be used on structs with a single non-zero-sized field (there may
-be additional zero-sized fields). The effect is that the layout and ABI of the
-whole struct is guaranteed to be the same as that one field.
+This can only be used on structs with a single non-zero-sized field
+or enums with only one non-zero-sized field (there may be additional zero-sized fields).
+The effect is that the layout and ABI of the whole struct/enum is guaranteed to be the same as that one field.
+
+> NOTE: There's a `transparent_unions` nightly feature to apply `repr(transparent)` to unions,
+> but it hasn't been stabilized due to design concerns. See the [tracking issue][issue-60405] for more details.
 
 The goal is to make it possible to transmute between the single field and the
-struct. An example of that is [`UnsafeCell`], which can be transmuted into
+struct/enum. An example of that is [`UnsafeCell`], which can be transmuted into
 the type it wraps ([`UnsafeCell`] also uses the unstable [no_niche][no-niche-pull],
 so its ABI is not actually guaranteed to be the same when nested in other types).
 
-Also, passing the struct through FFI where the inner field type is expected on
-the other side is guaranteed to work. In particular, this is necessary for `struct
-Foo(f32)` to always have the same ABI as `f32`.
+Also, passing the struct/enum through FFI where the inner field type is expected on
+the other side is guaranteed to work. In particular, this is necessary for
+`struct Foo(f32)` or `enum Foo { Bar(f32) }` to always have the same ABI as `f32`.
 
 This repr is only considered part of the public ABI of a type if either the single
 field is `pub`, or if its layout is documented in prose. Otherwise, the layout should
 not be relied upon by other crates.
 
-More details are in the [RFC][rfc-transparent].
+More details are in the [RFC 1758][rfc-transparent] and the [RFC 2645][rfc-transparent-unions-enums].
 
 ## repr(u*), repr(i*)
 
@@ -153,8 +156,10 @@ This is a modifier on `repr(C)` and `repr(Rust)`. It is incompatible with
 [unsafe code guidelines]: https://rust-lang.github.io/unsafe-code-guidelines/layout.html
 [drop flags]: drop-flags.html
 [ub loads]: https://github.com/rust-lang/rust/issues/27060
+[issue-60405]: https://github.com/rust-lang/rust/issues/60405
 [`UnsafeCell`]: ../std/cell/struct.UnsafeCell.html
 [rfc-transparent]: https://github.com/rust-lang/rfcs/blob/master/text/1758-repr-transparent.md
+[rfc-transparent-unions-enums]: https://rust-lang.github.io/rfcs/2645-transparent-unions.html
 [really-tagged]: https://github.com/rust-lang/rfcs/blob/master/text/2195-really-tagged-unions.md
 [rust-bindgen]: https://rust-lang.github.io/rust-bindgen/
 [cbindgen]: https://github.com/eqrion/cbindgen
