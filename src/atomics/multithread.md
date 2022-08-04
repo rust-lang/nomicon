@@ -15,7 +15,7 @@ However, while no global ordering of operations exists _between_ threads, there
 does exist a single total ordering _within_ each thread, which is known as its
 _sequence_. For example, given this simple Rust program:
 
-```rs
+```rust
 println!("A");
 println!("B");
 ```
@@ -39,7 +39,7 @@ happen one after the other and on the same thread.
 
 If we add a second thread to the mix:
 
-```rs
+```rust
 // Thread 1:
 println!("A");
 println!("B");
@@ -71,7 +71,7 @@ is.
 Now let’s make things more interesting by introducing some shared data, and have
 both threads read it.
 
-```rs
+```rust
 // Initial state
 let data = 0;
 // Thread 1:
@@ -101,7 +101,7 @@ return to a single thread, just to keep things simple).
 Consider this code, which we’re going to attempt to draw a diagram for like
 above:
 
-```rs
+```rust
 let mut data = 0;
 data = 1;
 data;

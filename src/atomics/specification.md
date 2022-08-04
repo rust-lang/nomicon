@@ -193,7 +193,7 @@ happens before the other. Any such data race results in undefined behavior.
 
 ## Atomic orderings
 
-```rs
+```rust
 // in ::core::sync::atomic
 #[non_exhaustive]
 pub enum Ordering {
@@ -269,7 +269,7 @@ Implementations should ensure that no “out-of-thin-air” values are computed 
 circularly depend on their own computation.
 
 > _Note 6_: For example, with `x` and `y` initially zero,
-> ```rs
+> ```rust,ignore
 > // Thread 1:
 > let r1 = y.load(atomic::Ordering::Relaxed);
 > x.store(r1, atomic::Ordering::Relaxed);
@@ -284,7 +284,7 @@ circularly depend on their own computation.
 
 > _Note 7_: The recommendation similarly disallows `r1 == r2 == 42` in the
 > following example, with `x` and `y` again initially zero:
-> ```rs
+> ```rust,ignore
 > // Thread 1:
 > let r1 = x.load(atomic::Ordering::Relaxed);
 > if r1 == 42 {
@@ -328,7 +328,7 @@ synchronizes with an acquire fence _B_ if there exists some atomic operation _X_
 on _M_ such that _X_ is sequenced before _B_ and reads the value written by _A_
 or a value written by any side effect in the release sequence headed by _A_.
 
-```rs
+```rust,ignore
 pub fn fence(order: Ordering);
 ```
 
@@ -339,7 +339,7 @@ _Effects_: Depending on the value of `order`, this operation:
 - is both an acquire and a release fence, if `order == AcqRel`;
 - is a sequentially consistent acquire and release fence, if `order == SeqCst`.
 
-```rs
+```rust,ignore
 pub fn compiler_fence(order: Ordering);
 ```
 

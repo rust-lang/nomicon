@@ -4,9 +4,9 @@ Now we’ve got single-threaded mutation semantics out of the way, we can try
 reintroducing a second thread. We’ll have one thread perform a write to the
 memory location, and a second thread read from it, like so:
 
-```rs
+```rust
 // Initial state
-let mut state = 0;
+let mut data = 0;
 // Thread 1:
 data = 1;
 // Thread 2:
