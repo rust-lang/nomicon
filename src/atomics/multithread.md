@@ -75,9 +75,9 @@ both threads read it.
 // Initial state
 let data = 0;
 // Thread 1:
-data;
+println!("{data}");
 // Thread 2:
-data;
+eprintln!("{data}");
 ```
 
 Each memory location, similarly to threads, can be shown as another column on
@@ -104,7 +104,7 @@ above:
 ```rust
 let mut data = 0;
 data = 1;
-data;
+println!("{data}");
 data = 2;
 ```
 

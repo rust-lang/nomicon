@@ -10,7 +10,7 @@ let mut data = 0;
 // Thread 1:
 data = 1;
 // Thread 2:
-data;
+println!("{data}");
 ```
 
 Of course, any Rust programmer will immediately tell you that this code doesn’t
