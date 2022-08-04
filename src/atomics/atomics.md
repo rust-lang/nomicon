@@ -17,12 +17,24 @@ details, you should check out the [C++ specification][C++-model].
 Still, we'll try to cover the basics and some of the problems Rust developers
 face.
 
-The C++ memory model is fundamentally about trying to bridge the gap between the
-semantics we want, the optimizations compilers want, and the inconsistent chaos
-our hardware wants. *We* would like to just write programs and have them do
-exactly what we said but, you know, fast. Wouldn't that be great?
+## Motivation
 
-## Compiler Reordering
+The C++ memory model is very large and confusing with lots of seemingly
+arbitrary design decisions. To understand the motivation behind this, it can
+help to look at what got us in this situation in the first place. There are
+three main factors at play here:
+
+1. Users of the language, who want fast, cross-platform code;
+2. compilers, who want to optimize code to make it fast;
+3. and the hardware, which is ready to unleash a wrath of inconsistent chaos on
+  your program at a moment's notice.
+
+The C++ memory model is fundamentally about trying to bridge the gap between
+these three, allowing users to write code for a logical and consistent abstract
+machine while the compiler and hardware deal with the madness underneath that
+makes it run fast.
+
+### Compiler Reordering
 
 Compilers fundamentally want to be able to do all sorts of complicated
 transformations to reduce data dependencies and eliminate dead code. In
@@ -53,7 +65,7 @@ able to make these kinds of optimizations, because they can seriously improve
 performance. On the other hand, we'd also like to be able to depend on our
 program *doing the thing we said*.
 
-## Hardware Reordering
+### Hardware Reordering
 
 On the other hand, even if the compiler totally understood what we wanted and
 respected our wishes, our hardware might instead get us in trouble. Trouble
@@ -105,6 +117,8 @@ programming:
   more likely to *happen* to work, even though your program is strictly
   incorrect. If possible, concurrent algorithms should be tested on
   weakly-ordered hardware.
+
+---
 
 ## Data Accesses
 
