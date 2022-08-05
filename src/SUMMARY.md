@@ -48,7 +48,6 @@
 	* [SeqCst](./atomics/seqcst.md)
 	* [Fences](./atomics/fences.md)
 	* [Signals](./atomics/signals.md)
-	* [Specification](./atomics/specification.md)
 * [Implementing Vec](./vec/vec.md)
   * [Layout](./vec/vec-layout.md)
   * [Allocating](./vec/vec-alloc.md)
