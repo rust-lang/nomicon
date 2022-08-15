@@ -56,8 +56,7 @@ compiled as normal.)
 
 ## repr(transparent)
 
-This can only be used on structs with a single non-zero-sized field
-or enums with only one non-zero-sized field (there may be additional zero-sized fields).
+`#[repr(transparent)]` can only be used on a struct or single-variant enum that has a single non-zero-sized field (there may be additional zero-sized fields).
 The effect is that the layout and ABI of the whole struct/enum is guaranteed to be the same as that one field.
 
 > NOTE: There's a `transparent_unions` nightly feature to apply `repr(transparent)` to unions,
