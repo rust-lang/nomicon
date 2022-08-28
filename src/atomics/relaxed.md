@@ -122,7 +122,10 @@ pub fn get_id() -> u64 {
 ```
 
 But then calling that function from multiple threads opens you up to an
-execution like below that results in two threads obtaining the same ID:
+execution like below that results in two threads obtaining the same ID (note
+that the duplication of `1` in the modification order is intentional; even if
+two values are the same, they always get separate entries in the order if they
+were caused by different accesses):
 
 ```text
 Thread 1   COUNTER   Thread 2
