@@ -213,7 +213,13 @@ the `load` and everything sequenced after it.
 There is one more rule required for these to be useful, and that is _release
 sequences_: after a release store is performed on an atomic, happens-before
 arrows will connect together each subsequent value of the atomic as long as the
-new value is caused by an RMW and not just a plain store.
+new value is caused by an RMW and not just a plain store (this means any
+subsequent normal store, no matter the ordering, will end the sequence).
+
+> In the C++11 memory model, any subsequent store by the same thread that
+> performed the original `Release` store would also contribute to the release
+> sequence. However, this was removed in C++20 for simplicity and better
+> optimizations and so **must not** be relied upon.
 
 With those rules in mind, converting Thread 1’s second store to use a `Release`
 ordering as well as converting Thread 2’s CAS to use an `Acquire` ordering
