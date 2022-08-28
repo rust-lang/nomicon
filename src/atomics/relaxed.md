@@ -101,8 +101,8 @@ it could end up reading the garbage data “in-between” `0` and `1` (also UB).
 
 > **NOTE:** This description of why both sides are needed to be atomic
 > operations, while neat and intuitive, is not strictly correct: in reality the
-> answer is simply “because the spec says so”. However, it is isomorphic to the
-> real rules, so it can aid in understanding.
+> answer is simply “because the spec says so”. However, it is functionally
+> equivalent to the real rules, so it can aid in understanding.
 
 ## Read-modify-write operations
 
