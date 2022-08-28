@@ -29,10 +29,9 @@ three main factors at play here:
 3. and the hardware, which is ready to unleash a wrath of inconsistent chaos on
   your program at a moment's notice.
 
-The C++ memory model is fundamentally about trying to bridge the gap between
-these three, allowing users to write code for a logical and consistent Abstract
-Machine (AM for short) while the compiler and hardware deal with the madness
-underneath that makes it run fast.
+The memory model is fundamentally about trying to bridge the gap between these
+three, allowing users to write the algorithms they want while the compiler and
+hardware perform the arcane magic necessary to make them run fast.
 
 ### Compiler Reordering
 

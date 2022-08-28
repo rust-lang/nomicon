@@ -1,15 +1,50 @@
 # Multithreaded Execution
 
-The first important thing to understand about C++20 atomics is that **the
-abstract machine has no concept of time**. You might expect there to be a single
-global ordering of events across the program where each happens at the same time
-or one after the other, but under the abstract model no such ordering exists;
-instead, a possible execution of the program must be treated as a single event
-that happens instantaneously — there is never any such thing as “now”, or a
-“latest value”, and using that terminology will only lead you to more confusion.
-(Of course, in reality there does exist a concept of time, but you must keep in
-mind that you’re not programming for the hardware, you’re programming for the
-AM.)
+When you write Rust code to run on your computer, it may surprise you but you’re
+not actually writing Rust code to run on your computer — instead, you’re writing
+Rust code to run on the _abstract machine_ (or AM for short). The abstract
+machine, to be contrasted with the physical machine, is an abstract
+representation of a theoretical computer: it doesn’t actually exist _per se_,
+but the combination of a compiler, target architecture and target operating
+system is capable of emulating a subset of its possible behaviours.
+
+The Abstract Machine has a few properties that are essential to understand:
+1. It is architecture and OS-independent. The Abstract Machine doesn’t care
+	whether you’re on x86_64 or iOS or a Nintendo 3DS, the rules are the same
+	for everyone. This enables you to write code without having to think about
+	what the underlying system does or how it does it, as long as you obey the
+	Abstract Machine’s rules you know you’ll be fine.
+1. It is the lowest common denominator of all supported computer systems. This
+	means it is allowed to result in executions no sane computer would actually
+	generate in real life. It is also purposefully built with forward
+	compatibility in mind, giving compilers the opportunity to make better and
+	more aggressive optimizations in the future. As a result, it can be quite
+	hard to test code, especially if you’re on a system that exploits fewer of
+	the AM’s allowed semantics, so it is highly recommended to utilize tools
+	that intentionally produce these executions like [Loom] and [Miri].
+1. Its model is highly formalized and not representative of what goes on
+	underneath. Because C++ needs to be defined by a formal specification and
+	not just hand-wavy rules about “this is what allowed and this is what
+	isn’t”, the Abstract Machine defines things in a very mathematical and,
+	well, _abstract_, way; instead of saying things like “the compiler is
+	allowed to do X” it will find a way to define the system such that the
+	compiler’s ability to do X simply follows as a natural consequence. This
+	makes it very elegant and keeps the mathematicians happy, but you should
+	keep in mind that this is not how computers actually function, it is merely
+	a representation of it.
+
+With that out of the way, let’s look into how the C++20 Abstract Machine is
+actually defined.
+
+The first important thing to understand is that **the abstract machine has no
+concept of time**. You might expect there to be a single global ordering of
+events across the program where each happens at the same time or one after the
+other, but under the abstract model no such ordering exists; instead, a possible
+execution of the program must be treated as a single event that happens
+instantaneously. There is never any such thing as “now”, or a “latest value”,
+and using that terminology will only lead you to more confusion. Of course, in
+reality there does exist a concept of time, but you must keep in mind that
+you’re not programming for the hardware, you’re programming for the AM.
 
 However, while no global ordering of operations exists _between_ threads, there
 does exist a single total ordering _within_ each thread, which is known as its
@@ -224,3 +259,6 @@ explanation ever of the most basic intuitive semantics of programming — and
 you’d be absolutely right. But it’s essential to grasp these fundamentals,
 because once you have this model in mind, the extension into multiple threads
 and the complicated semantics of real atomics becomes completely natural.
+
+[Loom]: https://docs.rs/loom
+[Miri]: https://github.com/rust-lang/miri
