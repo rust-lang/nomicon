@@ -158,7 +158,7 @@ case that doesn’t seem to be enough, since even if atomics were used it still
 would have the _option_ of reading `0` instead of `1`, and really if we want our
 mutex to be sane, it should only be able to read `1`.
 
-So it seems that want we _want_ is to be able to apply our arrow rules from
+So it seems that want we _want_ is to be able to apply the coherence rules from
 before to completely rule out zero from the set of the possible values — if we
 were able to draw a large arrow from the Thread 1’s `+= 1;` to Thread 2’s
 `guard`, then we could trivially then use the rule to rule out `0` as a value
@@ -198,7 +198,7 @@ These arrows are a new kind of arrow we haven’t seen yet; they are known as
 _happens-before_ (or happens-after) relations and are represented as thin arrows
 (→) on these diagrams. They are weaker than the _sequenced before_
 double-arrows (⇒) that occur inside a single thread, but can still be used with
-the arrow rules to determine which values of a memory location are valid to
+the coherence rules to determine which values of a memory location are valid to
 read.
 
 When a happens-before arrow stores a data value to an atomic (via a release
@@ -299,9 +299,9 @@ Thread 1       locked     data      Thread 2
               └───────┘
 ```
 
-We can now use the second arrow rule from before to follow _forward_ the arrow
-from the `guard` bubble all the way to the `+= 1;`, determining that it is only
-possible for that read to see `0` as its value.
+We can now use the second coherence rule from before to follow _forward_ the
+arrow from the `guard` bubble all the way to the `+= 1;`, determining that it is
+only possible for that read to see `0` as its value.
 
 This leads us to the proper memory orderings for any mutex (and other locks like
 RW locks too, even): use `Acquire` to lock it, and `Release` to unlock it. So

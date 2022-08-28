@@ -213,6 +213,12 @@ guaranteed by the Abstract Machine:
 ╰───────╯     └────┘
 ```
 
+These two rules combined make up the more generalized rule known as _coherence_,
+which is put in place to guarantee that a thread will never see a value earlier
+than the last one it read or later than a one it will in future write. Coherence
+is basically required for any program to act in a sane way, so luckily the C++20
+standard guarantees it as one of its most fundamental principles.
+
 You might be thinking that all this has been is the longest, most convoluted
 explanation ever of the most basic intuitive semantics of programming — and
 you’d be absolutely right. But it’s essential to grasp these fundamentals,

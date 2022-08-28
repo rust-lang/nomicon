@@ -28,11 +28,11 @@ Thread 1     data    Thread 2
             └────┘
 ```
 
-Unfortunately, the rules from before don’t help us in finding out where Thread
-2’s line joins up to, since there are no arrows connecting that operation to
-anything and therefore we can’t immediately rule any values out. As a result, we
-end up facing a situation we haven’t faced before: there is _more than one_
-potential value for Thread 2 to read.
+Unfortunately, coherence doesn’t help us in finding out where Thread 2’s line
+joins up to, since there are no arrows connecting that operation to anything and
+therefore we can’t immediately rule any values out. As a result, we end up
+facing a situation we haven’t faced before: there is _more than one_ potential
+value for Thread 2 to read.
 
 And this is where we encounter the big limitation with unsynchronized data
 accesses: the price we pay for their speed and optimization capability is that
@@ -225,7 +225,7 @@ value we loaded. This isn’t really a problem — we can just try again and aga
 until we succeed, and `compare_exchange` is even nice enough to give us the
 updated value so we don’t have to load again. Also note that after we’ve updated
 our value of the atomic, we’re guaranteed to never see the old value again, by
-the arrow rules from the previous chapter.
+the coherence rules from the previous chapter.
 
 So here’s how it looks with these changes appplied:
 

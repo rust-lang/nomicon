@@ -66,8 +66,9 @@ from `Y` and `X` respectively, is it possible for them _both_ to load `false`?
 
 And looking at this diagram, there’s absolutely no reason why not. There isn’t
 even a single arrow connecting the left and right hand sides so far, so the load
-has no restrictions on which value it is allowed to pick — and this goes for
-both sides equally, so we could end up with an execution like this:
+has no coherence-based restrictions on which value it is allowed to pick — and
+this goes for both sides equally, so we could end up with an execution like
+this:
 
 ```text
      a        static X         c             d        static Y         b
