@@ -283,15 +283,18 @@ but since the abstract machine has no concept of time, it’s just a valid UB as
 any other.
 
 Luckily, we’ve already solved this problem once, so it easy to solve again: just
-like before, we’ll have the CAS become acquire and the store become release.
+like before, we’ll have the CAS become acquire and the store become release, and
+then we can use the second coherence rule from before to follow _forward_ the
+arrow from the `guard` bubble all the way to the `+= 1;`, determining that it is
+only possible for that read to see `0` as its value, as in the execution below.
 
 ```text
 Thread 1       locked     data      Thread 2
 ╭───────╮     ┌───────┐   ┌───┐    ╭───────╮
-│  cas  ←───┐ │ false │┌──│ 0 │────→  cas  │
-╰───╥───╯   │ └───────┘│ ┌┼╌╌╌┤    ╰───╥───╯
-╭───⇓───╮   │ ┌───────┬┘ ├┼╌╌╌┤    ╭───⇓───╮
-│ += 1; ├╌┐ │ │ true  │  ┊│ 1 │  ?╌┤ guard │
+│  cas  ←───┐ │ false │┌──│ 0 ├╌┐──→  cas  │
+╰───╥───╯   │ └───────┘│ ┌┼╌╌╌┤ ┊  ╰───╥───╯
+╭───⇓───╮   │ ┌───────┬┘ ├┼╌╌╌┤ ┊  ╭───⇓───╮
+│ += 1; ├╌┐ │ │ true  │  ┊│ 1 │ └─╌┤ guard │
 ╰───╥───╯ ┊ │ └───────┘  ┊└───┘    ╰───╥───╯
 ╭───⇓───╮ └╌│╌╌╌╌╌╌╌╌╌╌╌╌┘         ╭───⇓───╮
 │ store ├─┐ │ ┌───────↙────────────┤ store │
@@ -304,10 +307,6 @@ Thread 1       locked     data      Thread 2
               │ false │
               └───────┘
 ```
-
-We can now use the second coherence rule from before to follow _forward_ the
-arrow from the `guard` bubble all the way to the `+= 1;`, determining that it is
-only possible for that read to see `0` as its value.
 
 This leads us to the proper memory orderings for any mutex (and other locks like
 RW locks too, even): use `Acquire` to lock it, and `Release` to unlock it. So
