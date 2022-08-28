@@ -105,8 +105,8 @@ do). It is in contrast to modification orders, which are similarly total but
 only scoped to a single atomic rather than the whole program.
 
 Other than an edge case involving `SeqCst` mixed with weaker orderings (detailed
-in the next section), _S_ is primarily controlled by the happens before
-relations in a program: this means that if an action _A_ happens before an
+in the next section), _S_ is primarily controlled by the happens-before
+relations in a program: this means that if an action _A_ happens-before an
 action _B_, it is also guaranteed to appear before _B_ in _S_. Other than that
 restriction, _S_ is unspecified and will be chosen arbitrarily during execution.
 
@@ -214,18 +214,18 @@ impossible.
 ## The mixed-`SeqCst` special case
 
 As I’ve been alluding to for a while, I wasn’t being totally truthful when I
-said that _S_ is consistent with happens before relations — in reality, it is
-only consistent with _strongly happens before_ relations, which presents a
-subtly-defined subset of happens before relations. In particular, it excludes
+said that _S_ is consistent with happens-before relations — in reality, it is
+only consistent with _strongly happens-before_ relations, which presents a
+subtly-defined subset of happens-before relations. In particular, it excludes
 two situations:
 
 1. The `SeqCst` operation A synchronizes-with an `Acquire` or `AcqRel` operation
    B which is sequenced before another `SeqCst` operation C. Here, despite the
-   fact that A happens before C, A does not _strongly_ happen before C and so is
+   fact that A happens-before C, A does not _strongly_ happen-before C and so is
    there not guaranteed to precede C in _S_.
 2. The `SeqCst` operation A is sequenced-before the `Release` or `AcqRel`
    operation B, which synchronizes-with another `SeqCst` operation C. Similarly,
-   despite the fact that A happens before C, A might not precede C in _S_.
+   despite the fact that A happens-before C, A might not precede C in _S_.
 
 The first situation is illustrated below, with `SeqCst` accesses repesented with
 asterisks:
@@ -240,12 +240,12 @@ asterisks:
                   ╰─────╯
 ```
 
-A happens before, but does not strongly happen before, C — and anything
+A happens-before, but does not strongly happen-before, C — and anything
 sequenced after C will have the same treatment (unless more synchronization is
 used). This means that C is actually allowed to _precede_ A in _S_, despite
-conceptually happening after it. However, anything sequenced before A, because
+conceptually occuring after it. However, anything sequenced before A, because
 there is at least one sequence on either side of the synchronization, will
-strongly happen before C.
+strongly happen-before C.
 
 But this is all highly theoretical at the moment, so let’s make an example to
 show how that rule can actually affect the execution of code. So, if C were to
@@ -272,12 +272,12 @@ _S_ after all.
 So somehow, to observe this difference we need to have a _different_ `SeqCst`
 operation, let’s call it E, be the one that loads from `x`, where C is
 guaranteed to precede it in _S_ (so we can observe the “weird” state in between
-C and A) but C also doesn’t happen before it (to avoid coherence getting in the
+C and A) but C also doesn’t happen-before it (to avoid coherence getting in the
 way) — and to do that, all we have to do is have C appear before a `SeqCst`
 operation D in the modification order of another atomic, but have D be a store
 so as to avoid C synchronizing with it, and then our desired load E can simply
 be sequenced after D (this will carry over the “precedes in _S_” guarantee, but
-does not restore the happens after relation to C since that was already dropped
+does not restore the happens-after relation to C since that was already dropped
 by having D be a store).
 
 In diagram form, that looks like this:
@@ -321,7 +321,7 @@ assert_eq!(X.load(SeqCst), 0); // E
 
 The second situation listed above has very similar consequences. Its abstract
 form is the following execution in which A is not guaranteed to precede C in
-_S_, despite A happening before C:
+_S_, despite A happening-before C:
 
 ```text
   t_1       x       t_2
@@ -335,7 +335,7 @@ _S_, despite A happening before C:
 
 Similarly to before, we can’t just have A access `x` to show why A not
 necessarily preceding C in _S_ matters; instead, we have to introduce a second
-atomic and third thread to break the happens before chain first. And finally, a
+atomic and third thread to break the happens-before chain first. And finally, a
 single relaxed load F at the end is added just to prove that the weird execution
 actually happened (leaving `x` as 2 instead of 1).
 
