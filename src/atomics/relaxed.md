@@ -163,6 +163,15 @@ between the read and the write; it happens as a single operation. I would also
 like to point out that this is true of **all** atomic orderings, since a common
 misconception is that the `Relaxed` ordering somehow negates this guarantee.
 
+> Another common confusion about RMWs is that they are guaranteed to “see the
+> latest value” of an atomic, which I believe came from a misinterpretation of
+> the C++ specification and was later spread by rumour. Of course, this makes no
+> sense, since atomics have no latest value due to the lack of the concept of
+> time. The original statement in the specification was actually just specifying
+> that atomic RMWs are atomic: they only consider the directly previous value in
+> the modification order and not any value before it, and gave no additional
+> guarantee.
+
 There are many different RMW operations to choose from, but the one most
 appropriate for this use case is `fetch_add`, which adds a number to the atomic,
 as well as returns the old value. So our code can be rewritten as this:
@@ -221,10 +230,10 @@ _only if_ it occurs directly after the value we loaded”. And luckily for us,
 there exists a function that does exactly\* this: `compare_exchange`.
 
 `compare_exchange` is a bit like a store, but instead of unconditionally storing
-the value, it will first check the previous value in the modification order to
-see whether it is what we expect, and if not it will simply tell us that and not
-make any changes. It is an RMW operation, so all of this happens fully
-atomically — there is no chance for a race condition.
+the value, it will first check the value directly before the `compare_exchange`
+in the modification order to see whether it is what we expect, and if not it
+will simply tell us that and not make any changes. It is an RMW operation, so
+all of this happens fully atomically — there is no chance for a race condition.
 
 > \* It’s not quite the same, because `compare_exchange` can suffer from ABA
 > problems in which it will see a later value in the modification order that
