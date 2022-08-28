@@ -129,12 +129,37 @@ Thread 1     data     Thread 2
 ```
 
 That is, both threads read the same value of `0` from `data`, with no relative
-ordering between them. This is the simple case, for when the data doesn’t ever
-change — but that’s no fun, so let’s add some mutability in the mix (we’ll also
-return to a single thread, just to keep things simple).
+ordering between them.
 
-Consider this code, which we’re going to attempt to draw a diagram for like
-above:
+That’s reads done, so we’ll look at the other kind of data access next: writes.
+We’ll also return to a single thread for now, just to keep things simple.
+
+```rust
+let mut data = 0;
+data = 1;
+```
+
+Here, we have a single variable that the main thread writes to once — this means
+that in its lifetime, it holds two values, first `0`, and then `1`.
+Diagrammatically, this code’s execution can be represented like so:
+
+```text
+ Thread 1        data
+╭───────╮       ┌────┐
+│  = 1  ├╌╌╌┐   │  0 │
+╰───────╯   ├╌╌╌┼╌╌╌╌┤
+            └╌╌╌┼╌╌╌╌┤
+                │  1 │
+                └────┘
+```
+
+Note the use of dashed padding in between the values of `data`’s column. Those
+spaces won’t ever contain a value, but they’re used to represent an
+unsynchronized (non-atomic) write — it is garbage data and attempting to read it
+would result in a data race.
+
+Now let’s put all of our knowledge thus far together, and make a program both
+that reads _and_ writes data — woah, scary!
 
 ```rust
 let mut data = 0;
@@ -164,13 +189,10 @@ some boxes:
 ╰───────╯       └────┘
 ```
 
-Note the use of dashed padding in between the values of `data`’s column. Those
-spaces won’t ever contain a value, but they’re used to represent an
-unsynchronized (non-atomic) write — it is garbage data and attempting to read it
-would result in a data race.
+We know all of those lines need to be joined _somewhere_, but we don’t quite
+know _where_ yet. This is where we need to bring in our first rule, a rule that
+universally governs all accesses to every location in memory:
 
-To solve this puzzle, we first need to bring in a new rule that governs all
-memory accesses to a particular location:
 > From the point at which the access occurs, find every other point that can be
 > reached by following the reverse direction of arrows, then for each one of
 > those, take a single step across every line that connects to the relevant
@@ -199,7 +221,8 @@ value in `data`. Therefore its diagram would look something like this:
 However, that second line breaks the rule we just established! Following up the
 arrows from the third operation in Thread 1, we reach the first operation, and
 from there we can take a single step to reach the space in between the `2` and
-the `1`, which excludes the this access from writing any value above that point.
+the `1`, which excludes the third access from writing any value above that point
+— including the `2` that it is currently writing!
 
 So evidently, this execution is no good. We can therefore conclude that the only
 possible execution of this program is the other one, in which the `1` appears
