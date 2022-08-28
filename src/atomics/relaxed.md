@@ -228,8 +228,14 @@ atomically — there is no chance for a race condition.
 
 > \* It’s not quite the same, because `compare_exchange` can suffer from ABA
 > problems in which it will see a later value in the modification order that
-> just happened to be same and succeed. However, in this code values can never
-> be reused so we don’t have to worry about that.
+> just happened to be same and succeed. For example, if the modification order
+> contained `1, 2, 1` and a thread loaded the first `1`,
+> `compare_exchange(1, 3)` could succeed in replacing either the first or second
+> `1`, giving either `1, 3, 2, 1` or `1, 2, 1, 3`.
+>
+> For some algorithms, this is problematic and needs to be taken into account
+> with additional checks; however for us, values can never be reused so we don’t
+> have to worry about it.
 
 In our case, we can simply replace the store with a compare exchange of the old
 value and itself plus one (returning `None` instead if the addition overflowed,
