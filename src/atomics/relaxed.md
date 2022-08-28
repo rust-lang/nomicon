@@ -137,10 +137,21 @@ Thread 1   COUNTER   Thread 2
             └───┘
 ```
 
-Technically, I believe it is _possible_ to implement this kind of thing with
-just loads and stores, if you try hard enough and use several atomics. But
-luckily, you don’t have to because there also exists another kind of operation,
-the read-modify-write, which is specifically suited to this purpose.
+This is known as a a **race condition** — a logic error in a program caused by a
+specific unintended execution of concurrent code. Note that this is distinct
+from a _data race_: while a data race is caused by two threads performing
+unsynchronized operations at the same time and is always undefined behaviour,
+race conditions are totally OK and defined behaviour from the AM’s perspective,
+but are only harmful because the programmer didn’t expect it to be possible. You
+can think of the distinction between the two as analagous to the difference
+between indexing out-of-bounds and indexing in-bounds, but to the wrong element:
+both are bugs, but only one is universally a bug, and the other is merely a
+logic problem.
+
+Technically, I believe it is _possible_ to solve this problem with just loads
+and stores, if you try hard enough and use several atomics. But luckily, you
+don’t have to because there also exists another kind of operation, the
+read-modify-write, which is specifically suited to this purpose.
 
 A read-modify-write operation (shortened to RMW) is a special kind of atomic
 operation that reads, changes and writes back a value _in one step_. This means
