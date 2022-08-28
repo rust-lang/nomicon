@@ -210,6 +210,13 @@ possible execution, Thread 1’s `store` synchronizes-with Thread 2’s `load`,
 which causes that `store` and everything sequenced before it to happen-before
 the `load` and everything sequenced after it.
 
+> More formally, we can say that A happens-before B if any of the following
+> conditions are true:
+> 1. A is sequenced-before B (i.e. A occurs before B on the same thread)
+> 2. A synchronizes-with B (i.e. A is a `Release` operation and B is an
+>    `Acquire` operation that reads the value written by A)
+> 3. A happens-before X, and X happens-before B (transitivity)
+
 There is one more rule required for these to be useful, and that is _release
 sequences_: after a release store is performed on an atomic, happens-before
 arrows will connect together each subsequent value of the atomic as long as the
