@@ -194,14 +194,21 @@ Thread 1      a     Thread 2  ┃  Thread 1      a     Thread 2
             └───┘             ┃              └───┘
 ```
 
-These arrows are a new kind of arrow we
-haven’t seen yet; they are known as _happens-before_ (or happens-after)
-relations and are represented as thin arrows (→) on these diagrams. They are
-weaker than the _sequenced before_ double-arrows (⇒) that occur inside a single
-thread, but can still be used with the arrow rules to determine which values of
-a memory location are valid to read. We can say that in the first possible
-execution, Thread 1’s `store` (and everything sequenced before that)
-_happens-before_ Thread 2’s load (and everything sequenced after that).
+These arrows are a new kind of arrow we haven’t seen yet; they are known as
+_happens-before_ (or happens-after) relations and are represented as thin arrows
+(→) on these diagrams. They are weaker than the _sequenced before_
+double-arrows (⇒) that occur inside a single thread, but can still be used with
+the arrow rules to determine which values of a memory location are valid to
+read.
+
+When a happens-before arrow stores a data value to an atomic (via a release
+operation) which is then loaded by another happens-before arrow (via an acquire
+operation) we say that the release operation _synchronized-with_ the acquire
+operation, which in doing so establishes that the release operation
+_happens-before_ the acquire operation. Therefore, we can say that in the first
+possible execution, Thread 1’s `store` synchronizes-with Thread 2’s `load`,
+which causes that `store` and everything sequenced before it to happen-before
+the `load` and everything sequenced after it.
 
 There is one more rule required for these to be useful, and that is _release
 sequences_: after a release store is performed on an atomic, happens-before
@@ -234,9 +241,10 @@ Thread 1     locked     data       Thread 2
 
 We now can trace back along the reverse direction of arrows from the `guard`
 bubble to the `+= 1` bubble; we have established that Thread 2’s load
-happens-after the `+= 1` side effect. This both avoids the data race and gives
-the guarantee that `1` will be always read by Thread 2 (as long as locks after
-Thread 1, of course).
+happens-after the `+= 1` side effect, because Thread 2’s CAS synchronizes-with
+Thread 1’s store. This both avoids the data race and gives the guarantee that
+`1` will be always read by Thread 2 (as long as locks after Thread 1, of
+course).
 
 However, that is not the only execution of the program possible. Even with this
 setup, there is another execution that can also cause UB: if Thread 2 locks the
