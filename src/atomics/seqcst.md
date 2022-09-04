@@ -106,17 +106,65 @@ do). It is in contrast to modification orders, which are similarly total but
 only scoped to a single atomic rather than the whole program.
 
 Other than an edge case involving `SeqCst` mixed with weaker orderings (detailed
-in the next section), _S_ is primarily controlled by the happens-before
-relations in a program: this means that if an action _A_ happens-before an
-action _B_, it is also guaranteed to appear before _B_ in _S_. Other than that
-restriction, _S_ is unspecified and will be chosen arbitrarily during execution.
+later on), _S_ is primarily controlled by the happens-before relations in a
+program: this means that if an action _A_ happens-before an action _B_, it is
+also guaranteed to appear before _B_ in _S_. Other than that restriction, _S_ is
+unspecified and will be chosen arbitrarily during execution.
 
 Once a particular _S_ has been established, every atomic’s modification order is
-then guaranteed to be consistent with it — this means that a `SeqCst` load will
-never see a value that has been overwritten by a write that occurred before it
-in _S_, or a value that has been written by a write that occured after it in
-_S_ (note that a `Relaxed`/`Acquire` load however might, since there is no
-“before” or “after” as it is not in _S_ in the first place).
+then guaranteed to be consistent with it, so a `SeqCst` load will never see a
+value that has been overwritten by a write that occurred before it in _S_, or a
+value that has been written by a write that occured after it in _S_ (note that a
+`Relaxed`/`Acquire` load however might, since there is no “before” or “after” as
+it is not in _S_ in the first place).
+
+More formally, this guarantee can be described with _coherence orderings_, a
+relation which expresses which of two operations appears before the other in an
+atomic’s modification order. It is said that an operation _A_ is
+_coherence-ordered-before_ another operation _B_ if any of the following
+conditions are met:
+1. _A_ is a store or RMW, _B_ is a store or RMW, and _A_ appears before _B_ in
+	the modification order.
+1. _A_ is a store or RMW, _B_ is a load, and _B_ reads the value stored by _A_.
+1. _A_ is a load, _B_ is a store or RMW, and _A_ takes its value from a place in
+	the modification order that appears before _B_.
+1. _A_ is coherence-ordered-before a different operation _X_, and _X_ is
+	coherence-ordered-before _B_ (the basic transitivity property).
+
+The following diagram gives examples for the main three rules (in each case _A_
+is coherence-ordered-before _B_):
+
+```text
+        Rule 1        ┃         Rule 2        ┃         Rule 3
+                      ┃                       ┃
+╭───╮ ┌─┬───┐   ╭───╮ ┃ ╭───╮ ┌─┬───┐   ╭───╮ ┃ ╭───╮   ┌───┐   ╭───╮
+│ A ├─┘ │   │ ┌─┤ B │ ┃ │ A ├─┘ │   ├───┤ B │ ┃ │ A ├───┤   │ ┌─┤ B │
+╰───╯   └───┘ │ ╰───╯ ┃ ╰───╯   └───┘   ╰───╯ ┃ ╰───╯   └───┘ │ ╰───╯
+        ┌───┬─┘       ┃                       ┃         ┌───┬─┘
+        │   │         ┃                       ┃         │   │
+        └───┘         ┃                       ┃         └───┘
+```
+
+The only important thing to note is that for two loads of the same value in the
+modification order, neither is coherence-ordered-before the other, as in the
+following example where _A_ has no coherence ordering relation to _B_:
+
+```text
+╭───╮   ┌───┐   ╭───╮
+│ A ├───┤   ├───┤ B │
+╰───╯   └───┘   ╰───╯
+```
+
+With this terminology applied, we can use a more precise definition of
+`SeqCst`’s guarantee: for two `SeqCst` operations on the same atomic _A_ and
+_B_, where _A_ precedes _B_ in _S_, either _A_ must be coherence-ordered-before
+_B_ or they must both be loads that see the same value in the modification
+order. Effectively, this one rule ensures that _S_’s order “propagates”
+throughout all the atomics of the program — you can imagine each operation in
+_S_ as storing a snapshot of the world, so that every subsequent operation is
+consistent with it.
+
+## Applying `SeqCst`
 
 So, looking back at our program, let’s consider how we could use `SeqCst` to
 make that execution invalid. As a refresher, here’s the framework for every
@@ -137,9 +185,10 @@ become `SeqCst`, because they need to be aware of the total ordering that
 determines whether `X` or `Y` becomes `true` first. And secondly, we need to
 establish that ordering in the first place, and that needs to be done by making
 sure that there is always one operation in _S_ that both sees one of the atomics
-as `true` and precedes both final loads (the final loads themselves don’t work
-for this since although they “know” that their corresponding atomic is `true`
-they don’t interact with it directly so _S_ doesn’t care).
+as `true` and precedes both final loads in _S_, so that the coherence ordering
+guarantee will apply (the final loads themselves don’t work for this since
+although they “know” that their corresponding atomic is `true` they don’t
+interact with it directly so _S_ doesn’t care).
 
 There are two operations in the program that could fulfill the first condition,
 should they be made `SeqCst`: the stores of `true` and the first loads. However,
@@ -207,9 +256,9 @@ executions of this program:
 	1. `c` loads `X` (gives `true`)
 	1. `c` loads `Y` (required to be `true`)
 
-All the places were the load is requied to give `true` were caused by a
-preceding load in _S_ of the same atomic which saw `true`, because otherwise _S_
-would be inconsistent with the atomic’s modification order and that is
+All the places where the load was required to give `true` were caused by a
+preceding load in _S_ of the same atomic which saw `true` — otherwise, the load
+would be coherence-ordered-before a load which precedes it in _S_, and that is
 impossible.
 
 ## The mixed-`SeqCst` special case
@@ -250,10 +299,10 @@ strongly happen-before C.
 
 But this is all highly theoretical at the moment, so let’s make an example to
 show how that rule can actually affect the execution of code. So, if C were to
-precede A in _S_ then that means in the modification order of any atomic they
-both access, C would have to come before A. Let’s say then that C loads from `x`
-(the atomic that A has to access), it may load the value that came before A if
-it were to precede A in _S_:
+precede A in _S_ (and they are not both loads) then that means C is always
+coherence-ordered-before A. Let’s say then that C loads from `x` (the atomic
+that A has to access), it may load the value that came before A if it were to
+precede A in _S_:
 
 ```text
   t_1       x       t_2
@@ -265,9 +314,9 @@ it were to precede A in _S_:
           └───┘   ╰─────╯
 ```
 
-Ah wait no, that doesn’t work because coherence still mandates that `1` is the
-only value that can be loaded. In fact, once `1` is loaded _S_’s required
-consistency with modification orders means that A _is_ required to precede C in
+Ah wait no, that doesn’t work because regular coherence still mandates that `1`
+is the only value that can be loaded. In fact, once `1` is loaded _S_’s required
+consistency with coherence orderings means that A _is_ required to precede C in
 _S_ after all.
 
 So somehow, to observe this difference we need to have a _different_ `SeqCst`
@@ -386,6 +435,4 @@ would make atomics significantly slower. So instead, in C++20 they simply
 encoded it into the specification.
 
 Generally however, this rule is so complex it’s best to just avoid it entirely
-by never mixing `SeqCst` and non-`SeqCst` on a single atomic in the first place
-— or even better, just avoiding `SeqCst` entirely and using a stronger ordering
-instead that has less complex semantics and fewer gotchas.
+by never mixing `SeqCst` and non-`SeqCst` on a single atomic in the first place.
