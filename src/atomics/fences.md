@@ -170,10 +170,11 @@ The execution with the relation looks like this:
 ╰───────╯   └───┴──┘╰───────╯
 ```
 
-Like with acquire fences, release fences are commonly used to optimize over a
-series of atomic stores that don’t individually need to be `Release`, since it’s
-often faster to put a single release fence at the start and use `Relaxed` from
-that point on than it is to use `Release` every time.
+Like with acquire fences, release fences can be used to optimize over a series
+of atomic stores that don’t individually need to be `Release`, since in some
+conditions and on some architectures it’s faster to put a single release fence
+at the start and use `Relaxed` from that point on than it is to use `Release`
+every time.
 
 ## `AcqRel` fences
 
