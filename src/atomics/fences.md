@@ -73,7 +73,7 @@ atomic::fence(atomic::Ordering::Acquire);
 
 This can result in an execution like so:
 
-```
+```text
    t_1        X        t_3        Y        t_2
 ╭───────╮   ┌───┐   ╭───────╮   ┌───┐   ╭───────╮
 │ store ├─┐ │ 0 │ ┌─┤ load  │   │ 0 │ ┌─┤ store │
