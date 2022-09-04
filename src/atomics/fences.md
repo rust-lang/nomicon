@@ -199,4 +199,58 @@ following:
 Here, A happens-before B, which is singularly due to the `AcqRel` fence’s
 ability to “carry over” happens-before relations within itself.
 
+## `SeqCst` fences
+
+`SeqCst` fences are the strongest kind of fence. They first of all inherit the
+behaviour from an `AcqRel` fence, meaning they have both acquire and release
+semantics at the same time, but being `SeqCst` operations they also participate
+in _S_. Just as with all other `SeqCst` operations, their placement in _S_ is
+primarily determined by strongly happens-before relations (including the
+[mixed-`SeqCst` caveat] that comes with it), which then gives additional
+guarantees to your code.
+
+Namely, the power of `SeqCst` fences can be summarized in three points:
+
+* Everything that happens-before a `SeqCst` fence is not coherence-ordered-after
+	any `SeqCst` operation that the fence precedes in _S_.
+* Everything that happens-after a `SeqCst` fence is not coherence-ordered-before
+	any `SeqCst` operation that the fence succeeds in _S_.
+* Everything that happens-before a `SeqCst` fence X is not
+	coherence-ordered-after anything that happens-after another `SeqCst` fence
+	Y, if X preceeds Y in _S_.
+
+> In C++11, the above three statements were similar, except they only talked
+> about what was sequenced-before and sequenced-after the `SeqCst` fences; C++20
+> strengthened this to also include happens-before, because in practice this
+> theoretical optimization was not being exploited by anybody. However do note
+> that as of the time of writing, [Miri only implements the old, weaker
+> semantics][miri scfix] and so you may see false positives when testing with
+> it.
+
+The “motivating use-case” for `SeqCst` demonstrated in the `SeqCst` chapter can
+also be rewritten to use exclusively `SeqCst` fences and `Relaxed` operations,
+by inserting fences in between the loads in threads `c` and `d`:
+
+```text
+     a        static X         c               d        static Y         b
+╭─────────╮   ┌───────┐   ╭─────────╮     ╭─────────╮   ┌───────┐   ╭─────────╮
+│ store X ├─┐ │ false │ ┌─┤ load X  │     │ load Y  ├─┐ │ false │ ┌─┤ store Y │
+╰─────────╯ │ └───────┘ │ ╰────╥────╯     ╰────╥────╯ │ └───────┘ │ ╰─────────╯
+            └─┬───────┐ │ ╭────⇓────╮     ╭────⇓────╮ │ ┌───────┬─┘
+              │ true  ├─┘ │ *fence* │     │ *fence* │ └─┤ true  │
+              └───────┘   ╰────╥────╯     ╰────╥────╯   └───────┘
+                          ╭────⇓────╮     ╭────⇓────╮
+                          │ load Y  ├─? ?─┤ load X  │
+                          ╰─────────╯     ╰─────────╯
+```
+
+There are two executions to consider here, depending on which way round the
+fences appear in _S_. Should `c`’s fence appear first, the fence–fence `SeqCst`
+guarantee tells us that `c`’s load of `X` is not coherence-ordered-after `d`’s
+load of `X`, which forbids `d`’s load of `X` from seeing the value `false`. The
+same logic can be applied should the fences appear the other way around, proving
+that at least one thread must load `true` in the end.
+
 [`core::sync::atomic::fence`]: https://doc.rust-lang.org/stable/core/sync/atomic/fn.fence.html
+[mixed-`SeqCst` caveat]: seqcst.md#the-mixed-seqcst-special-case
+[miri scfix]: https://github.com/rust-lang/miri/issues/2301

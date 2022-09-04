@@ -155,11 +155,18 @@ following example where _A_ has no coherence ordering relation to _B_:
 ╰───╯   └───┘   ╰───╯
 ```
 
+Because of this, “_A_ is coherence-ordered-before _B_” is subtly different from
+“_A_ is not coherence-ordered-after _B_”; only the latter phrase includes the
+above situation, and is synonymous with “either _A_ is coherence-ordered-before
+_B_ or _A_ and _B_ are both loads, and see the same value in the atomic’s
+modification order”. “Not coherence-ordered-after” is generally a more useful
+relation than “coherence-ordered-before”, and so it’s important to understand
+what it means.
+
 With this terminology applied, we can use a more precise definition of
 `SeqCst`’s guarantee: for two `SeqCst` operations on the same atomic _A_ and
-_B_, where _A_ precedes _B_ in _S_, either _A_ must be coherence-ordered-before
-_B_ or they must both be loads that see the same value in the modification
-order. Effectively, this one rule ensures that _S_’s order “propagates”
+_B_, where _A_ precedes _B_ in _S_, _A_ is not coherence-ordered-after _B_.
+Effectively, this one rule ensures that _S_’s order “propagates”
 throughout all the atomics of the program — you can imagine each operation in
 _S_ as storing a snapshot of the world, so that every subsequent operation is
 consistent with it.
