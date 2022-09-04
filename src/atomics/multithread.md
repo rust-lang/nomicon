@@ -67,8 +67,8 @@ its sequence during one possible execution can be visualized like so:
 ```
 
 That double arrow in between the two boxes (`⇒`) represents that the second
-statement is _sequenced after_ the first (and similarly the first statement is
-_sequenced before_ the second). This is the strongest kind of ordering guarantee
+statement is _sequenced-after_ the first (and similarly the first statement is
+_sequenced-before_ the second). This is the strongest kind of ordering guarantee
 between any two operations, and only comes about when those two operations
 happen one after the other and on the same thread.
 
@@ -96,10 +96,14 @@ sequence:
 ╰───────────────╯    ╰─────────────────╯
 ```
 
-Note that this is **not** a representation of multiple things that _could_
-happen at runtime — instead, this diagram describes exactly what _did_ happen
-when the program ran once. This distinction is key, because it highlights that
-even the lowest-level representation of a program’s execution does not have
+We can say that the prints of `A` and `B` are _unsequenced_ with regard to the
+prints of `01` and `02` that occur in the second thread, since they have no
+sequenced-before arrows connecting the boxes together.
+
+Note that these diagrams are **not** a representation of multiple things that
+_could_ happen at runtime — instead, this diagram describes exactly what _did_
+happen when the program ran once. This distinction is key, because it highlights
+that even the lowest-level representation of a program’s execution does not have
 a global ordering between threads; those two disconnected chains are all there
 is.
 
@@ -128,8 +132,8 @@ Thread 1     data     Thread 2
 ╰──────╯    └────┘    ╰──────╯
 ```
 
-That is, both threads read the same value of `0` from `data`, with no relative
-ordering between them.
+That is, both threads read the same value of `0` from `data`, and the two
+operations are unsequenced — they have no relative ordering between them.
 
 That’s reads done, so we’ll look at the other kind of data access next: writes.
 We’ll also return to a single thread for now, just to keep things simple.

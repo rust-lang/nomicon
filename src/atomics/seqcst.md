@@ -229,7 +229,7 @@ assert!(c || d);
 ```
 
 As there are four `SeqCst` operations with a partial order between two pairs in
-them (caused by the sequenced before relation), there are six possible
+them (caused by the sequenced-before relation), there are six possible
 executions of this program:
 
 - All of `c`’s loads precede `d`’s loads:
@@ -277,7 +277,7 @@ subtly-defined subset of happens-before relations. In particular, it excludes
 two situations:
 
 1. The `SeqCst` operation A synchronizes-with an `Acquire` or `AcqRel` operation
-   B which is sequenced before another `SeqCst` operation C. Here, despite the
+   B which is sequenced-before another `SeqCst` operation C. Here, despite the
    fact that A happens-before C, A does not _strongly_ happen-before C and so is
    there not guaranteed to precede C in _S_.
 2. The `SeqCst` operation A is sequenced-before the `Release` or `AcqRel`
@@ -298,9 +298,9 @@ asterisks:
 ```
 
 A happens-before, but does not strongly happen-before, C — and anything
-sequenced after C will have the same treatment (unless more synchronization is
+sequenced-after C will have the same treatment (unless more synchronization is
 used). This means that C is actually allowed to _precede_ A in _S_, despite
-conceptually occuring after it. However, anything sequenced before A, because
+conceptually occuring after it. However, anything sequenced-before A, because
 there is at least one sequence on either side of the synchronization, will
 strongly happen-before C.
 
@@ -333,7 +333,7 @@ C and A) but C also doesn’t happen-before it (to avoid coherence getting in th
 way) — and to do that, all we have to do is have C appear before a `SeqCst`
 operation D in the modification order of another atomic, but have D be a store
 so as to avoid C synchronizing with it, and then our desired load E can simply
-be sequenced after D (this will carry over the “precedes in _S_” guarantee, but
+be sequenced-after D (this will carry over the “precedes in _S_” guarantee, but
 does not restore the happens-after relation to C since that was already dropped
 by having D be a store).
 

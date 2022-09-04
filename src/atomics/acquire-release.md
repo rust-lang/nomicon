@@ -196,7 +196,7 @@ Thread 1      a     Thread 2  ┃  Thread 1      a     Thread 2
 
 These arrows are a new kind of arrow we haven’t seen yet; they are known as
 _happens-before_ (or happens-after) relations and are represented as thin arrows
-(→) on these diagrams. They are weaker than the _sequenced before_
+(→) on these diagrams. They are weaker than the _sequenced-before_
 double-arrows (⇒) that occur inside a single thread, but can still be used with
 the coherence rules to determine which values of a memory location are valid to
 read.
@@ -207,8 +207,8 @@ operation) we say that the release operation _synchronized-with_ the acquire
 operation, which in doing so establishes that the release operation
 _happens-before_ the acquire operation. Therefore, we can say that in the first
 possible execution, Thread 1’s `store` synchronizes-with Thread 2’s `load`,
-which causes that `store` and everything sequenced before it to happen-before
-the `load` and everything sequenced after it.
+which causes that `store` and everything sequenced-before it to happen-before
+the `load` and everything sequenced-after it.
 
 > More formally, we can say that A happens-before B if any of the following
 > conditions are true:
