@@ -1,3 +1,0 @@
-# Signals
-
-(and compiler fences)
