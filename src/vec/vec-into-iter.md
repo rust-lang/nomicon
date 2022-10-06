@@ -49,7 +49,6 @@ pub struct IntoIter<T> {
     cap: usize,
     start: *const T,
     end: *const T,
-    _marker: PhantomData<T>,
 }
 ```
 
@@ -80,7 +79,6 @@ impl<T> IntoIterator for Vec<T> {
                 } else {
                     ptr.as_ptr().add(len)
                 },
-                _marker: PhantomData,
             }
         }
     }

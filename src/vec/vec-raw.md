@@ -13,7 +13,6 @@ allocating, growing, and freeing:
 struct RawVec<T> {
     ptr: NonNull<T>,
     cap: usize,
-    _marker: PhantomData<T>,
 }
 
 unsafe impl<T: Send> Send for RawVec<T> {}
@@ -25,7 +24,6 @@ impl<T> RawVec<T> {
         RawVec {
             ptr: NonNull::dangling(),
             cap: 0,
-            _marker: PhantomData,
         }
     }
 
