@@ -22,9 +22,11 @@ pub fn insert(&mut self, index: usize, elem: T) {
 
     unsafe {
         // ptr::copy(src, dest, len): "copy from src to dest len elems"
-        ptr::copy(self.ptr.as_ptr().add(index),
-                  self.ptr.as_ptr().add(index + 1),
-                  self.len - index);
+        ptr::copy(
+            self.ptr.as_ptr().add(index),
+            self.ptr.as_ptr().add(index + 1),
+            self.len - index,
+        );
         ptr::write(self.ptr.as_ptr().add(index), elem);
         self.len += 1;
     }
@@ -42,9 +44,11 @@ pub fn remove(&mut self, index: usize) -> T {
     unsafe {
         self.len -= 1;
         let result = ptr::read(self.ptr.as_ptr().add(index));
-        ptr::copy(self.ptr.as_ptr().add(index + 1),
-                  self.ptr.as_ptr().add(index),
-                  self.len - index);
+        ptr::copy(
+            self.ptr.as_ptr().add(index + 1),
+            self.ptr.as_ptr().add(index),
+            self.len - index,
+        );
         result
     }
 }
