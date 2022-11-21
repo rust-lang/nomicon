@@ -17,7 +17,7 @@ pub struct Vec<T> {
 
 And indeed this would compile. Unfortunately, it would be too strict. The
 compiler will give us too strict variance. So a `&Vec<&'static str>`
-couldn't be used where an `&Vec<&'a str>` was expected. See [the chapter
+couldn't be used where a `&Vec<&'a str>` was expected. See [the chapter
 on ownership and lifetimes][ownership] for all the details on variance.
 
 As we saw in the ownership chapter, the standard library uses `Unique<T>` in place of
