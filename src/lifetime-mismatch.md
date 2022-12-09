@@ -65,7 +65,7 @@ fn main() {
 
 The lifetime system is forced to extend the `&mut foo` to have lifetime `'c`,
 due to the lifetime of `loan` and `mutate_and_share`'s signature. Then when we
-try to call `share`, and it sees we're trying to alias that `&'c mut foo` and
+try to call `share`, it sees we're trying to alias that `&'c mut foo` and
 blows up in our face!
 
 This program is clearly correct according to the reference semantics we actually
