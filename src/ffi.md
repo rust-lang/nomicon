@@ -659,7 +659,8 @@ Certain Rust types are defined to never be `null`. This includes references (`&T
 `&mut T`), boxes (`Box<T>`), and function pointers (`extern "abi" fn()`). When
 interfacing with C, pointers that might be `null` are often used, which would seem to
 require some messy `transmute`s and/or unsafe code to handle conversions to/from Rust types.
-However, the language provides a workaround.
+However, trying to construct/work with these invalid values **is undefined behavior**,
+so you should use the following workaround instead.
 
 As a special case, an `enum` is eligible for the "nullable pointer optimization" if it contains
 exactly two variants, one of which contains no data and the other contains a field of one of the
