@@ -293,7 +293,7 @@ We name the file as `call_rust.c` and place it on the crate root.
 Run the following to compile:
 
 ```sh
-gcc call_rust.c -o call_rust -lrust_from_c -L./target/debug
+gcc call_rust.c -o call_rust -l rust_from_c -L./target/debug
 ```
 
 `-l` and `-L` tell gcc to find our Rust library.
