@@ -250,7 +250,7 @@ fn main() {
         inspector: None,
         days: Box::new(1),
     };
-    world.inspector = Some(Inspector(&world.days, "gatget"));
+    world.inspector = Some(Inspector(&world.days, "gadget"));
 }
 ```
 
