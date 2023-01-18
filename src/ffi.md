@@ -721,17 +721,20 @@ No `transmute` required!
 
 ## FFI and unwinding
 
-It’s important to be mindful of unwinding when working with FFI. Each
-non-`Rust` ABI comes in two variants, one with `-unwind` suffix and one without. If
-you expect Rust `panic`s or foreign (e.g. C++) exceptions to cross an FFI
-boundary, that boundary must use the appropriate `-unwind` ABI string (note
-that compiling with `panic=abort` will still cause `panic!` to immediately
-abort the process, regardless of which ABI is specified by the function that
-`panic`s).
+It’s important to be mindful of unwinding when working with FFI. Most
+ABI strings come in two variants, one with an `-unwind` suffix and one without.
+The `Rust` ABI always permits unwinding, so there is no `Rust-unwind` ABI.
 
+If you expect Rust `panic`s or foreign (e.g. C++) exceptions to cross an FFI
+boundary, that boundary must use the appropriate `-unwind` ABI string.
 Conversely, if you do not expect unwinding to cross an ABI boundary, use one of
-the non-`unwind` ABI strings (other than `Rust`, which always permits
-unwinding). If an unwinding operation does encounter an ABI boundary that is
+the non-`unwind` ABI strings.
+
+> Note: Compiling with `panic=abort` will still cause `panic!` to immediately
+abort the process, regardless of which ABI is specified by the function that
+`panic`s.
+
+If an unwinding operation does encounter an ABI boundary that is
 not permitted to unwind, the behavior depends on the source of the unwinding
 (Rust `panic` or a foreign exception):
 
