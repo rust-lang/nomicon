@@ -187,6 +187,10 @@ some sense "fundamental". All the others can be understood by analogy to the oth
 * `*const T` follows the logic of `&T`
 * `*mut T` follows the logic of `&mut T` (or `UnsafeCell<T>`)
 
+Note that type `T` itself can be a reference to another type. So the type
+`&'a mut T` could be `&'a mut &'b str`. In this case, the lifetime `'a` would be
+*covariant* while the lifetime `'b` would be part of the type `T` and thus *invariant*.
+
 For more types, see the ["Variance" section][variance-table] on the reference.
 
 [variance-table]: ../reference/subtyping.html#variance
@@ -267,10 +271,11 @@ So with lifetimes, we want to take a long-lived thing, convert it into a
 short-lived thing, and then use that to write something that doesn't live long
 enough into the place expecting something long-lived.
 
-Here it is:
+Here is the example from above using lifetimes. For clarity, we will explictly
+spell out the elided lifetime of `input`:
 
 ```rust,compile_fail
-fn evil_feeder<T>(input: &mut T, val: T) {
+fn evil_feeder<'c, T>(input: &'c mut T, val: T) {
     *input = val;
 }
 
@@ -306,7 +311,7 @@ Good, it doesn't compile! Let's break down what's happening here in detail.
 First let's look at the new `evil_feeder` function:
 
 ```rust
-fn evil_feeder<T>(input: &mut T, val: T) {
+fn evil_feeder<'c, T>(input: &'c mut T, val: T) {
     *input = val;
 }
 ```
@@ -315,9 +320,10 @@ All it does is take a mutable reference and a value and overwrite the referent w
 What's important about this function is that it creates a type equality constraint. It
 clearly says in its signature the referent and the value must be the *exact same* type.
 
-Meanwhile, in the caller we pass in `&mut &'static str` and `&'spike_str str`.
+Meanwhile, in the caller we pass in `&'c mut &'static str` as `input` and
+`&'spike_str str` as `val`.
 
-Because `&mut T` is invariant over `T`, the compiler concludes it can't apply any subtyping
+Because `&'a mut T` is invariant over `T`, the compiler concludes it can't apply any subtyping
 to the first argument, and so `T` must be exactly `&'static str`.
 
 The other argument is only an `&'a str`, which *is* covariant over `'a`. So the compiler
@@ -333,13 +339,13 @@ So even though references are covariant over their lifetimes, they "inherit" inv
 whenever they're put into a context that could do something bad with that. In this case,
 we inherited invariance as soon as we put our reference inside an `&mut T`.
 
-As it turns out, the argument for why it's ok for Box (and Vec, Hashmap, etc.) to
-be covariant is pretty similar to the argument for why it's ok for
+As it turns out, the argument for why it's ok for `Box` (and `Vec`, `HashMap`, etc.)
+to be covariant is pretty similar to the argument for why it's ok for
 lifetimes to be covariant: as soon as you try to stuff them in something like a
 mutable reference, they inherit invariance and you're prevented from doing anything
 bad.
 
-However Box makes it easier to focus on by-value aspect of references that we
+However `Box` makes it easier to focus on by-value aspect of references that we
 partially glossed over.
 
 Unlike a lot of languages which allow values to be freely aliased at all times,
@@ -359,7 +365,7 @@ pet = spike;
 ```
 
 There is no problem at all with the fact that we have forgotten that `mr_snuggles` was a Cat,
-or that we overwrote him with a Dog, because as soon as we moved mr_snuggles to a variable
+or that we overwrote him with a Dog, because as soon as we moved `mr_snuggles` to a variable
 that only knew he was an Animal, **we destroyed the only thing in the universe that
 remembered he was a Cat**!
 
@@ -425,9 +431,9 @@ over `A` is exactly `a`'s variance over `A`.
 
 However if `A` is used in multiple fields:
 
-* If all uses of `A` are covariant, then MyType is covariant over `A`
-* If all uses of `A` are contravariant, then MyType is contravariant over `A`
-* Otherwise, MyType is invariant over `A`
+* If all uses of `A` are covariant, then `MyType` is covariant over `A`
+* If all uses of `A` are contravariant, then `MyType` is contravariant over `A`
+* Otherwise, `MyType` is invariant over `A`
 
 ```rust
 use std::cell::Cell;
