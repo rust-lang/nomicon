@@ -339,7 +339,7 @@ lifetimes to be covariant: as soon as you try to stuff them in something like a
 mutable reference, they inherit invariance and you're prevented from doing anything
 bad.
 
-However Box makes it easier to focus on by-value aspect of references that we
+However, Box makes it easier to focus on the by-value aspect of references that we
 partially glossed over.
 
 Unlike a lot of languages which allow values to be freely aliased at all times,
