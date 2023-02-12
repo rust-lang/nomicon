@@ -94,6 +94,7 @@ to the heap.
 use std::{
     mem::{align_of, size_of},
     ptr,
+    cmp::max,
 };
 
 struct Carton<T>(ptr::NonNull<T>);
@@ -105,8 +106,8 @@ impl<T> Carton<T> {
         let mut memptr: *mut T = ptr::null_mut();
         unsafe {
             let ret = libc::posix_memalign(
-                (&mut memptr).cast(),
-                align_of::<T>(),
+                (&mut memptr as *mut *mut T).cast(),
+                max(align_of::<T>(), size_of::<usize>()),
                 size_of::<T>()
             );
             assert_eq!(ret, 0, "Failed to allocate or invalid alignment");
