@@ -89,8 +89,7 @@ Now, let's wrap this all up inside the `Drop` implementation:
 ```rust,ignore
 impl<T> Drop for Arc<T> {
     fn drop(&mut self) {
-        let inner = unsafe { self.ptr.as_ref() };
-        if inner.rc.fetch_sub(1, Ordering::Release) != 1 {
+        if unsafe { self.ptr.as_ref() }.rc.fetch_sub(1, Ordering::Release) != 1 {
             return;
         }
         // This fence is needed to prevent reordering of the use and deletion
