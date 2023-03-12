@@ -258,7 +258,7 @@ pub extern "C" fn hello_from_rust() {
 # fn main() {}
 ```
 
-The `extern "C"` makes this function adhere to the C calling convention, as discussed above in "[Foreign Calling Conventions]".
+The `extern "C"` makes this function adhere to the C calling convention, as discussed below in "[Foreign Calling Conventions]".
 The `no_mangle` attribute turns off Rust's name mangling, so that it has a well defined symbol to link to.
 
 Then, to compile Rust code as a shared library that can be called from C, add the following to your `Cargo.toml`:
