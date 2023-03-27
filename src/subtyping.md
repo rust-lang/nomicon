@@ -335,7 +335,7 @@ we inherited invariance as soon as we put our reference inside an `&mut T`.
 
 As it turns out, the argument for why it's ok for Box (and Vec, Hashmap, etc.) to
 be covariant is pretty similar to the argument for why it's ok for
-lifetimes to be covariant: as soon as you try to stuff them in something like a
+references to be covariant: as soon as you try to stuff them in something like a
 mutable reference, they inherit invariance and you're prevented from doing anything
 bad.
 
