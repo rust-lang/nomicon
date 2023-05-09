@@ -29,6 +29,9 @@ Locking and unlocking is simple with our layout; Make sure the mutex is in the c
             ).is_err{
                 panic!("Unlock called while the lock was not locked")
             };
+            
+            fence(Ordering::Acquire);//prevent writes to the data protected by the mutex 
+            //from being reordered before the mutex is actually acquired.
         }
     }
 
