@@ -17,7 +17,8 @@ boundaries.
 Given a function, any output lifetimes that don't derive from inputs are
 unbounded. For instance:
 
-```rust
+<!-- no_run: This example exhibits undefined behavior. -->
+```rust,no_run
 fn get_str<'a>(s: *const String) -> &'a str {
     unsafe { &*s }
 }
