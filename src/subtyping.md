@@ -12,7 +12,7 @@ Let's start with an example.
 ```rust
 // Note: debug expects two parameters with the *same* lifetime
 fn debug<'a>(a: &'a str, b: &'a str) {
-    println!("a = {:?} b = {:?}", a, b);
+    println!("a = {a:?} b = {b:?}");
 }
 
 fn main() {
@@ -25,7 +25,7 @@ fn main() {
 }
 ```
 
-In a conservative implementation of lifetimes, since `hello` and `world` have differing lifetimes,
+In a conservative implementation of lifetimes, since `hello` and `world` have different lifetimes,
 we might see the following error:
 
 ```text
@@ -72,12 +72,12 @@ so we need to understand how this stuff really works, and how we can mess it up.
 Going back to our example above, we can say that `'static <: 'world`.
 For now, let's also accept the idea that subtypes of lifetimes can be passed through references
 (more on this in [Variance](#variance)),
-_e.g._ `&'static str` is a subtype of `&'world str`, then we can let a `&'static str` "downgrade" into a `&'world str`.
+_e.g._ `&'static str` is a subtype of `&'world str`, then we can "downgrade" `&'static str` into a `&'world str`.
 With that, the example above will compile:
 
 ```rust
-fn debug<T: std::fmt::Debug>(a: T, b: T) {
-    println!("a = {:?} b = {:?}", a, b);
+fn debug<'a>(a: &'a str, b: &'a str) {
+    println!("a = {a:?} b = {b:?}");
 }
 
 fn main() {
@@ -95,7 +95,7 @@ fn main() {
 Above, we glossed over the fact that `'static <: 'b` implied that `&'static T <: &'b T`. This uses a property known as _variance_.
 It's not always as simple as this example, though. To understand that, let's try to extend this example a bit:
 
-```rust,compile_fail
+```rust,compile_fail,E0597
 fn assign<T>(input: &mut T, val: T) {
     *input = val;
 }
@@ -106,7 +106,7 @@ fn main() {
         let world = String::from("world");
         assign(&mut hello, &world);
     }
-    println!("{}", hello); // use after free 😿
+    println!("{hello}"); // use after free 😿
 }
 ```
 
@@ -177,7 +177,7 @@ For more types, see the ["Variance" section][variance-table] on the reference.
 Now that we have some more formal understanding of variance,
 let's go through some more examples in more detail.
 
-```rust,compile_fail
+```rust,compile_fail,E0597
 fn assign<T>(input: &mut T, val: T) {
     *input = val;
 }
@@ -188,7 +188,7 @@ fn main() {
         let world = String::from("world");
         assign(&mut hello, &world);
     }
-    println!("{}", hello);
+    println!("{hello}");
 }
 ```
 
@@ -230,7 +230,7 @@ This is counter to the `&T` case:
 
 ```rust
 fn debug<T: std::fmt::Debug>(a: T, b: T) {
-    println!("a = {:?} b = {:?}", a, b);
+    println!("a = {a:?} b = {b:?}");
 }
 ```
 
