@@ -24,7 +24,7 @@ We do this using `PhantomData`, which is a special marker type. `PhantomData`
 consumes no space, but simulates a field of the given type for the purpose of
 static analysis. This was deemed to be less error-prone than explicitly telling
 the type-system the kind of variance that you want, while also providing other
-useful things such as the information needed by drop check.
+useful things such as auto traits and the information needed by drop check.
 
 Iter logically contains a bunch of `&'a T`s, so this is exactly what we tell
 the `PhantomData` to simulate:
@@ -234,14 +234,14 @@ standard library made a utility for itself called `Unique<T>` which:
 
 Here’s a table of all the wonderful ways `PhantomData` could be used:
 
-| Phantom type                | `'a`      | `T`                       |
-|-----------------------------|-----------|---------------------------|
-| `PhantomData<T>`            | -         | covariant (with drop check) |
-| `PhantomData<&'a T>`        | covariant | covariant                 |
-| `PhantomData<&'a mut T>`    | covariant | invariant                 |
-| `PhantomData<*const T>`     | -         | covariant                 |
-| `PhantomData<*mut T>`       | -         | invariant                 |
-| `PhantomData<fn(T)>`        | -         | contravariant             |
-| `PhantomData<fn() -> T>`    | -         | covariant                 |
-| `PhantomData<fn(T) -> T>`   | -         | invariant                 |
-| `PhantomData<Cell<&'a ()>>` | invariant | -                         |
+| Phantom type                | `'a`      | `T`                         | `Send`    | `Sync`    |
+|-----------------------------|-----------|-----------------------------|-----------|-----------|
+| `PhantomData<T>`            | -         | covariant (with drop check) | `T: Send` | `T: Sync` |
+| `PhantomData<&'a T>`        | covariant | covariant                   | `T: Sync` | `T: Sync` |
+| `PhantomData<&'a mut T>`    | covariant | invariant                   | `T: Send` | `T: Sync` |
+| `PhantomData<*const T>`     | -         | covariant                   | -         | -         |
+| `PhantomData<*mut T>`       | -         | invariant                   | -         | -         |
+| `PhantomData<fn(T)>`        | -         | contravariant               | `Send`    | `Sync`    |
+| `PhantomData<fn() -> T>`    | -         | covariant                   | `Send`    | `Sync`    |
+| `PhantomData<fn(T) -> T>`   | -         | invariant                   | `Send`    | `Sync`    |
+| `PhantomData<Cell<&'a ()>>` | invariant | -                           | `Send`    | -         |
