@@ -194,7 +194,7 @@ pub fn scoped<'a, F>(f: F) -> JoinGuard<'a>
 ```
 
 Here `f` is some closure for the other thread to execute. Saying that
-`F: Send +'a` is saying that it closes over data that lives for `'a`, and it
+`F: Send + 'a` is saying that it closes over data that lives for `'a`, and it
 either owns that data or the data was Sync (implying `&data` is Send).
 
 Because JoinGuard has a lifetime, it keeps all the data it closes over
