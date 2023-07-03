@@ -161,9 +161,9 @@ impl<'a, T> Hole<'a, T> {
         unsafe {
             let elt = ptr::read(&data[pos]);
             Hole {
-                data: data,
+                data,
                 elt: Some(elt),
-                pos: pos,
+                pos,
             }
         }
     }

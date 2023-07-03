@@ -134,10 +134,10 @@ impl<T> Rc<T> {
             // Wouldn't it be nice if heap::allocate worked like this?
             let ptr = heap::allocate::<RcBox<T>>();
             ptr::write(ptr, RcBox {
-                data: data,
+                data,
                 ref_count: 1,
             });
-            Rc { ptr: ptr }
+            Rc { ptr }
         }
     }
 

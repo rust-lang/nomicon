@@ -23,7 +23,7 @@ impl<T> RawVec<T> {
         // `NonNull::dangling()` doubles as "unallocated" and "zero-sized allocation"
         RawVec {
             ptr: NonNull::dangling(),
-            cap: cap,
+            cap,
         }
     }
 
