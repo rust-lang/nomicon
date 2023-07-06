@@ -166,7 +166,7 @@ impl<T> Vec<T> {
             self.len = 0;
 
             Drain {
-                iter: iter,
+                iter,
                 vec: PhantomData,
             }
         }
@@ -203,7 +203,7 @@ impl<T> IntoIterator for Vec<T> {
             mem::forget(self);
 
             IntoIter {
-                iter: iter,
+                iter,
                 _buf: buf,
             }
         }

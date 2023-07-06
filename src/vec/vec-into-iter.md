@@ -71,7 +71,7 @@ impl<T> IntoIterator for Vec<T> {
         unsafe {
             IntoIter {
                 buf: ptr,
-                cap: cap,
+                cap,
                 start: ptr.as_ptr(),
                 end: if cap == 0 {
                     // can't offset off this pointer, it's not allocated!
