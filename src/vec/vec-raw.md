@@ -131,23 +131,21 @@ impl<T> IntoIterator for Vec<T> {
     type Item = T;
     type IntoIter = IntoIter<T>;
     fn into_iter(self) -> IntoIter<T> {
-        unsafe {
-            // need to use ptr::read to unsafely move the buf out since it's
-            // not Copy, and Vec implements Drop (so we can't destructure it).
-            let buf = ptr::read(&self.buf);
-            let len = self.len;
-            mem::forget(self);
+        // need to use ptr::read to unsafely move the buf out since it's
+        // not Copy, and Vec implements Drop (so we can't destructure it).
+        let buf = unsafe { ptr::read(&self.buf) };
+        let len = self.len;
+        mem::forget(self);
 
-            IntoIter {
-                start: buf.ptr.as_ptr(),
-                end: if buf.cap == 0 {
-                    // can't offset off of a pointer unless it's part of an allocation
-                    buf.ptr.as_ptr()
-                } else {
-                    buf.ptr.as_ptr().add(len)
-                },
-                _buf: buf,
-            }
+        IntoIter {
+            start: buf.ptr.as_ptr(),
+            end: if buf.cap == 0 {
+                // can't offset off of a pointer unless it's part of an allocation
+                buf.ptr.as_ptr()
+            } else {
+                unsafe { buf.ptr.as_ptr().add(len) }
+            },
+            _buf: buf,
         }
     }
 }
