@@ -127,7 +127,7 @@ impl<T> Vec<T> {
 
     pub fn insert(&mut self, index: usize, elem: T) {
         assert!(index <= self.len, "index out of bounds");
-        if self.cap() == self.len {
+        if self.len == self.cap() {
             self.buf.grow();
         }
 

@@ -18,7 +18,7 @@ pub fn insert(&mut self, index: usize, elem: T) {
     // Note: `<=` because it's valid to insert after everything
     // which would be equivalent to push.
     assert!(index <= self.len, "index out of bounds");
-    if self.cap == self.len { self.grow(); }
+    if self.len == self.cap { self.grow(); }
 
     unsafe {
         // ptr::copy(src, dest, len): "copy from src to dest len elems"
