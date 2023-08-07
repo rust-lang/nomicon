@@ -234,14 +234,18 @@ standard library made a utility for itself called `Unique<T>` which:
 
 Here’s a table of all the wonderful ways `PhantomData` could be used:
 
-| Phantom type                | `'a`      | `T`                         | `Send`    | `Sync`    |
-|-----------------------------|-----------|-----------------------------|-----------|-----------|
-| `PhantomData<T>`            | -         | covariant (with drop check) | `T: Send` | `T: Sync` |
-| `PhantomData<&'a T>`        | covariant | covariant                   | `T: Sync` | `T: Sync` |
-| `PhantomData<&'a mut T>`    | covariant | invariant                   | `T: Send` | `T: Sync` |
-| `PhantomData<*const T>`     | -         | covariant                   | -         | -         |
-| `PhantomData<*mut T>`       | -         | invariant                   | -         | -         |
-| `PhantomData<fn(T)>`        | -         | contravariant               | `Send`    | `Sync`    |
-| `PhantomData<fn() -> T>`    | -         | covariant                   | `Send`    | `Sync`    |
-| `PhantomData<fn(T) -> T>`   | -         | invariant                   | `Send`    | `Sync`    |
-| `PhantomData<Cell<&'a ()>>` | invariant | -                           | `Send`    | -         |
+| Phantom type                | variance of `'a` | variance of `T`   | `Send`/`Sync`<br/>(or lack thereof)       | dangling `'a` or `T` in drop glue<br/>(_e.g._, `#[may_dangle] Drop`) |
+|-----------------------------|:----------------:|:-----------------:|:-----------------------------------------:|:------------------------------------------------:|
+| `PhantomData<T>`            | -                | **cov**ariant     | inherited                                 | disallowed ("owns `T`")                          |
+| `PhantomData<&'a T>`        | **cov**ariant    | **cov**ariant     | `Send + Sync`<br/>requires<br/>`T : Sync` | allowed                                          |
+| `PhantomData<&'a mut T>`    | **cov**ariant    | **inv**ariant     | inherited                                 | allowed                                          |
+| `PhantomData<*const T>`     | -                | **cov**ariant     | `!Send + !Sync`                           | allowed                                          |
+| `PhantomData<*mut T>`       | -                | **inv**ariant     | `!Send + !Sync`                           | allowed                                          |
+| `PhantomData<fn(T)>`        | -                | **contra**variant | `Send + Sync`                             | allowed                                          |
+| `PhantomData<fn() -> T>`    | -                | **cov**ariant     | `Send + Sync`                             | allowed                                          |
+| `PhantomData<fn(T) -> T>`   | -                | **inv**ariant     | `Send + Sync`                             | allowed                                          |
+| `PhantomData<Cell<&'a ()>>` | **inv**ariant    | -                 | `Send + !Sync`                            | allowed                                          |
+
+  - Note: opting out of the `Unpin` auto-trait requires the dedicated [`PhantomPinned`] type instead.
+
+[`PhantomPinned`]: ../core/marker/struct.PhantomPinned.html
