@@ -110,6 +110,11 @@ When a type already has a `Drop impl`, **adding an extra `_owns_T: PhantomData<T
 is thus _superfluous_ and accomplishes nothing**, dropck-wise (it still affects variance
 and auto-traits).
 
+  - (advanced edge case: if the type containing the `PhantomData` has no `Drop` impl at all,
+    but still has drop glue (by having _another_ field with drop glue), then the
+    dropck/`#[may_dangle]` considerations mentioned herein do apply as well: a `PhantomData<T>`
+    field will then require `T` to be droppable whenever the containing type goes out of scope).
+
 ___
 
 But this situation can sometimes lead to overly restrictive code. That's why the
