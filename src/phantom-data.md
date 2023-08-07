@@ -106,7 +106,9 @@ that that `Vec<T>` _owns_ values of type `T` (more precisely: may use values of 
 in its `Drop` implementation), and Rust will thus not allow them to _dangle_ should a
 `Vec<T>` be dropped.
 
-**Adding an extra `_owns_T: PhantomData<T>` field is thus _superfluous_ and accomplishes nothing**.
+When a type already has a `Drop impl`, **adding an extra `_owns_T: PhantomData<T>` field
+is thus _superfluous_ and accomplishes nothing**, dropck-wise (it still affects variance
+and auto-traits).
 
 ___
 
