@@ -586,6 +586,7 @@ are:
 * `aapcs`
 * `cdecl`
 * `fastcall`
+* `thiscall`
 * `vectorcall`
 This is currently hidden behind the `abi_vectorcall` gate and is subject to change.
 * `Rust`
