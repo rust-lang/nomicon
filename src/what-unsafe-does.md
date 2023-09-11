@@ -71,7 +71,7 @@ Rust considers it "safe" to:
 * Deadlock
 * Have a [race condition][race]
 * Leak memory
-* Overflow integers
+* Overflow integers (with the built-in operators such as `+` etc.)
 * Abort the program
 * Delete the production database
 
