@@ -71,7 +71,6 @@ Rust considers it "safe" to:
 * Deadlock
 * Have a [race condition][race]
 * Leak memory
-* Fail to call destructors
 * Overflow integers
 * Abort the program
 * Delete the production database
