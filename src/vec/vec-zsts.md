@@ -1,13 +1,13 @@
 # Handling Zero-Sized Types
 
 It's time. We're going to fight the specter that is zero-sized types. Safe Rust
-*never* needs to care about this, but Vec is very intensive on raw pointers and
+_never_ needs to care about this, but Vec is very intensive on raw pointers and
 raw allocations, which are exactly the two things that care about
 zero-sized types. We need to be careful of two things:
 
-* The raw allocator API has undefined behavior if you pass in 0 for an
+- The raw allocator API has undefined behavior if you pass in 0 for an
   allocation size.
-* raw pointer offsets are no-ops for zero-sized types, which will break our
+- raw pointer offsets are no-ops for zero-sized types, which will break our
   C-style pointer iterator.
 
 Thankfully we abstracted out pointer-iterators and allocating handling into
@@ -30,6 +30,7 @@ Due to our current architecture, all this means is writing 3 guards, one in each
 method of `RawVec`.
 
 <!-- ignore: simplified code -->
+
 ```rust,ignore
 impl<T> RawVec<T> {
     fn new() -> Self {
@@ -108,6 +109,7 @@ nothing. The current solution to this is to cast the pointers to integers,
 increment, and then cast them back:
 
 <!-- ignore: simplified code -->
+
 ```rust,ignore
 impl<T> RawValIter<T> {
     unsafe fn new(slice: &[T]) -> Self {
@@ -126,12 +128,13 @@ impl<T> RawValIter<T> {
 ```
 
 Now we have a different bug. Instead of our iterators not running at all, our
-iterators now run *forever*. We need to do the same trick in our iterator impls.
+iterators now run _forever_. We need to do the same trick in our iterator impls.
 Also, our size_hint computation code will divide by 0 for ZSTs. Since we'll
 basically be treating the two pointers as if they point to bytes, we'll just
 map size 0 to divide by 1. Here's what `next` will be:
 
 <!-- ignore: simplified code -->
+
 ```rust,ignore
 fn next(&mut self) -> Option<T> {
     if self.start == self.end {
@@ -152,13 +155,13 @@ fn next(&mut self) -> Option<T> {
 
 Do you see the "bug"? No one else did! The original author only noticed the
 problem when linking to this page years later. This code is kind of dubious
-because abusing the iterator pointers to be *counters* makes them unaligned!
-Our *one job* when using ZSTs is to keep pointers aligned! *forehead slap*
+because abusing the iterator pointers to be _counters_ makes them unaligned!
+Our _one job_ when using ZSTs is to keep pointers aligned! _forehead slap_
 
 Raw pointers don't need to be aligned at all times, so the basic trick of
-using pointers as counters is *fine*, but they *should* definitely be aligned
-when passed to `ptr::read`! This is *possibly* needless pedantry
-because `ptr::read` is a noop for a ZST, but let's be a *little* more
+using pointers as counters is _fine_, but they _should_ definitely be aligned
+when passed to `ptr::read`! This is _possibly_ needless pedantry
+because `ptr::read` is a noop for a ZST, but let's be a _little_ more
 responsible and read from `NonNull::dangling` on the ZST path.
 
 (Alternatively you could call `read_unaligned` on the ZST path. Either is fine,
@@ -166,6 +169,7 @@ because either way we're making up a value from nothing and it all compiles
 to doing nothing.)
 
 <!-- ignore: simplified code -->
+
 ```rust,ignore
 impl<T> Iterator for RawValIter<T> {
     type Item = T;
@@ -215,8 +219,6 @@ impl<T> DoubleEndedIterator for RawValIter<T> {
 
 And that's it. Iteration works!
 
-And that's it. Iteration works!
-
 One last thing that we need to take into account, is that now when our vec gets dropped it deallocates the memory that was allocated during the time our vec was alive. With ZSTs we did not allocate any memory, and infact we never do. So right now we have unsoundness in our code where we still try deallocate a `NonNull::dangling()` ptr that we use to simulate the ZST in our vec, This means that we would cause an undefined behaviour if we try to deallocate something that we never allocated (obviously and for the right reasons). Lets fix tha, in our raw_vec we are going to tweak our Drop trait and check that we deallocate only types that are sized.
 
 ```rust,ignore
@@ -232,4 +234,3 @@ impl<T> Drop for RawVec<T> {
     }
 }
 ```
-
