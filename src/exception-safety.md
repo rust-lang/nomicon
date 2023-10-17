@@ -172,7 +172,7 @@ impl<'a, T> Hole<'a, T> {
 
     fn removed(&self) -> &T { self.elt.as_ref().unwrap() }
 
-    unsafe fn get(&self, index: usize) -> &T { &self.data[index] }
+    fn get(&self, index: usize) -> &T { &self.data[index] }
 
     unsafe fn move_to(&mut self, index: usize) {
         let index_ptr: *const _ = &self.data[index];
