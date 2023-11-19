@@ -21,14 +21,18 @@ We can update the atomic reference count as follows:
 let old_rc = inner.rc.fetch_add(1, Ordering::???);
 ```
 
-But what ordering should we use here? We don't really have any code that will
-need atomic synchronization when cloning, as we do not modify the internal value
-while cloning. Thus, we can use a Relaxed ordering here, which implies no
-happens-before relationship but is atomic. When `Drop`ping the Arc, however,
-we'll need to atomically synchronize when decrementing the reference count. This
-is described more in [the section on the `Drop` implementation for
-`Arc`](arc-drop.md). For more information on atomic relationships and Relaxed
-ordering, see [the section on atomics](../atomics.md).
+But what ordering should we use here? We don't really have any code
+that will need atomic synchronization when cloning, as we do not
+modify the internal value while cloning. Additionally, we already know
+the reference count is at least one, by virtue of having a
+`&Arc<T>`--and it will stay that way in sound code as long as that
+reference still lives. Thus, we can use a Relaxed ordering here, which
+implies no happens-before relationship but is atomic. When `Drop`ping
+the Arc, however, we'll need to atomically synchronize when
+decrementing the reference count. This is described more in [the
+section on the `Drop` implementation for `Arc`](arc-drop.md). For more
+information on atomic relationships and Relaxed ordering, see [the
+section on atomics](../atomics.md).
 
 Thus, the code becomes this:
 
