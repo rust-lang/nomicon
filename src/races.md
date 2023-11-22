@@ -6,26 +6,28 @@ Safe Rust guarantees an absence of data races, which are defined as:
 * one or more of them is a write
 * one or more of them is unsynchronized
 
-A data race has Undefined Behavior, and is therefore impossible to perform
-in Safe Rust. Data races are *mostly* prevented through Rust's ownership system:
+A data race has Undefined Behavior, and is therefore impossible to perform in
+Safe Rust. Data races are *mostly* prevented through Rust's ownership system:
 it's impossible to alias a mutable reference, so it's impossible to perform a
 data race. Interior mutability makes this more complicated, which is largely why
-we have the Send and Sync traits (see below).
+we have the Send and Sync traits (see the next section for more on this).
 
 **However Rust does not prevent general race conditions.**
 
-This is pretty fundamentally impossible, and probably honestly undesirable. Your
-hardware is racy, your OS is racy, the other programs on your computer are racy,
-and the world this all runs in is racy. Any system that could genuinely claim to
-prevent *all* race conditions would be pretty awful to use, if not just
-incorrect.
+This is mathematically impossible in situations where you do not control the
+scheduler, which is true for the normal OS environment. If you do control
+preemption, it _can be_ possible to prevent general races - this technique is
+used by frameworks such as [RTIC](https://github.com/rtic-rs/rtic). However,
+actually having control over scheduling is a very uncommon case.
 
-So it's perfectly "fine" for a Safe Rust program to get deadlocked or do
-something nonsensical with incorrect synchronization. Obviously such a program
-isn't very good, but Rust can only hold your hand so far. Still, a race
-condition can't violate memory safety in a Rust program on its own. Only in
-conjunction with some other unsafe code can a race condition actually violate
-memory safety. For instance:
+For this reason, it is considered "safe" for Rust to get deadlocked or do
+something nonsensical with incorrect synchronization: this is known as a general
+race condition or resource race. Obviously such a program isn't very good, but
+Rust of course cannot prevent all logic errors.
+
+In any case, a race condition cannot violate memory safety in a Rust program on
+its own. Only in conjunction with some other unsafe code can a race condition
+actually violate memory safety. For instance, a correct program looks like this:
 
 ```rust,no_run
 use std::thread;
@@ -57,6 +59,9 @@ thread::spawn(move || {
 // thread execution.
 println!("{}", data[idx.load(Ordering::SeqCst)]);
 ```
+
+We can cause a data race if we instead do the bound check in advance, and then
+unsafely access the data with an unchecked value:
 
 ```rust,no_run
 use std::thread;
