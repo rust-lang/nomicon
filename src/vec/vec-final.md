@@ -127,7 +127,7 @@ impl<T> Vec<T> {
 
     pub fn insert(&mut self, index: usize, elem: T) {
         assert!(index <= self.len, "index out of bounds");
-        if self.cap() == self.len {
+        if self.len == self.cap() {
             self.buf.grow();
         }
 
@@ -138,14 +138,17 @@ impl<T> Vec<T> {
                 self.len - index,
             );
             ptr::write(self.ptr().add(index), elem);
-            self.len += 1;
         }
+
+        self.len += 1;
     }
 
     pub fn remove(&mut self, index: usize) -> T {
         assert!(index < self.len, "index out of bounds");
+
+        self.len -= 1;
+
         unsafe {
-            self.len -= 1;
             let result = ptr::read(self.ptr().add(index));
             ptr::copy(
                 self.ptr().add(index + 1),
@@ -157,18 +160,16 @@ impl<T> Vec<T> {
     }
 
     pub fn drain(&mut self) -> Drain<T> {
-        unsafe {
-            let iter = RawValIter::new(&self);
+        let iter = unsafe { RawValIter::new(&self) };
 
-            // this is a mem::forget safety thing. If Drain is forgotten, we just
-            // leak the whole Vec's contents. Also we need to do this *eventually*
-            // anyway, so why not do it now?
-            self.len = 0;
+        // this is a mem::forget safety thing. If Drain is forgotten, we just
+        // leak the whole Vec's contents. Also we need to do this *eventually*
+        // anyway, so why not do it now?
+        self.len = 0;
 
-            Drain {
-                iter: iter,
-                vec: PhantomData,
-            }
+        Drain {
+            iter,
+            vec: PhantomData,
         }
     }
 }
@@ -197,15 +198,15 @@ impl<T> IntoIterator for Vec<T> {
     type Item = T;
     type IntoIter = IntoIter<T>;
     fn into_iter(self) -> IntoIter<T> {
-        unsafe {
-            let iter = RawValIter::new(&self);
-            let buf = ptr::read(&self.buf);
-            mem::forget(self);
+        let (iter, buf) = unsafe {
+            (RawValIter::new(&self), ptr::read(&self.buf))
+        };
 
-            IntoIter {
-                iter: iter,
-                _buf: buf,
-            }
+        mem::forget(self);
+
+        IntoIter {
+            iter,
+            _buf: buf,
         }
     }
 }

@@ -68,18 +68,16 @@ impl<T> IntoIterator for Vec<T> {
         let cap = vec.cap;
         let len = vec.len;
 
-        unsafe {
-            IntoIter {
-                buf: ptr,
-                cap: cap,
-                start: ptr.as_ptr(),
-                end: if cap == 0 {
-                    // can't offset off this pointer, it's not allocated!
-                    ptr.as_ptr()
-                } else {
-                    ptr.as_ptr().add(len)
-                },
-            }
+        IntoIter {
+            buf: ptr,
+            cap,
+            start: ptr.as_ptr(),
+            end: if cap == 0 {
+                // can't offset off this pointer, it's not allocated!
+                ptr.as_ptr()
+            } else {
+                unsafe { ptr.as_ptr().add(len) }
+            },
         }
     }
 }

@@ -40,7 +40,6 @@ we get the same results as using `Unique<T>`:
 
 ```rust
 use std::ptr::NonNull;
-use std::marker::PhantomData;
 
 pub struct Vec<T> {
     ptr: NonNull<T>,
