@@ -310,9 +310,7 @@ thread_local! {
 
 /// saves the input given into a thread local `Vec<&'static str>`
 fn store(input: &'static str) {
-    StaticVecs.with(|v| {
-        v.borrow_mut().push(input);
-    })
+    StaticVecs.with_borrow_mut(|v| v.push(input));
 }
 
 /// Calls the function with it's input (must have the same lifetime!)
@@ -332,9 +330,8 @@ fn main() {
         demo(&smuggle, store);
     }
 
-    StaticVecs.with(|v| {
-        println!("{:?}", v.borrow()); // use after free 😿
-    });
+    // use after free 😿
+    StaticVecs.with_borrow(|v| println!("{v:?}"));
 }
 ```
 
