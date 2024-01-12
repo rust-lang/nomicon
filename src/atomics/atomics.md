@@ -87,7 +87,7 @@ For instance, say we convince the compiler to emit this logic:
 ```text
 initial state: x = 0, y = 1
 
-THREAD 1        THREAD2
+THREAD 1        THREAD 2
 y = 3;          if x == 1 {
 x = 1;              y *= 2;
                 }

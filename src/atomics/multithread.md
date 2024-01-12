@@ -24,7 +24,7 @@ The Abstract Machine has a few properties that are essential to understand:
 	that intentionally produce these executions like [Loom] and [Miri].
 1. Its model is highly formalized and not representative of what goes on
 	underneath. Because C++ needs to be defined by a formal specification and
-	not just hand-wavy rules about “this is what allowed and this is what
+	not just hand-wavy rules about “this is what is allowed and this is what
 	isn’t”, the Abstract Machine defines things in a very mathematical and,
 	well, _abstract_, way; instead of saying things like “the compiler is
 	allowed to do X” it will find a way to define the system such that the
@@ -247,7 +247,7 @@ above the `2`:
 
 Now to sort out the read operation in the middle. We can use the same rule as
 before to trace up to the first write and rule out us reading either the `0`
-value or the garbage that exists between it and `1`, but how to we choose
+value or the garbage that exists between it and `1`, but how do we choose
 between the `1` and the `2`? Well, as it turns out there is a complement to the
 rule we already defined which gives us the exact answer we need:
 

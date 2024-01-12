@@ -26,7 +26,7 @@ impl<T> Mutex<T> {
 ```
 
 Now for the lock function. We need to use an RMW here, since we need to both
-check whether it is locked and lock it if is not in a single atomic step; this
+check whether it is locked and lock it if it isn’t in a single atomic step; this
 can be most simply done with a `compare_exchange` (unlike before, it doesn’t
 need to be in a loop this time). For the ordering, we’ll just use `Relaxed`
 since we don’t know of any others yet.
@@ -158,7 +158,7 @@ case that doesn’t seem to be enough, since even if atomics were used it still
 would have the _option_ of reading `0` instead of `1`, and really if we want our
 mutex to be sane, it should only be able to read `1`.
 
-So it seems that want we _want_ is to be able to apply the coherence rules from
+So it seems that what we _want_ is to be able to apply the coherence rules from
 before to completely rule out zero from the set of the possible values — if we
 were able to draw a large arrow from the Thread 1’s `+= 1;` to Thread 2’s
 `guard`, then we could trivially then use the rule to rule out `0` as a value
@@ -256,7 +256,7 @@ We now can trace back along the reverse direction of arrows from the `guard`
 bubble to the `+= 1` bubble; we have established that Thread 2’s load
 happens-after the `+= 1` side effect, because Thread 2’s CAS synchronizes-with
 Thread 1’s store. This both avoids the data race and gives the guarantee that
-`1` will be always read by Thread 2 (as long as locks after Thread 1, of
+`1` will be always read by Thread 2 (as long as it locks after Thread 1, of
 course).
 
 However, that is not the only execution of the program possible. Even with this

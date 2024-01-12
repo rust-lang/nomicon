@@ -279,7 +279,7 @@ two situations:
 1. The `SeqCst` operation A synchronizes-with an `Acquire` or `AcqRel` operation
    B which is sequenced-before another `SeqCst` operation C. Here, despite the
    fact that A happens-before C, A does not _strongly_ happen-before C and so is
-   there not guaranteed to precede C in _S_.
+   not guaranteed to precede C in _S_.
 2. The `SeqCst` operation A is sequenced-before the `Release` or `AcqRel`
    operation B, which synchronizes-with another `SeqCst` operation C. Similarly,
    despite the fact that A happens-before C, A might not precede C in _S_.
