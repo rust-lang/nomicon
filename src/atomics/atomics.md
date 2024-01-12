@@ -105,10 +105,12 @@ However there's a third potential state that the hardware enables:
 * `y = 2`: (thread 2 saw `x = 1`, but not `y = 3`, and then overwrote `y = 3`)
 
 It's worth noting that different kinds of CPU provide different guarantees. It
-is common to separate hardware into two categories: strongly-ordered and weakly-ordered.
-Most notably x86/64 provides strong ordering guarantees, while ARM
-provides weak ordering guarantees. This has two consequences for concurrent
-programming:
+is common to separate hardware into two categories: strongly-ordered and
+weakly-ordered, where strongly-ordered hardware implements weak orderings like
+`Relaxed` using strong orderings like `Acquire`, while weakly-ordered hardware
+makes use of the optimization potential that weak orderings like `Relaxed` give.
+Most notably, x86/64 provides strong ordering guarantees, while ARM provides
+weak ordering guarantees. This has two consequences for concurrent programming:
 
 * Asking for stronger guarantees on strongly-ordered hardware may be cheap or
   even free because they already provide strong guarantees unconditionally.
