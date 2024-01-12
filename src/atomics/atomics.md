@@ -13,9 +13,11 @@ received some bugfixes since then.)
 Trying to fully explain the model in this book is fairly hopeless. It's defined
 in terms of madness-inducing causality graphs that require a full book to
 properly understand in a practical way. If you want all the nitty-gritty
-details, you should check out the [C++ specification][C++-model].
-Still, we'll try to cover the basics and some of the problems Rust developers
-face.
+details, you should check out the [C++ specification][C++-model] —
+note that Rust atomics correspond to C++’s `atomic_ref`, since Rust allows
+accessing atomics via non-atomic operations when it is safe to do so.
+In this section we aim to give an informal overview of the topic to cover the
+common problems that Rust developers face.
 
 ## Motivation
 
