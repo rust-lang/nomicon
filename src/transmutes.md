@@ -2,7 +2,7 @@
 
 Get out of our way type system! We're going to reinterpret these bits or die
 trying! Even though this book is all about doing things that are unsafe, I
-really can't emphasize that you should deeply think about finding Another Way
+really can't emphasize enough that you should deeply think about finding Another Way
 than the operations covered in this section. This is really, truly, the most
 horribly unsafe thing you can do in Rust. The guardrails here are dental floss.
 

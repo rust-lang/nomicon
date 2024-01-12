@@ -65,7 +65,7 @@ fn main() {
 
 The lifetime system is forced to extend the `&mut foo` to have lifetime `'c`,
 due to the lifetime of `loan` and `mutate_and_share`'s signature. Then when we
-try to call `share`, and it sees we're trying to alias that `&'c mut foo` and
+try to call `share`, it sees we're trying to alias that `&'c mut foo` and
 blows up in our face!
 
 This program is clearly correct according to the reference semantics we actually
@@ -74,9 +74,9 @@ care about, but the lifetime system is too coarse-grained to handle that.
 ## Improperly reduced borrows
 
 The following code fails to compile, because Rust sees that a variable, `map`,
-is borrowed twice, and can not infer that the first borrow stops to be needed
+is borrowed twice, and can not infer that the first borrow ceases to be needed
 before the second one occurs. This is caused by Rust conservatively falling back
-to using a whole scope for the first borow. This will eventually get fixed.
+to using a whole scope for the first borrow. This will eventually get fixed.
 
 ```rust,compile_fail
 # use std::collections::HashMap;

@@ -11,7 +11,7 @@ Unsafe Rust gives us a powerful tool to handle this problem:
 [`MaybeUninit`]. This type can be used to handle memory that has not been fully
 initialized yet.
 
-With `MaybeUninit`, we can initialize an array element-for-element as follows:
+With `MaybeUninit`, we can initialize an array element by element as follows:
 
 ```rust
 use std::mem::{self, MaybeUninit};
@@ -79,8 +79,7 @@ This code proceeds in three steps:
    acknowledge that by providing appropriate methods).
 
 It's worth spending a bit more time on the loop in the middle, and in particular
-the assignment operator and its interaction with `drop`. If we would have
-written something like:
+the assignment operator and its interaction with `drop`. If we wrote something like:
 
 <!-- ignore: simplified code -->
 ```rust,ignore
@@ -88,7 +87,7 @@ written something like:
 ```
 
 we would actually overwrite a `Box<u32>`, leading to `drop` of uninitialized
-data, which will cause much sadness and pain.
+data, which would cause much sadness and pain.
 
 The correct alternative, if for some reason we cannot use `MaybeUninit::new`, is
 to use the [`ptr`] module. In particular, it provides three functions that allow
@@ -97,7 +96,7 @@ us to assign bytes to a location in memory without dropping the old value:
 
 * `ptr::write(ptr, val)` takes a `val` and moves it into the address pointed
   to by `ptr`.
-* `ptr::copy(src, dest, count)` copies the bits that `count` T's would occupy
+* `ptr::copy(src, dest, count)` copies the bits that `count` T items would occupy
   from src to dest. (this is equivalent to C's memmove -- note that the argument
   order is reversed!)
 * `ptr::copy_nonoverlapping(src, dest, count)` does what `copy` does, but a
@@ -105,8 +104,8 @@ us to assign bytes to a location in memory without dropping the old value:
   (this is equivalent to C's memcpy -- note that the argument order is reversed!)
 
 It should go without saying that these functions, if misused, will cause serious
-havoc or just straight up Undefined Behavior. The only things that these
-functions *themselves* require is that the locations you want to read and write
+havoc or just straight up Undefined Behavior. The only requirement of these
+functions *themselves* is that the locations you want to read and write
 are allocated and properly aligned. However, the ways writing arbitrary bits to
 arbitrary locations of memory can break things are basically uncountable!
 

@@ -134,10 +134,10 @@ impl<T> Rc<T> {
             // Wouldn't it be nice if heap::allocate worked like this?
             let ptr = heap::allocate::<RcBox<T>>();
             ptr::write(ptr, RcBox {
-                data: data,
+                data,
                 ref_count: 1,
             });
-            Rc { ptr: ptr }
+            Rc { ptr }
         }
     }
 
@@ -194,7 +194,7 @@ pub fn scoped<'a, F>(f: F) -> JoinGuard<'a>
 ```
 
 Here `f` is some closure for the other thread to execute. Saying that
-`F: Send +'a` is saying that it closes over data that lives for `'a`, and it
+`F: Send + 'a` is saying that it closes over data that lives for `'a`, and it
 either owns that data or the data was Sync (implying `&data` is Send).
 
 Because JoinGuard has a lifetime, it keeps all the data it closes over

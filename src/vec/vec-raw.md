@@ -13,7 +13,6 @@ allocating, growing, and freeing:
 struct RawVec<T> {
     ptr: NonNull<T>,
     cap: usize,
-    _marker: PhantomData<T>,
 }
 
 unsafe impl<T: Send> Send for RawVec<T> {}
@@ -25,23 +24,17 @@ impl<T> RawVec<T> {
         RawVec {
             ptr: NonNull::dangling(),
             cap: 0,
-            _marker: PhantomData,
         }
     }
 
     fn grow(&mut self) {
-        let (new_cap, new_layout) = if self.cap == 0 {
-            (1, Layout::array::<T>(1).unwrap())
-        } else {
-            // This can't overflow because we ensure self.cap <= isize::MAX.
-            let new_cap = 2 * self.cap;
+        // This can't overflow because we ensure self.cap <= isize::MAX.
+        let new_cap = if self.cap == 0 { 1 } else { 2 * self.cap };
 
-            // Layout::array checks that the number of bytes is <= usize::MAX,
-            // but this is redundant since old_layout.size() <= isize::MAX,
-            // so the `unwrap` should never fail.
-            let new_layout = Layout::array::<T>(new_cap).unwrap();
-            (new_cap, new_layout)
-        };
+        // Layout::array checks that the number of bytes is <= usize::MAX,
+        // but this is redundant since old_layout.size() <= isize::MAX,
+        // so the `unwrap` should never fail.
+        let new_layout = Layout::array::<T>(new_cap).unwrap();
 
         // Ensure that the new allocation doesn't exceed `isize::MAX` bytes.
         assert!(new_layout.size() <= isize::MAX as usize, "Allocation too large");
@@ -138,23 +131,21 @@ impl<T> IntoIterator for Vec<T> {
     type Item = T;
     type IntoIter = IntoIter<T>;
     fn into_iter(self) -> IntoIter<T> {
-        unsafe {
-            // need to use ptr::read to unsafely move the buf out since it's
-            // not Copy, and Vec implements Drop (so we can't destructure it).
-            let buf = ptr::read(&self.buf);
-            let len = self.len;
-            mem::forget(self);
+        // need to use ptr::read to unsafely move the buf out since it's
+        // not Copy, and Vec implements Drop (so we can't destructure it).
+        let buf = unsafe { ptr::read(&self.buf) };
+        let len = self.len;
+        mem::forget(self);
 
-            IntoIter {
-                start: buf.ptr.as_ptr(),
-                end: if buf.cap == 0 {
-                    // can't offset off of a pointer unless it's part of an allocation
-                    buf.ptr.as_ptr()
-                } else {
-                    buf.ptr.as_ptr().add(len)
-                },
-                _buf: buf,
-            }
+        IntoIter {
+            start: buf.ptr.as_ptr(),
+            end: if buf.cap == 0 {
+                // can't offset off of a pointer unless it's part of an allocation
+                buf.ptr.as_ptr()
+            } else {
+                unsafe { buf.ptr.as_ptr().add(len) }
+            },
+            _buf: buf,
         }
     }
 }

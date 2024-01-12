@@ -258,7 +258,7 @@ pub extern "C" fn hello_from_rust() {
 # fn main() {}
 ```
 
-The `extern "C"` makes this function adhere to the C calling convention, as discussed above in "[Foreign Calling Conventions]".
+The `extern "C"` makes this function adhere to the C calling convention, as discussed below in "[Foreign Calling Conventions]".
 The `no_mangle` attribute turns off Rust's name mangling, so that it has a well defined symbol to link to.
 
 Then, to compile Rust code as a shared library that can be called from C, add the following to your `Cargo.toml`:
@@ -586,6 +586,7 @@ are:
 * `aapcs`
 * `cdecl`
 * `fastcall`
+* `thiscall`
 * `vectorcall`
 This is currently hidden behind the `abi_vectorcall` gate and is subject to change.
 * `Rust`
@@ -659,7 +660,8 @@ Certain Rust types are defined to never be `null`. This includes references (`&T
 `&mut T`), boxes (`Box<T>`), and function pointers (`extern "abi" fn()`). When
 interfacing with C, pointers that might be `null` are often used, which would seem to
 require some messy `transmute`s and/or unsafe code to handle conversions to/from Rust types.
-However, the language provides a workaround.
+However, trying to construct/work with these invalid values **is undefined behavior**,
+so you should use the following workaround instead.
 
 As a special case, an `enum` is eligible for the "nullable pointer optimization" if it contains
 exactly two variants, one of which contains no data and the other contains a field of one of the
@@ -720,17 +722,20 @@ No `transmute` required!
 
 ## FFI and unwinding
 
-It’s important to be mindful of unwinding when working with FFI. Each
-non-`Rust` ABI comes in two variants, one with `-unwind` suffix and one without. If
-you expect Rust `panic`s or foreign (e.g. C++) exceptions to cross an FFI
-boundary, that boundary must use the appropriate `-unwind` ABI string (note
-that compiling with `panic=abort` will still cause `panic!` to immediately
-abort the process, regardless of which ABI is specified by the function that
-`panic`s).
+It’s important to be mindful of unwinding when working with FFI. Most
+ABI strings come in two variants, one with an `-unwind` suffix and one without.
+The `Rust` ABI always permits unwinding, so there is no `Rust-unwind` ABI.
 
+If you expect Rust `panic`s or foreign (e.g. C++) exceptions to cross an FFI
+boundary, that boundary must use the appropriate `-unwind` ABI string.
 Conversely, if you do not expect unwinding to cross an ABI boundary, use one of
-the non-`unwind` ABI strings (other than `Rust`, which always permits
-unwinding). If an unwinding operation does encounter an ABI boundary that is
+the non-`unwind` ABI strings.
+
+> Note: Compiling with `panic=abort` will still cause `panic!` to immediately
+abort the process, regardless of which ABI is specified by the function that
+`panic`s.
+
+If an unwinding operation does encounter an ABI boundary that is
 not permitted to unwind, the behavior depends on the source of the unwinding
 (Rust `panic` or a foreign exception):
 

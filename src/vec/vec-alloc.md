@@ -28,7 +28,6 @@ impl<T> Vec<T> {
             ptr: NonNull::dangling(),
             len: 0,
             cap: 0,
-            _marker: PhantomData,
         }
     }
 }

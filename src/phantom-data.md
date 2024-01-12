@@ -24,7 +24,7 @@ We do this using `PhantomData`, which is a special marker type. `PhantomData`
 consumes no space, but simulates a field of the given type for the purpose of
 static analysis. This was deemed to be less error-prone than explicitly telling
 the type-system the kind of variance that you want, while also providing other
-useful things such as the information needed by drop check.
+useful things such as auto traits and the information needed by drop check.
 
 Iter logically contains a bunch of `&'a T`s, so this is exactly what we tell
 the `PhantomData` to simulate:
@@ -106,7 +106,14 @@ that that `Vec<T>` _owns_ values of type `T` (more precisely: may use values of 
 in its `Drop` implementation), and Rust will thus not allow them to _dangle_ should a
 `Vec<T>` be dropped.
 
-**Adding an extra `_owns_T: PhantomData<T>` field is thus _superfluous_ and accomplishes nothing**.
+When a type already has a `Drop impl`, **adding an extra `_owns_T: PhantomData<T>` field
+is thus _superfluous_ and accomplishes nothing**, dropck-wise (it still affects variance
+and auto-traits).
+
+  - (advanced edge case: if the type containing the `PhantomData` has no `Drop` impl at all,
+    but still has drop glue (by having _another_ field with drop glue), then the
+    dropck/`#[may_dangle]` considerations mentioned herein do apply as well: a `PhantomData<T>`
+    field will then require `T` to be droppable whenever the containing type goes out of scope).
 
 ___
 
@@ -234,14 +241,18 @@ standard library made a utility for itself called `Unique<T>` which:
 
 Here’s a table of all the wonderful ways `PhantomData` could be used:
 
-| Phantom type                | `'a`      | `T`                       |
-|-----------------------------|-----------|---------------------------|
-| `PhantomData<T>`            | -         | covariant (with drop check) |
-| `PhantomData<&'a T>`        | covariant | covariant                 |
-| `PhantomData<&'a mut T>`    | covariant | invariant                 |
-| `PhantomData<*const T>`     | -         | covariant                 |
-| `PhantomData<*mut T>`       | -         | invariant                 |
-| `PhantomData<fn(T)>`        | -         | contravariant             |
-| `PhantomData<fn() -> T>`    | -         | covariant                 |
-| `PhantomData<fn(T) -> T>`   | -         | invariant                 |
-| `PhantomData<Cell<&'a ()>>` | invariant | -                         |
+| Phantom type                | variance of `'a` | variance of `T`   | `Send`/`Sync`<br/>(or lack thereof)       | dangling `'a` or `T` in drop glue<br/>(_e.g._, `#[may_dangle] Drop`) |
+|-----------------------------|:----------------:|:-----------------:|:-----------------------------------------:|:------------------------------------------------:|
+| `PhantomData<T>`            | -                | **cov**ariant     | inherited                                 | disallowed ("owns `T`")                          |
+| `PhantomData<&'a T>`        | **cov**ariant    | **cov**ariant     | `Send + Sync`<br/>requires<br/>`T : Sync` | allowed                                          |
+| `PhantomData<&'a mut T>`    | **cov**ariant    | **inv**ariant     | inherited                                 | allowed                                          |
+| `PhantomData<*const T>`     | -                | **cov**ariant     | `!Send + !Sync`                           | allowed                                          |
+| `PhantomData<*mut T>`       | -                | **inv**ariant     | `!Send + !Sync`                           | allowed                                          |
+| `PhantomData<fn(T)>`        | -                | **contra**variant | `Send + Sync`                             | allowed                                          |
+| `PhantomData<fn() -> T>`    | -                | **cov**ariant     | `Send + Sync`                             | allowed                                          |
+| `PhantomData<fn(T) -> T>`   | -                | **inv**ariant     | `Send + Sync`                             | allowed                                          |
+| `PhantomData<Cell<&'a ()>>` | **inv**ariant    | -                 | `Send + !Sync`                            | allowed                                          |
+
+  - Note: opting out of the `Unpin` auto-trait requires the dedicated [`PhantomPinned`] type instead.
+
+[`PhantomPinned`]: ../core/marker/struct.PhantomPinned.html
