@@ -68,7 +68,7 @@ Vec and Box make use of intrinsics that require their pointers to be non-null at
 Rust is otherwise quite permissive with respect to other dubious operations.
 Rust considers it "safe" to:
 
-* Deadlock
+* [Deadlock][Deadlocked]
 * Have a [race condition][race]
 * Leak memory
 * Overflow integers (with the built-in operators such as `+` etc.)
@@ -84,3 +84,4 @@ these problems are considered impractical to categorically prevent.
 [race]: races.html
 [target features]: ../reference/attributes/codegen.html#the-target_feature-attribute
 [`NonNull`]: ../std/ptr/struct.NonNull.html
+[Deadlocked]: https://geometry-dash.fandom.com/wiki/Deadlocked
