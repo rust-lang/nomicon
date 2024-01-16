@@ -36,8 +36,8 @@ Then create a new file at the root of your workspace, named `build.rs`.
 ```rust
 // build.rs
 fn main() {
-    println!("cargo:rustc-link-lib=dylib=stdc++");
-    println!("cargo:rustc-link-search=<YOUR SNAPPY LIBRARY PATH>");
+    println!("cargo:rustc-link-lib=dylib=stdc++");
+    println!("cargo:rustc-link-search=<YOUR SNAPPY LIBRARY PATH>");
 }
 ```
 
