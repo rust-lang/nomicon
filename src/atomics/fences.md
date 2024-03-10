@@ -230,25 +230,25 @@ Namely, the power of `SeqCst` fences can be summarized in three points:
 
 The “motivating use-case” for `SeqCst` demonstrated in the `SeqCst` chapter can
 also be rewritten to use exclusively `SeqCst` fences and `Relaxed` operations,
-by inserting fences in between the loads in threads `c` and `d`:
+by inserting fences in between the operations in the two threads:
 
 ```text
-     a        static X         c               d        static Y         b
-╭─────────╮   ┌───────┐   ╭─────────╮     ╭─────────╮   ┌───────┐   ╭─────────╮
-│ store X ├─┐ │ false │ ┌─┤ load X  │     │ load Y  ├─┐ │ false │ ┌─┤ store Y │
-╰─────────╯ │ └───────┘ │ ╰────╥────╯     ╰────╥────╯ │ └───────┘ │ ╰─────────╯
-            └─┬───────┐ │ ╭────⇓────╮     ╭────⇓────╮ │ ┌───────┬─┘
-              │ true  ├─┘ │ *fence* │     │ *fence* │ └─┤ true  │
-              └───────┘   ╰────╥────╯     ╰────╥────╯   └───────┘
-                          ╭────⇓────╮     ╭────⇓────╮
-                          │ load Y  ├─? ?─┤ load X  │
-                          ╰─────────╯     ╰─────────╯
+     a        static X    static Y         b
+╭─────────╮   ┌───────┐   ┌───────┐   ╭─────────╮
+│ store X ├─┐ │ false │   │ false │ ┌─┤ store Y │
+╰────╥────╯ │ └───────┘   └───────┘ │ ╰────╥────╯
+╭────⇓────╮ └─┬───────┐   ┌───────┬─┘ ╭────⇓────╮
+│ *fence* │   │ true  │   │ true  │   │ *fence* │
+╰────╥────╯   └───────┘   └───────┘   ╰────╥────╯
+╭────⇓────╮                           ╭────⇓────╮
+│ load Y  ├─?                       ?─┤ load X  │
+╰─────────╯                           ╰─────────╯
 ```
 
 There are two executions to consider here, depending on which way round the
-fences appear in _S_. Should `c`’s fence appear first, the fence–fence `SeqCst`
-guarantee tells us that `c`’s load of `X` is not coherence-ordered-after `d`’s
-load of `X`, which forbids `d`’s load of `X` from seeing the value `false`. The
+fences appear in _S_. Should `a`’s fence appear first, the fence–fence `SeqCst`
+guarantee tells us that `b`’s load of `X` is not coherence-ordered-after `a`’s
+store of `X`, which forbids `b`’s load of `X` from seeing the value `false`. The
 same logic can be applied should the fences appear the other way around, proving
 that at least one thread must load `true` in the end.
 

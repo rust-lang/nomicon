@@ -12,10 +12,8 @@ behind it are, and it gets really ugly really fast as soon as you try to mix it
 with any other ordering.
 
 To understand `SeqCst`, we first have to understand the problem it exists to
-solve. The first complexity is that this problem can only be observed in the
-presence of at least four different threads _and_ two separate atomic variables;
-anything less and it’s not possible to notice a difference. The common example
-used to show where weaker orderings produce counterintuitive results is this:
+solve. A simple example used to show where weaker orderings produce
+counterintuitive results is this:
 
 ```rust
 # use std::sync::atomic::{self, AtomicBool};
@@ -29,56 +27,48 @@ const ORDERING: atomic::Ordering = atomic::Ordering::Relaxed;
 static X: AtomicBool = AtomicBool::new(false);
 static Y: AtomicBool = AtomicBool::new(false);
 
-let a = thread::spawn(|| { X.store(true, ORDERING) });
-let b = thread::spawn(|| { Y.store(true, ORDERING) });
-let c = thread::spawn(|| { while !X.load(ORDERING) {} Y.load(ORDERING) });
-let d = thread::spawn(|| { while !Y.load(ORDERING) {} X.load(ORDERING) });
+let a = thread::spawn(|| { X.store(true, ORDERING); Y.load(ORDERING) });
+let b = thread::spawn(|| { Y.store(true, ORDERING); X.load(ORDERING) });
 
 let a = a.join().unwrap();
 let b = b.join().unwrap();
-let c = c.join().unwrap();
-let d = d.join().unwrap();
 
 # return;
 // This assert is allowed to fail.
-assert!(c || d);
+assert!(a || b);
 ```
 
 The basic setup of this code, for all of its possible executions, looks like
 this:
 
 ```text
-     a        static X         c               d        static Y         b
-╭─────────╮   ┌───────┐   ╭─────────╮     ╭─────────╮   ┌───────┐   ╭─────────╮
-│ store X ├─┐ │ false │ ┌─┤ load X  │     │ load Y  ├─┐ │ false │ ┌─┤ store Y │
-╰─────────╯ │ └───────┘ │ ╰────╥────╯     ╰────╥────╯ │ └───────┘ │ ╰─────────╯
-            └─┬───────┐ │ ╭────⇓────╮     ╭────⇓────╮ │ ┌───────┬─┘
-              │ true  ├─┘ │ load Y  ├─? ?─┤ load X  │ └─┤ true  │
-              └───────┘   ╰─────────╯     ╰─────────╯   └───────┘
+     a        static X    static Y         b
+╭─────────╮   ┌───────┐   ┌───────┐   ╭─────────╮
+│ store X ├─┐ │ false │   │ false │ ┌─┤ store Y │
+╰────╥────╯ │ └───────┘   └───────┘ │ ╰────╥────╯
+╭────⇓────╮ └─┬───────┐   ┌───────┬─┘ ╭────⇓────╮
+│ load Y  ├─? │ true  │   │ true  │ ?─┤ load X  │
+╰─────────╯   └───────┘   └───────┘   ╰─────────╯
 ```
 
-In other words, `a` and `b` are guaranteed to, at some point, store `true` into
-`X` and `Y` respectively, and `c` and `d` are guaranteed to, at some point, load
-those values of `true` from `X` and `Y` (there could also be an arbitrary number
-of loads of `false` by `c` and `d`, but they’ve been omitted since they don’t
-actually affect the execution at all). The question now is when `c` and `d` load
-from `Y` and `X` respectively, is it possible for them _both_ to load `false`?
+In other words, `a` and `b` are guaranteed to store `true` into `X` and `Y`
+respectively, and then attempt to load from the other thread’s atomic. The
+question now is: is it possible for them _both_ to load `false`?
 
 And looking at this diagram, there’s absolutely no reason why not. There isn’t
-even a single arrow connecting the left and right hand sides so far, so the load
-has no coherence-based restrictions on which value it is allowed to pick — and
-this goes for both sides equally, so we could end up with an execution like
-this:
+even a single arrow connecting the left and right hand sides so far, so the
+loads have no coherence-based restrictions on which values they are allowed to
+pick, and we could end up with an execution like this:
 
 ```text
-     a        static X         c             d        static Y         b
-╭─────────╮   ┌───────┐   ╭─────────╮   ╭─────────╮   ┌───────┐   ╭─────────╮
-│ store X ├─┐ │ false ├┐ ┌┤ load X  │   │ load Y  ├┐ ┌┤ false │ ┌─┤ store Y │
-╰─────────╯ │ └───────┘│ │╰────╥────╯   ╰────╥────╯│ │└───────┘ │ ╰─────────╯
-            └─┬───────┐└─│─────║──────┐┌─────║─────│─┘┌───────┬─┘
-              │ true  ├──┘╭────⇓────╮┌─┘╭────⇓────╮└──┤ true  │
-              └───────┘   │ load Y  ├┘└─┤ load X  │   └───────┘
-                          ╰─────────╯   ╰─────────╯
+     a        static X    static Y         b
+╭─────────╮   ┌───────┐   ┌───────┐   ╭─────────╮
+│ store X ├┐  │ false ├─┐┌┤ false │  ┌┤ store Y │
+╰────╥────╯│  └───────┘┌─┘└───────┘  │╰────╥────╯
+     ║     │ ┌─────────┘└───────────┐│     ║
+╭────⇓────╮└─│┬───────┐   ┌───────┬─│┘╭────⇓────╮
+│ load Y  ├──┘│ true  │   │ true  │ └─┤ load X  │
+╰─────────╯   └───────┘   └───────┘   ╰─────────╯
 ```
 
 Which results in a failed assert. This execution is brought about because the
@@ -178,16 +168,16 @@ make that execution invalid. As a refresher, here’s the framework for every
 possible execution of the program:
 
 ```text
-     a        static X         c               d        static Y         b
-╭─────────╮   ┌───────┐   ╭─────────╮     ╭─────────╮   ┌───────┐   ╭─────────╮
-│ store X ├─┐ │ false │ ┌─┤ load X  │     │ load Y  ├─┐ │ false │ ┌─┤ store Y │
-╰─────────╯ │ └───────┘ │ ╰────╥────╯     ╰────╥────╯ │ └───────┘ │ ╰─────────╯
-            └─┬───────┐ │ ╭────⇓────╮     ╭────⇓────╮ │ ┌───────┬─┘
-              │ true  ├─┘ │ load Y  ├─? ?─┤ load X  │ └─┤ true  │
-              └───────┘   ╰─────────╯     ╰─────────╯   └───────┘
+     a        static X    static Y         b
+╭─────────╮   ┌───────┐   ┌───────┐   ╭─────────╮
+│ store X ├─┐ │ false │   │ false │ ┌─┤ store Y │
+╰────╥────╯ │ └───────┘   └───────┘ │ ╰────╥────╯
+╭────⇓────╮ └─┬───────┐   ┌───────┬─┘ ╭────⇓────╮
+│ load Y  ├─? │ true  │   │ true  │ ?─┤ load X  │
+╰─────────╯   └───────┘   └───────┘   ╰─────────╯
 ```
 
-First of all, both the final loads (`c` and `d`’s second operations) need to
+First of all, both the final loads (`a` and `b`’s second operations) need to
 become `SeqCst`, because they need to be aware of the total ordering that
 determines whether `X` or `Y` becomes `true` first. And secondly, we need to
 establish that ordering in the first place, and that needs to be done by making
@@ -195,77 +185,74 @@ sure that there is always one operation in _S_ that both sees one of the atomics
 as `true` and precedes both final loads in _S_, so that the coherence ordering
 guarantee will apply (the final loads themselves don’t work for this since
 although they “know” that their corresponding atomic is `true` they don’t
-interact with it directly so _S_ doesn’t care).
-
-There are two operations in the program that could fulfill the first condition,
-should they be made `SeqCst`: the stores of `true` and the first loads. However,
-the second condition ends up ruling out using the stores, since in order to make
-sure that they precede the final loads in _S_ it would be necessary to have the
-first loads be `SeqCst` anyway (due to the mixed-`SeqCst` special case detailed
-later), so in the end we can just leave them as `Relaxed`.
+interact with it directly so _S_ doesn’t care) — for this, we must set both
+stores to use the `SeqCst` ordering.
 
 This leaves us with the correct version of the above program, which is
 guaranteed to never panic:
 
 ```rust
-# use std::sync::atomic::{AtomicBool, Ordering::{Relaxed, SeqCst}};
+# use std::sync::atomic::{self, AtomicBool};
 use std::thread;
+
+const ORDERING: atomic::Ordering = atomic::Ordering::SeqCst;
 
 static X: AtomicBool = AtomicBool::new(false);
 static Y: AtomicBool = AtomicBool::new(false);
 
-let a = thread::spawn(|| { X.store(true, Relaxed) });
-let b = thread::spawn(|| { Y.store(true, Relaxed) });
-let c = thread::spawn(|| { while !X.load(SeqCst) {} Y.load(SeqCst) });
-let d = thread::spawn(|| { while !Y.load(SeqCst) {} X.load(SeqCst) });
+let a = thread::spawn(|| { X.store(true, ORDERING); Y.load(ORDERING) });
+let b = thread::spawn(|| { Y.store(true, ORDERING); X.load(ORDERING) });
 
 let a = a.join().unwrap();
 let b = b.join().unwrap();
-let c = c.join().unwrap();
-let d = d.join().unwrap();
 
+# return;
 // This assert is **not** allowed to fail.
-assert!(c || d);
+assert!(a || b);
 ```
 
 As there are four `SeqCst` operations with a partial order between two pairs in
 them (caused by the sequenced-before relation), there are six possible
 executions of this program:
 
-- All of `c`’s loads precede `d`’s loads:
-	1. `c` loads `X` (gives `true`)
-	1. `c` loads `Y` (gives either `false` or `true`)
-	1. `d` loads `Y` (gives `true`)
-	1. `d` loads `X` (required to be `true`)
-- Both initial loads precede both final loads:
-	1. `c` loads `X` (gives `true`)
-	1. `d` loads `Y` (gives `true`)
-	1. `c` loads `Y` (required to be `true`)
-	1. `d` loads `X` (required to be `true`)
-- As above, but the final loads occur in a different order:
-	1. `c` loads `X` (gives `true`)
-	1. `d` loads `Y` (gives `true`)
-	1. `d` loads `X` (required to be `true`)
-	1. `c` loads `Y` (required to be `true`)
-- As before, but the initial loads occur in a different order:
-	1. `d` loads `Y` (gives `true`)
-	1. `c` loads `X` (gives `true`)
-	1. `c` loads `Y` (required to be `true`)
-	1. `d` loads `X` (required to be `true`)
-- As above, but the final loads occur in a different order:
-	1. `d` loads `Y` (gives `true`)
-	1. `c` loads `X` (gives `true`)
-	1. `d` loads `X` (required to be `true`)
-	1. `c` loads `Y` (required to be `true`)
-- All of `d`’s loads precede `c`’s loads:
-	1. `d` loads `Y` (gives `true`)
-	1. `d` loads `X` (gives either `false` or `true`)
-	1. `c` loads `X` (gives `true`)
-	1. `c` loads `Y` (required to be `true`)
+- All of `a`’s operations precede `b`’s operations:
+	1. `a` stores `true` into `X`
+	1. `a` loads `Y` (gives `false`)
+	1. `b` stores `true` into `Y`
+	1. `b` loads `X` (required to give `true`)
+- All of `b`’s operations precede `a`’s operations:
+	1. `b` stores `true` into `Y`
+	1. `b` loads `X` (gives `false`)
+	1. `a` stores `true` into `X`
+	1. `a` loads `Y` (required to give `true`)
+- The stores precede the loads,
+	`a`’s store precedes `b`’s and `a`’s load precedes `b`’s:
+	1. `a` stores `true` to `X`
+	1. `b` stores `true` into `Y`
+	1. `a` loads `Y` (required to give `true`)
+	1. `b` loads `X` (required to give `true`)
+- The stores precede the loads,
+	`a`’s store precedes `b`’s and `b`’s load precedes `a`’s:
+	1. `a` stores `true` to `X`
+	1. `b` stores `true` into `Y`
+	1. `b` loads `X` (required to give `true`)
+	1. `a` loads `Y` (required to give `true`)
+- The stores precede the loads,
+	`b`’s store precedes `a`’s and `a`’s load precedes `b`’s:
+	1. `b` stores `true` into `Y`
+	1. `a` stores `true` to `X`
+	1. `a` loads `Y` (required to give `true`)
+	1. `b` loads `X` (required to give `true`)
+- The stores precede the loads,
+	`b`’s store precedes `a`’s and `b`’s load precedes `a`’s:
+	1. `b` stores `true` into `Y`
+	1. `a` stores `true` to `X`
+	1. `b` loads `X` (required to give `true`)
+	1. `a` loads `Y` (required to give `true`)
 
 All the places where the load was required to give `true` were caused by a
-preceding load in _S_ of the same atomic which saw `true` — otherwise, the load
-would be coherence-ordered-before a load which precedes it in _S_, and that is
+preceding store in _S_ of the same atomic of `true` — otherwise, the load would
+be coherence-ordered-before a store which precedes it in _S_, and that is
 impossible.
 
 ## The mixed-`SeqCst` special case
