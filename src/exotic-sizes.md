@@ -139,7 +139,7 @@ other is still Undefined Behavior).
 
 The following *could* also compile:
 
-```rust,compile_fail
+```ignore(this is about to change)
 enum Void {}
 
 let res: Result<u32, Void> = Ok(0);
