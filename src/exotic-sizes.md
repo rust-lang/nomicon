@@ -131,7 +131,7 @@ actually possible to communicate this at the type level by returning a
 knowing that it's *statically impossible* for this value to be an `Err`, as
 this would require providing a value of type `Void`.
 
-In principle, Rust can do some interesting analyses and optimizations based
+In principle, Rust can do some interesting analysis and optimizations based
 on this fact. For instance, `Result<T, Void>` is represented as just `T`,
 because the `Err` case doesn't actually exist (strictly speaking, this is only
 an optimization that is not guaranteed, so for example transmuting one into the
