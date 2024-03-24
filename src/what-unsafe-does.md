@@ -41,6 +41,9 @@ language cares about is preventing the following things:
     [`NonNull`] that is null. (Requesting custom invalid values is an unstable
     feature, but some stable libstd types, like `NonNull`, make use of it.)
 
+For a more detailed explanation about "Undefined Bahavior", you may refer to
+[the reference][behavior-considered-undefined].
+
 "Producing" a value happens any time a value is assigned, passed to a
 function/primitive operation or returned from a function/primitive operation.
 
@@ -75,6 +78,8 @@ Rust considers it "safe" to:
 * Abort the program
 * Delete the production database
 
+For more detailed information, you may refer to [the reference][behavior-not-considered-unsafe].
+
 However any program that actually manages to do such a thing is *probably*
 incorrect. Rust provides lots of tools to make these things rare, but
 these problems are considered impractical to categorically prevent.
@@ -84,3 +89,5 @@ these problems are considered impractical to categorically prevent.
 [race]: races.html
 [target features]: ../reference/attributes/codegen.html#the-target_feature-attribute
 [`NonNull`]: ../std/ptr/struct.NonNull.html
+[behavior-considered-undefined]: ../reference/behavior-considered-undefined.html
+[behavior-not-considered-unsafe]: ../reference/behavior-not-considered-unsafe.html
