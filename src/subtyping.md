@@ -268,7 +268,7 @@ To see why `fn(T) -> U` should be covariant over `U`, consider the following sig
 fn get_str() -> &'a str;
 ```
 
-This function claims to produce a `str` bound by some liftime `'a`. As such, it is perfectly valid to
+This function claims to produce a `str` bound by some lifetime `'a`. As such, it is perfectly valid to
 provide a function with the following signature instead:
 
 <!-- ignore: simplified code -->
