@@ -19,7 +19,10 @@ Note that the default features have been disabled. This is a critical step -
 disabled.**
 
 Alternatively, we can use the unstable `rustc_private` private feature together
-with an `extern crate libc;` declaration as shown in the examples below.
+with an `extern crate libc;` declaration as shown in the examples below. Note that
+windows-msvc targets do not require a libc, and correspondingly there is no `libc`
+crate in their sysroot. We do not need the `extern crate libc;` below, and having it
+on a windows-msvc target would be a compile error.
 
 ## Writing an executable without `std`
 
@@ -39,11 +42,12 @@ in the same format as C (aside from the exact integer types being used):
 #![allow(internal_features)]
 #![no_std]
 
-// Necessary for `panic = "unwind"` builds on some platforms.
+// Necessary for `panic = "unwind"` builds on cfg(unix) platforms.
 #![feature(panic_unwind)]
 extern crate unwind;
 
 // Pull in the system libc library for what crt0.o likely requires.
+#[cfg(not(windows))]
 extern crate libc;
 
 use core::panic::PanicInfo;
@@ -73,11 +77,12 @@ compiler's name mangling too:
 #![no_std]
 #![no_main]
 
-// Necessary for `panic = "unwind"` builds on some platforms.
+// Necessary for `panic = "unwind"` builds on cfg(unix) platforms.
 #![feature(panic_unwind)]
 extern crate unwind;
 
 // Pull in the system libc library for what crt0.o likely requires.
+#[cfg(not(windows))]
 extern crate libc;
 
 use core::ffi::{c_char, c_int};
