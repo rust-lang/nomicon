@@ -8,7 +8,7 @@ This isn't always the case in Rust.
 Rust supports Dynamically Sized Types (DSTs): types without a statically
 known size or alignment. On the surface, this is a bit nonsensical: Rust *must*
 know the size and alignment of something in order to correctly work with it! In
-this regard, DSTs are not normal types. Because they lack a statically known
+this regard, DSTs are not normal types. Since they lack a statically known
 size, these types can only exist behind a pointer. Any pointer to a
 DST consequently becomes a *wide* pointer consisting of the pointer and the
 information that "completes" them (more on this below).
@@ -40,7 +40,7 @@ struct MySuperSlice {
 }
 ```
 
-Although such a type is largely useless without a way to construct it. Currently the
+Unfortunately, such a type is largely useless without a way to construct it. Currently the
 only properly supported way to create a custom DST is by making your type generic
 and performing an *unsizing coercion*:
 
