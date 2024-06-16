@@ -24,9 +24,9 @@
 
 이 책은 주로 높은 수준에서 [러스트 언어 참조서(영문)][ref] 와 함께 가는 용도로 존재합니다. 참조서가 언어의 모든 부분의 문법과 의미를 자세하게 알기 위해 존재한다면, 러스토노미콘은 이런 부분들을 어떻게 짜맞추어 쓰느냐, 그리고 그러는 동안 부딪힐 난관들을 조명하기 위해 존재합니다. 
 
+참조서는 레퍼런스, 소멸자, 그리고 되감기에 대한 문법과 의미를 말해 주겠지만, 그들을 결합하는 것이 어떻게 프로그램이 예외에도 견딜 수 있게 하는 데에 문제를 가져다 줄 수 있는지, 혹은 그 문제들을 어떻게 해결해야 하는지를 말해 주지는 않을 겁니다.
 
 
-The Reference will tell you the syntax and semantics of references, destructors, and unwinding, but it won't tell you how combining them can lead to exception-safety issues, or how to deal with those issues.
 
 It should be noted that we haven't synced The Rustnomicon and The Reference well, so they may have duplicate content.
 In general, if the two documents disagree, The Reference should be assumed to be correct (it isn't yet considered normative, it's just better maintained).
