@@ -1,6 +1,6 @@
 # Summary
 
-[Introduction](intro.md)
+[소개](intro.md)
 
 * [Meet Safe and Unsafe](meet-safe-and-unsafe.md)
   * [How Safe and Unsafe Interact](safe-unsafe-meaning.md)
