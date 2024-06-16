@@ -1,10 +1,10 @@
 # 러스토노미콘
 
-심오하고 비안전[comm1]한 러스트 프로그래밍의 흑마법들
+심오하고 비안전[^1]한 러스트 프로그래밍의 흑마법들
 
-별명은 "노미콘"
+짧게 "노미콘"이라고 부릅니다.
 
-## 주의: 이것은 수정중인 문서이고, 심각한 오류들을 포함할 수 있습니다.
+## 주의: 이것은 미완성 문서이고, 심각한 오류들을 포함할 수 있습니다.
 
 > 내가 바랐던 프로그램들 대신, 살떨리는 어둠과 표현할 수 없는 외로움만이 있었다. 그리고 난 마침내 보고야 말았다.
   아무도 그 앞에서 감히 숨도 쉬지 못한 두려운 진실, 속삭일 수조차 없는 비밀들 중의 비밀을 보고야 만 것이다.
@@ -12,14 +12,12 @@
   런던이었고 파리도 그랬지만, 이 언어는 아니었다. 이것은 꽤나 비(非)안전했고,
   그 뻗어있는 몸은 거의 미라가 되어 있었고 컴파일할 때는 없었던, 움직이는 요상한 것들로 들끓고 있었다.
 
-This book digs into all the awful details that are necessary to understand in
-order to write correct Unsafe Rust programs. Due to the nature of this problem,
-it may lead to unleashing untold horrors that shatter your psyche into a billion
-infinitesimal fragments of despair.
+이 책은 올바른 "비안전" 러스트 프로그램을 작성하기 위해 이해해야 하는 온갖 자질구레한 하나하나를 다 다룹니다.
+이러한 문제의 특성 때문에, 이는 이루 다 말할 수 없는 공포스러운 것들을 해방시켜 당신의 정신을 무수한 절망의 조각들로 박살낼 수도 있습니다.
 
-## Requirements
+## 요구사항
 
-Building the Nomicon requires [mdBook]. To get it:
+노미콘을 빌드하기 위해서는 [mdBook]이 필요합니다. 설치하려면 다음과 같이 입력하세요:
 
 [mdBook]: https://github.com/rust-lang/mdBook
 
@@ -27,24 +25,22 @@ Building the Nomicon requires [mdBook]. To get it:
 cargo install mdbook
 ```
 
-### `mdbook` usage
+### `mdbook` 사용법
 
-To build the Nomicon use the `build` sub-command:
+노미콘을 빌드하려면 `build` 서브커맨드를 사용하세요:
 
 ```bash
 mdbook build
 ```
 
-The output will be placed in the `book` subdirectory. To check it out, open the
-`index.html` file in your web browser. You can pass the `--open` flag to `mdbook
-build` and it'll open the index page in your default browser (if the process is
-successful) just like with `cargo doc --open`:
+결과물은 `book` 디렉토리에 위치할 것입니다. 이 결과물을 보려면, `index.html` 파일을 웹 브라우저에서 여세요.
+`--open` 플래그를 `mdbook build`에 사용하면 (성공한다면) 기본 브라우저에서 인덱스 페이지를 엽니다. 마치 `cargo doc --open`처럼요:
 
 ```bash
 mdbook build --open
 ```
 
-There is also a `test` sub-command to test all code samples contained in the book:
+책에 담겨있는 모든 코드 예제를 테스트하는 `test` 서브커맨드도 있습니다:
 
 ```bash
 mdbook test
@@ -52,21 +48,19 @@ mdbook test
 
 ### `linkcheck`
 
-We use the `linkcheck` tool to find broken links.
-To run it locally:
+`linkcheck` 툴을 사용하여 유효하지 않은 링크를 검증합니다.
+로컬에서 실행하려면 다음과 같이 입력하세요:
 
 ```sh
 curl -sSLo linkcheck.sh https://raw.githubusercontent.com/rust-lang/rust/master/src/tools/linkchecker/linkcheck.sh
 sh linkcheck.sh --all nomicon
 ```
 
-## Contributing
+## 기여
 
-Given that the Nomicon is still in a draft state, we'd love your help! Please
-feel free to open issues about anything, and send in PRs for things you'd like
-to fix or change. If your change is large, please open an issue first, so we can
-make sure that it's something we'd accept before you go through the work of
-getting a PR together.
+노미콘은 아직 미완성 상태이기 때문에, 당신의 도움이 필요합니다!
+아무 주제라도 좋으니 자유롭게 이슈를 열어 주시고, 고치거나 바꾸고 싶은 것들이 있다면 PR도 환영합니다.
+만약 변경사항이 많다면 PR로 고생하시기 전에, 수락할 변경사항인지 확실하게 하기 위해 먼저 이슈를 열어 주세요.
 
 
-[comm1]: # "a comment"
+[^1]: "불안전"이라는 단어는 위험하다고 느껴질 것 같은데, unsafe Rust 는 안전하지 않지만 무조건 위험한 것은 아니고 러스트의 안전한 시스템에서 opt-out 하는 것이기 때문에 비(非)안전이라는 용어를 사용합니다.
