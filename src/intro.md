@@ -26,10 +26,9 @@
 
 참조서는 레퍼런스, 소멸자, 그리고 되감기에 대한 문법과 의미를 말해 주겠지만, 그들을 결합하는 것이 어떻게 프로그램이 예외에도 견딜 수 있게 하는 데에 문제를 가져다 줄 수 있는지, 혹은 그 문제들을 어떻게 해결해야 하는지를 말해 주지는 않을 겁니다.
 
+알아두실 필요가 있는 것은 러스토노미콘과 참조서를 잘 동기화하진 않아서, 중복된 내용을 발견하실 수도 있다는 점입니다. 보통 두 문서가 내용이 일치하지 않는다면, 참조서가 맞다고 보는 것이 좋습니다 (참조서가 표준은 아닙니다. 그냥 더 잘 관리될 뿐입니다).
 
 
-It should be noted that we haven't synced The Rustnomicon and The Reference well, so they may have duplicate content.
-In general, if the two documents disagree, The Reference should be assumed to be correct (it isn't yet considered normative, it's just better maintained).
 
 Topics that are within the scope of this book include: the meaning of (un)safety, unsafe primitives provided by the language and standard library, techniques for creating safe abstractions with those unsafe primitives, subtyping and variance, exception-safety (panic/unwind-safety), working with uninitialized memory, type punning, concurrency, interoperating with other languages (FFI), optimization tricks, how constructs lower to compiler/OS/hardware primitives, how to **not** make the memory model people angry, how you're **going** to make the memory model people angry, and more.
 
