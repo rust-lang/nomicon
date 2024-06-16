@@ -1,17 +1,17 @@
-# The Rustonomicon
+# 러스토노미콘
 
 <div class="warning">
 
-Warning:
-This book is incomplete.
-Documenting everything and rewriting outdated parts take a while.
-See the [issue tracker] to check what's missing/outdated, and if there are any mistakes or ideas that haven't been reported, feel free to open a new issue there.
+경고:
+이 책은 미완성입니다.
+모든 것을 문서화하고, 예전에는 맞았지만 지금은 아닌 내용들을 고치는 데는 시간이 걸립니다.
+[이슈 트래커]에 없는 기능이나, 예전에는 맞았지만 지금은 아닌 내용들을 보실 수 있고, 아직 보고되지 않은 실수나 생각들이 있다면 거기에 얼마든지 새로운 이슈를 열어 주세요.
 
 </div>
 
-[issue tracker]: https://github.com/rust-lang/nomicon/issues
+[이슈 트래커]: https://github.com/nomicon-kr/nomicon-kr.github.io/issues
 
-## The Dark Arts of Unsafe Rust
+## 비안전 러스트의 흑마법들
 
 > THE KNOWLEDGE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF UNLEASHING INDESCRIBABLE HORRORS THAT SHATTER YOUR PSYCHE AND SET YOUR MIND ADRIFT IN THE UNKNOWABLY INFINITE COSMOS.
 
