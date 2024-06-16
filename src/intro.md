@@ -28,7 +28,9 @@
 
 알아두실 필요가 있는 것은 러스토노미콘과 참조서를 잘 동기화하진 않아서, 중복된 내용을 발견하실 수도 있다는 점입니다. 보통 두 문서가 내용이 일치하지 않는다면, 참조서가 맞다고 보는 것이 좋습니다 (참조서가 표준은 아닙니다. 그냥 더 잘 관리될 뿐입니다).
 
-
+이 책의 범위 안에 있는 주제들은 다음과 같습니다:
+- (비)안전의 의미
+- 언어와 표준 라이브러리에서 재공되는 비안전한 기본 연산들
 
 Topics that are within the scope of this book include: the meaning of (un)safety, unsafe primitives provided by the language and standard library, techniques for creating safe abstractions with those unsafe primitives, subtyping and variance, exception-safety (panic/unwind-safety), working with uninitialized memory, type punning, concurrency, interoperating with other languages (FFI), optimization tricks, how constructs lower to compiler/OS/hardware primitives, how to **not** make the memory model people angry, how you're **going** to make the memory model people angry, and more.
 
