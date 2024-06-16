@@ -69,4 +69,4 @@ make sure that it's something we'd accept before you go through the work of
 getting a PR together.
 
 
-[comm1]: "a comment"
+[comm1]: # "a comment"
