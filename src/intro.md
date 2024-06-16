@@ -20,7 +20,7 @@
 만일 당신이 러스트 프로그램을 작성하는 데 있어서 길고 행복한 나날을 바란다면, 당장 뒤돌아서서 이 책을 봤다는 것도 잊어버리세요. 이것이 필수적인 것은 아닙니다. 
 그러나 당신이 *비안전한* 코드를 쓰려고 하거나 - 아니면 그냥 언어의 속을 파 보고 싶다면 - 이 책은 유용한 정보를 많이 담고 있습니다.
 
-*[러스트 프로그래밍 언어][trpl]*와 다르게, 어느 정도의 준비 지식은 갖추고 있다고 가정하겠습니다. 
+*[러스트 프로그래밍 언어][trpl]* 와 다르게, 어느 정도의 준비 지식은 갖추고 있다고 가정하겠습니다. 
 
 Unlike *[The Rust Programming Language][trpl]*, we will be assuming considerable prior knowledge.
 In particular, you should be comfortable with basic systems programming and Rust.
