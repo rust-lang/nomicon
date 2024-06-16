@@ -13,13 +13,12 @@
 
 ## 비안전 러스트의 흑마법들
 
-> THE KNOWLEDGE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF UNLEASHING INDESCRIBABLE HORRORS THAT SHATTER YOUR PSYCHE AND SET YOUR MIND ADRIFT IN THE UNKNOWABLY INFINITE COSMOS.
+> **이 지식은 "있는 그대로" 제공되며, 표현할 수 없는 공포스러운 것들을 해방시켜 당신의 정신을 산산조각내고, 당신의 마음을 알 수 없는 무한한 우주에 떠다니게 하는 것, 혹은 그 이상의 범위를 포함한 사항에 있어서, 명시적 혹은 묵시적인 어떠한 보증도 하지 않는다.**
 
-The Rustonomicon digs into all the awful details that you need to understand when writing Unsafe Rust programs.
+러스토노미콘은 *비안전한* 러스트 프로그램을 작성할 때 알아야 하는 모든 무시무시한 하나하나를 다 파헤칩니다.
 
-Should you wish a long and happy career of writing Rust programs, you should turn back now and forget you ever saw this book.
-It is not necessary.
-However if you intend to write unsafe code — or just want to dig into the guts of the language — this book contains lots of useful information.
+만일 당신이 러스트 프로그램을 작성하는 데 있어서 길고 행복한 나날을 바란다면, 당장 뒤돌아서서 이 책을 봤다는 것도 잊어버리세요. 이것이 필수적인 것은 아닙니다. 
+그러나 당신이 *비안전한* 코드를 쓰려고 하거나 - 아니면 그냥 언어의 속을 파 보고 싶다면 - 이 책은 유용한 정보를 많이 담고 있습니다.
 
 Unlike *[The Rust Programming Language][trpl]*, we will be assuming considerable prior knowledge.
 In particular, you should be comfortable with basic systems programming and Rust.
