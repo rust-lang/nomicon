@@ -24,19 +24,29 @@
 
 이 책은 주로 높은 수준에서 [러스트 언어 참조서(영문)][ref] 와 함께 가는 용도로 존재합니다. 참조서가 언어의 모든 부분의 문법과 의미를 자세하게 알기 위해 존재한다면, 러스토노미콘은 이런 부분들을 어떻게 짜맞추어 쓰느냐, 그리고 그러는 동안 부딪힐 난관들을 조명하기 위해 존재합니다. 
 
-참조서는 레퍼런스, 소멸자, 그리고 되감기에 대한 문법과 의미를 말해 주겠지만, 그들을 결합하는 것이 어떻게 프로그램이 예외에도 견딜 수 있게 하는 데에 문제를 가져다 줄 수 있는지, 혹은 그 문제들을 어떻게 해결해야 하는지를 말해 주지는 않을 겁니다.
+참조서는 레퍼런스, 소멸자, 그리고 되감기에 대한 문법과 의미를 말해 주겠지만, 그들을 결합하는 것이 어떻게 예외 내구성 관련 문제를 가져다 줄 수 있는지, 혹은 그 문제들을 어떻게 해결해야 하는지를 말해 주지는 않을 겁니다.
 
 알아두실 필요가 있는 것은 러스토노미콘과 참조서를 잘 동기화하진 않아서, 중복된 내용을 발견하실 수도 있다는 점입니다. 보통 두 문서가 내용이 일치하지 않는다면, 참조서가 맞다고 보는 것이 좋습니다 (참조서가 표준은 아닙니다. 그냥 더 잘 관리될 뿐입니다).
 
 이 책의 범위 안에 있는 주제들은 다음과 같습니다:
 - (비)안전의 의미
 - 언어와 표준 라이브러리에서 재공되는 비안전한 기본 연산들
+- 그 비안전한 기본 연산들로 안전한 추상화를 만드는 기법들
+- subtyping and variance
+- 예외 내구성 (패닉/되감기 내구성)
+- 초기화되지 않은 메모리를 가지고 작업하기
+- type punning
+- 병렬성
+- 다른 언어와 상호작용하기 (FFI)
+- 최적화 기법
+- how constructs lower to compiler/OS/hardware primitives
+- 메모리 모델 사람들을 화나지 **않게** 하는 법
+- 메모리 모델 사람들을 **화나게** 하는 법
+- 기타 등등
 
-Topics that are within the scope of this book include: the meaning of (un)safety, unsafe primitives provided by the language and standard library, techniques for creating safe abstractions with those unsafe primitives, subtyping and variance, exception-safety (panic/unwind-safety), working with uninitialized memory, type punning, concurrency, interoperating with other languages (FFI), optimization tricks, how constructs lower to compiler/OS/hardware primitives, how to **not** make the memory model people angry, how you're **going** to make the memory model people angry, and more.
+러스토노미콘은 표준 라이브러리의 모든 API 하나하나의 의미와 보장되는 사항을 일일이 설명하는 곳이 아니고, 러스트의 모든 기능을 하나하나 설명하는 곳도 아닙니다.
 
-The Rustonomicon is not a place to exhaustively describe the semantics and guarantees of every single API in the standard library, nor is it a place to exhaustively describe every feature of Rust.
-
-Unless otherwise noted, Rust code in this book uses the Rust 2021 edition.
+다른 말이 없으면, 이 책의 러스트 코드는 러스트 2021 에디션을 사용합니다.
 
 [trpl]: https://doc.rust-kr.org
 [ref]: https://doc.rust-lang.org/reference/index.html
