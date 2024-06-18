@@ -2,7 +2,7 @@
 
 [소개](intro.md)
 
-* [안전함과 비안전함을 마주하라](meet-safe-and-unsafe.md)
+* [안전함과 불안전함을 마주하라](meet-safe-and-unsafe.md)
   * [How Safe and Unsafe Interact](safe-unsafe-meaning.md)
   * [What Unsafe Can Do](what-unsafe-does.md)
   * [Working with Unsafe](working-with-unsafe.md)
