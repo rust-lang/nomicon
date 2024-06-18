@@ -1,47 +1,42 @@
-# Meet Safe and Unsafe
+# 안전함과 불안전함을 마주하라
 
 ![safe and unsafe](img/safeandunsafe.svg)
 
-It would be great to not have to worry about low-level implementation details.
-Who could possibly care how much space the empty tuple occupies? Sadly, it
-sometimes matters and we need to worry about it. The most common reason
-developers start to care about implementation details is performance, but more
-importantly, these details can become a matter of correctness when interfacing
-directly with hardware, operating systems, or other languages.
+낮은 레벨의 구현 세부사항에 대해 걱정하지 않아도 되면 참 좋을 것입니다. 빈 튜플이 얼마만큼의 공간을 차지하는지 대체 누가 신경쓸까요?
+슬프게도 이런 것들은 어떤 때에는 중요하고, 우리는 이런 것들을 걱정해야 합니다. 개발자들이 구현 세부사항에 대해서 걱정하기 시작하는 가장 흔한 이유는 성능이지만 그보다 더 중요한 것은, 
+하드웨어, 운영체제, 혹은 다른 언어들과 직접적으로 상호작용할 때 이런 세부적인 것들이 올바른 코드를 작성하는 것에 대한 문제가 될 수 있습니다.
 
-When implementation details start to matter in a safe programming language,
-programmers usually have three options:
+안전한 프로그래밍 언어에서 구현 세부사항이 중요해지기 시작할 때, 프로그래머들은 보통 3가지 선택지가 있습니다:
 
-* fiddle with the code to encourage the compiler/runtime to perform an optimization
-* adopt a more unidiomatic or cumbersome design to get the desired implementation
-* rewrite the implementation in a language that lets you deal with those details
+- 컴파일러나 런타임이 최적화를 수행하도록 코드에 꼼수 쓰기
+- 원하는 구현을 얻기 위해 훨씬 부자연스럽거나 거추장스러운 디자인을 채용하기
+- 구현을 그런 세부사항을 다룰 수 있는 언어로 다시 작성하기
 
-For that last option, the language programmers tend to use is *C*. This is often
-necessary to interface with systems that only declare a C interface.
+마지막 선택지에서, 프로그래머들이 주로 쓰는 언어는 *C* 입니다. 이 언어는 C 인터페이스만 정의하는 시스템들과 
+상호작용하기 위해 보통 필요합니다. 
 
-Unfortunately, C is incredibly unsafe to use (sometimes for good reason),
-and this unsafety is magnified when trying to interoperate with another
-language. Care must be taken to ensure C and the other language agree on
-what's happening, and that they don't step on each other's toes.
+불행하게도 C는 (때때로 좋은 이유로) 사용하기에 엄청나게 불안전하고, 다른 언어들과 협업하려고 할 때 
+이 불안전함은 증폭됩니다. C와 다른 언어가 어떤 일이 일어날지 서로 동의하고, 서로의 발을 밟지 않게 하기 위해 
+주의가 필요합니다.
 
-So what does this have to do with Rust?
+그래서 이것이 러스트와 무슨 상관일까요?
 
-Well, unlike C, Rust is a safe programming language.
+그게, C와 다르게, 러스트는 안전한 프로그래밍 언어입니다.
 
-But, like C, Rust is an unsafe programming language.
+하지만, C와 마찬가지로, 러스트는 불안전한 언어입니다.
 
-More accurately, Rust *contains* both a safe and unsafe programming language.
+더 정확하게 말하자면, 러스트는 안전한 언어와 불안전한 언어 두 가지를 모두 *포함하고 있습니다.*
 
-Rust can be thought of as a combination of two programming languages: *Safe
-Rust* and *Unsafe Rust*. Conveniently, these names mean exactly what they say:
-Safe Rust is Safe. Unsafe Rust is, well, not. In fact, Unsafe Rust lets us
-do some *really* unsafe things. Things the Rust authors will implore you not to
-do, but we'll do anyway.
+러스트는 *안전한 러스트* 와 *불안전한 러스트* 라는 두 개의 프로그래밍 언어의 조합이라고 볼 수 있습니다. 
+편리하게도, 이 이름들은 말 그대로입니다: 안전한 러스트는 안전하고, 불안전한 러스트는, 음, 그렇지 않죠. 
+사실 불안전한 러스트는 *매우* 불안전한 것들을 할 수 있게 해 줍니다. 러스트 개발자들이 하지 말라고 간곡히 
+부탁하는 것들이지만, 우리는 그냥 무시하고 할 겁니다. 
 
-Safe Rust is the *true* Rust programming language. If all you do is write Safe
-Rust, you will never have to worry about type-safety or memory-safety. You will
-never endure a dangling pointer, a use-after-free, or any other kind of
-Undefined Behavior (a.k.a. UB).
+안전한 러스트는 *진정한* 러스트 프로그래밍 언어입니다. 만약 안전한 러스트만 작성한다면, 
+타입 안정성이나 메모리 안정성은 절대 걱정할 필요가 없을 겁니다. 달랑거리는 포인터나, 해제 후 사용, 
+혹은 다른 종류의 미정의 동작은 겪지 않을 테니까요.
+
+
 
 The standard library also gives you enough utilities out of the box that you'll
 be able to write high-performance applications and libraries in pure idiomatic
