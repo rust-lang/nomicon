@@ -36,28 +36,19 @@
 타입 안정성이나 메모리 안정성은 절대 걱정할 필요가 없을 겁니다. 달랑거리는 포인터나, 해제 후 사용, 
 혹은 다른 종류의 미정의 동작은 겪지 않을 테니까요.
 
+표준 라이브러리도 또한 당신에게 바로 쓸 수 있는 도구들을 풍부하게 주어서 당신이 순수하고 자연스러운, 안전한 러스트로 
+고성능의 응용 프로그램을 만들 수 있게 해 줍니다.
 
+하지만 혹시 당신이 다른 언어에게 말을 걸고 싶을 수도 있습니다. 표준 라이브러리가 노출하지 않은 
+저수준의 추상화를 작성하고 있을 수도 있죠. 당신이 (순수하게 러스트로 만들어진) 표준 라이브러리를 *작성하고* 
+있을 수도 있습니다. 타입 시스템이 이해하지 못하는 것을 해야 할 수도 있고 그냥 *좀 비트들에 장난질을* 
+하고 싶을 수도 있습니다. 당신은 불안전한 러스트가 필요할지도 모릅니다.
 
-The standard library also gives you enough utilities out of the box that you'll
-be able to write high-performance applications and libraries in pure idiomatic
-Safe Rust.
+불안전한 러스트는 안전한 러스트와 아주 흡사합니다. 안전한 러스트의 모든 규칙들과 의미들을 담고 있죠. 
+다만 *추가적으로* **절대로 안전하지 않은** 것들을 할 수 있게 해 줍니다 (이에 대해서는 다음 섹션에서 다루겠습니다).
 
-But maybe you want to talk to another language. Maybe you're writing a
-low-level abstraction not exposed by the standard library. Maybe you're
-*writing* the standard library (which is written entirely in Rust). Maybe you
-need to do something the type-system doesn't understand and just *frob some dang
-bits*. Maybe you need Unsafe Rust.
+이런 구분을 통해 우리는 C와 같은 불안전한 언어의 이점 - 구현 세부사항에 대한 저수준 제어 - 을 얻으면서 
+완전히 다른 안전한 언어에 통합하려고 할 때 생기는 문제들 대부분을 피할 수 있게 됩니다.
 
-Unsafe Rust is exactly like Safe Rust with all the same rules and semantics.
-It just lets you do some *extra* things that are Definitely Not Safe
-(which we will define in the next section).
-
-The value of this separation is that we gain the benefits of using an unsafe
-language like C — low level control over implementation details — without most
-of the problems that come with trying to integrate it with a completely
-different safe language.
-
-There are still some problems — most notably, we must become aware of properties
-that the type system assumes and audit them in any code that interacts with
-Unsafe Rust. That's the purpose of this book: to teach you about these assumptions
-and how to manage them.
+몇몇 문제들이 아직 있긴 합니다 - 대표적으로 타입 시스템이 가정하는 속성들에 대해서 인식하고, 불안전한 러스트와 상호작용하는 
+어떤 코드에도 그 속성들을 검증해야 합니다. 그게 바로 이 책의 목적입니다: 이런 가정들에 대해서, 또 이것들을 어떻게 관리해야 하는지 가르쳐주는 것이죠.
