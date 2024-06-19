@@ -1,55 +1,41 @@
-# How Safe and Unsafe Interact
+# 안전함과 불안전함은 어떻게 상호작용하는가
 
-What's the relationship between Safe Rust and Unsafe Rust? How do they
-interact?
+안전한 러스트와 불안전한 러스트는 어떤 관계일까요? 둘은 어떻게 상호작용할까요?
 
-The separation between Safe Rust and Unsafe Rust is controlled with the
-`unsafe` keyword, which acts as an interface from one to the other. This is
-why we can say Safe Rust is a safe language: all the unsafe parts are kept
-exclusively behind the `unsafe` boundary. If you wish, you can even toss
-`#![forbid(unsafe_code)]` into your code base to statically guarantee that
-you're only writing Safe Rust.
+안전한 러스트와 불안전한 러스트 간의 구분은 `unsafe` 라는 키워드로 제어되는데, 이것은 서로에게 인터페이스 역할을 합니다. 
+이것이 바로 안전한 러스트는 안전한 언어라고 할 수 있는 이유입니다: 모든 불안전한 부분은 `unsafe` 라는 경계 뒤로 밀리거든요. 
+원한다면 `#![forbid(unsafe_code)]` 를 코드베이스에 집어넣음으로써 오직 안전한 러스트만 쓴다는 것을 컴파일할 때 보장할 수 있죠.
 
-The `unsafe` keyword has two uses: to declare the existence of contracts the
-compiler can't check, and to declare that a programmer has checked that these
-contracts have been upheld.
+`unsafe` 키워드는 두 가지 용도가 있습니다: 컴파일러가 확인할 수 없는 계약의 존재를 정의할 때 사용하고, 또한 
+이 계약들이 성립한다는 것을 프로그래머가 확인했다고 선언할 때 사용합니다.
 
-You can use `unsafe` to indicate the existence of unchecked contracts on
-_functions_ and _trait declarations_. On functions, `unsafe` means that
-users of the function must check that function's documentation to ensure
-they are using it in a way that maintains the contracts the function
-requires. On trait declarations, `unsafe` means that implementors of the
-trait must check the trait documentation to ensure their implementation
-maintains the contracts the trait requires.
+_함수들_ 과 _트레잇 정의들_ 에서 확인되지 않은 계약들의 존재를 알리기 위해 `unsafe` 키워드를 쓸 수 있습니다. 
+함수에서 `unsafe` 는 함수의 사용자들이 함수의 문서를 확인해서, 함수가 요구하는 계약을 지키는 방식으로 사용해야 
+한다는 것을 의미합니다. 트레잇 정의에서 `unsafe` 는 트레잇의 구현자들이 트레잇 문서를 확인해서 그들의 구현이 
+트레잇이 요구하는 계약을 지키는 것을 확실히 해야 한다는 것을 뜻합니다.
 
-You can use `unsafe` on a block to declare that all unsafe actions performed
-within are verified to uphold the contracts of those operations. For instance,
-the index passed to [`slice::get_unchecked`][get_unchecked] is in-bounds.
+코드 블럭에도 `unsafe` 를 사용해서 그 안에서 이루어진 모든 불안전한 작업들이 그 작업들의 계약들을 지켰다는 
+것을 확인했다고 선언할 수 있습니다. 예를 들어, [`slice::get_unchecked`][get_unchecked] 에 넘겨진 인덱스는 
+범위 안에 있어야 합니다.
 
-You can use `unsafe` on a trait implementation to declare that the implementation
-upholds the trait's contract. For instance, that a type implementing [`Send`] is
-really safe to move to another thread.
+트레잇 구현에 `unsafe` 를 사용해서 그 구현이 트레잇의 계약을 지킨다고 선언할 수 있습니다. 예를 들어, [`Send`] 를 
+구현하는 타입은 정말로 다른 스레드로 안전하게 이동할 수 있어야 합니다.
 
-The standard library has a number of unsafe functions, including:
+표준 라이브러리는 다음을 포함한 다수의 불안전한 함수들을 가지고 있습니다:
 
-* [`slice::get_unchecked`][get_unchecked], which performs unchecked indexing,
-  allowing memory safety to be freely violated.
-* [`mem::transmute`][transmute] reinterprets some value as having a given type,
-  bypassing type safety in arbitrary ways (see [conversions] for details).
-* Every raw pointer to a sized type has an [`offset`][ptr_offset] method that
-  invokes Undefined Behavior if the passed offset is not ["in bounds"][ptr_offset].
-* All FFI (Foreign Function Interface) functions are `unsafe` to call because the
-  other language can do arbitrary operations that the Rust compiler can't check.
+* [`slice::get_unchecked`][get_unchecked] 는 범위를 확인하지 않고 인덱싱을 하기 때문에 메모리 안정성이 자유롭게 침해되도록 허용합니다.
+* [`mem::transmute`][transmute] 는 어떤 값을 주어진 타입으로 재해석하여 임의의 방식으로 타입 안정성을 건너뜁니다 (자세한 사항은 [변환][conversions] 을 참고하세요).
+* 사이즈가 정해진 타입의 모든 생(raw)포인터는 [`offset`][ptr_offset] 메서드가 있는데, 이 메서드는 전달된 편차(offset)가 ["범위 안에 있지"][ptr_offset] 않을 경우 미정의 동작을 일으킵니다.
+* 모든 외부 함수 인터페이스 (FFI) 함수들은 호출하기에 `불안전` 합니다. 이는 다른 언어들이 러스트 컴파일러가 확인할 수 없는 임의의 연산들을 할 수 있기 때문입니다.
 
-As of Rust 1.29.2 the standard library defines the following unsafe traits
-(there are others, but they are not stabilized yet and some of them may never
-be):
+러스트 1.48.0 버전에서 표준 라이브러리는 다음의 불안전한 트레잇들을 정의하고 있습니다 (다른 것들도 있지만 아직 안정화되지 않았고, 어떤 것들은 나중에도 안정화되지 않을 것입니다):
 
-* [`Send`] is a marker trait (a trait with no API) that promises implementors
-  are safe to send (move) to another thread.
-* [`Sync`] is a marker trait that promises threads can safely share implementors
-  through a shared reference.
-* [`GlobalAlloc`] allows customizing the memory allocator of the whole program.
+* [`Send`] 는 이를 구현하는 타입들이 다른 스레드로 이동해도 안전함을 약속하는 표시 트레잇(API가 없는 트레잇)입니다.
+* [`Sync`] 는 또다른 표시 트레잇으로, 이를 구현하는 타입들을 불변 레퍼런스를 이용해 스레드들이 서로 공유할 수 있음을 약속합니다.
+* [`GlobalAlloc`] 은 프로그램 전체의 메모리 할당자를 커스터마이징할 수 있게 해 줍니다.
+* [`SliceIndex`] 는 슬라이스 타입들의 인덱싱을 위한 동작을 정의합니다.
+
+
 
 Much of the Rust standard library also uses Unsafe Rust internally. These
 implementations have generally been rigorously manually checked, so the Safe Rust
@@ -154,13 +140,14 @@ make using Safe Rust as ergonomic as possible, but requires extra effort and
 care when writing Unsafe Rust. The rest of this book is largely a discussion
 of the sort of care that must be taken, and what contracts Unsafe Rust must uphold.
 
-[`Send`]: ../std/marker/trait.Send.html
-[`Sync`]: ../std/marker/trait.Sync.html
-[`GlobalAlloc`]: ../std/alloc/trait.GlobalAlloc.html
+[`Send`]: https://doc.rust-lang.org/std/marker/trait.Send.html
+[`Sync`]: https://doc.rust-lang.org/std/marker/trait.Sync.html
+[`GlobalAlloc`]: https://doc.rust-lang.org/std/alloc/trait.GlobalAlloc.html
+[`SliceIndex`]: https://doc.rust-lang.org/std/slice/trait.SliceIndex.html
 [conversions]: conversions.html
-[ptr_offset]: ../std/primitive.pointer.html#method.offset
-[get_unchecked]: ../std/primitive.slice.html#method.get_unchecked
-[transmute]: ../std/mem/fn.transmute.html
-[`PartialOrd`]: ../std/cmp/trait.PartialOrd.html
-[`Ord`]: ../std/cmp/trait.Ord.html
-[`BTreeMap`]: ../std/collections/struct.BTreeMap.html
+[ptr_offset]: https://doc.rust-lang.org/std/primitive.pointer.html#method.offset
+[get_unchecked]: https://doc.rust-lang.org/std/primitive.slice.html#method.get_unchecked
+[transmute]: https://doc.rust-lang.org/std/mem/fn.transmute.html
+[`PartialOrd`]: https://doc.rust-lang.org/std/cmp/trait.PartialOrd.html
+[`Ord`]: https://doc.rust-lang.org/std/cmp/trait.Ord.html
+[`BTreeMap`]: https://doc.rust-lang.org/std/collections/struct.BTreeMap.html
