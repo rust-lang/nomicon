@@ -104,6 +104,47 @@ mem::forget us in the middle of the iteration, all that does is *leak even more*
 Since we've accepted that mem::forget is safe, this is definitely safe. We call
 leaks causing more leaks a *leak amplification*.
 
+Expanding the above example shows that elements remaining in the vector after
+dropping the `drainer` are leaked:
+
+<!-- ignore: simplified code -->
+```rust
+use std::mem;
+
+struct Frob {
+    v: i32,
+}
+
+impl Drop for Frob {
+    fn drop(&mut self) {
+        println!("Frob {{ v: {} }} dropped", self.v)
+    }
+}
+
+fn main() {
+    let mut vec = (1..5).map(|v| Frob { v }).collect::<Vec<_>>();
+
+    {
+        let mut drainer = vec.drain(..);
+
+        drainer.next();
+        drainer.next();
+
+        mem::forget(drainer);
+    }
+
+    println!("Goodbye");
+}
+```
+
+Output: 
+
+```text
+Frob { v: 1 } dropped
+Frob { v: 2 } dropped
+Goodbye
+```
+
 ## Rc
 
 Rc is an interesting case because at first glance it doesn't appear to be a
