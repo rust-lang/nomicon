@@ -33,34 +33,27 @@ _함수들_ 과 _트레잇 정의들_ 에서 확인되지 않은 계약들의 �
 * [`Send`] 는 이를 구현하는 타입들이 다른 스레드로 이동해도 안전함을 약속하는 표시 트레잇(API가 없는 트레잇)입니다.
 * [`Sync`] 는 또다른 표시 트레잇으로, 이를 구현하는 타입들을 불변 레퍼런스를 이용해 스레드들이 서로 공유할 수 있음을 약속합니다.
 * [`GlobalAlloc`] 은 프로그램 전체의 메모리 할당자를 커스터마이징할 수 있게 해 줍니다.
-* [`SliceIndex`] 는 슬라이스 타입들의 인덱싱을 위한 동작을 정의합니다.
+* [`SliceIndex`] 는 슬라이스 타입들의 인덱싱을 위한 동작을 정의합니다. 여기에는 경계를 확인하지 않고 인덱싱하는 작업이 포함됩니다.
+
+러스트 표준 라이브러리도 내부적으로 불안전한 러스트를 꽤 많이 씁니다. 이 구현사항들은 수동으로 엄격하게 확인되어서, 
+이 위에 안전한 러스트로 지은 인터페이스들은 안전하다고 생각해도 됩니다.
+
+이런 구분의 필요성은 *견고성* 이라고 불리는, 안전한 러스트의 근본적인 특성으로 귀결됩니다: 
+
+**무슨 일을 하던, 안전한 러스트는 미정의 동작을 유발할 수 없습니다.**
+
+안전/불안전으로 구분하는 디자인은 안전한 러스트와 불안전한 러스트 사이에 비대칭적 신뢰 관계가 있다는 것을 의미합니다. 
+안전한 러스트는 본질적으로 모든 불안전한 러스트 코드가 올바르게 작성되었다고 믿어야 합니다. 
+반면 불안전한 러스트는 부주의하게 작성한 안전한 러스트 코드를 믿을 수 없습니다.
+
+예를 들어, 러스트는 "그냥" 비교할 수 있는 타입과 "완전한" 순서를 가지고 있는 (즉 비교가 합리적으로 이루어지는) 
+타입을 구분하기 위해 [`PartialOrd`] 와 [`Ord`] 트레잇을 가지고 있습니다.
+
+[`BTreeMap`] 은 불완전한 순서를 가지는 타입들에 쓰는 것은 말이 안 되기 때문에 키 역할을 하는 타입이 `Ord` 를 구현하도록 요구합니다. 
+하지만 `BTreeMap` 은 구현 내부에 불안전한 러스트 코드가 있습니다. 안전한 러스트 코드이긴 하겠지만, 부주의한 `Ord` 구현이 미정의 동작을 일으키는 것은 받아들일 수 없기 때문에, 
+BTreeMap에 있는 불안전한 코드는 완전하게 순서를 이루고 있지 않은 `Ord` 구현을 견딜 수 있도록 작성되어야 합니다 - 비록 그렇기 때문에 `Ord` 를 요구한다고 해도요.
 
 
-
-Much of the Rust standard library also uses Unsafe Rust internally. These
-implementations have generally been rigorously manually checked, so the Safe Rust
-interfaces built on top of these implementations can be assumed to be safe.
-
-The need for all of this separation boils down a single fundamental property
-of Safe Rust, the *soundness property*:
-
-**No matter what, Safe Rust can't cause Undefined Behavior.**
-
-The design of the safe/unsafe split means that there is an asymmetric trust
-relationship between Safe and Unsafe Rust. Safe Rust inherently has to
-trust that any Unsafe Rust it touches has been written correctly.
-On the other hand, Unsafe Rust cannot trust Safe Rust without care.
-
-As an example, Rust has the [`PartialOrd`] and [`Ord`] traits to differentiate
-between types which can "just" be compared, and those that provide a "total"
-ordering (which basically means that comparison behaves reasonably).
-
-[`BTreeMap`] doesn't really make sense for partially-ordered types, and so it
-requires that its keys implement `Ord`. However, `BTreeMap` has Unsafe Rust code
-inside of its implementation. Because it would be unacceptable for a sloppy `Ord`
-implementation (which is Safe to write) to cause Undefined Behavior, the Unsafe
-code in BTreeMap must be written to be robust against `Ord` implementations which
-aren't actually total — even though that's the whole point of requiring `Ord`.
 
 The Unsafe Rust code just can't trust the Safe Rust code to be written correctly.
 That said, `BTreeMap` will still behave completely erratically if you feed in
