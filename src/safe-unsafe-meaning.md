@@ -51,24 +51,15 @@ _함수들_ 과 _트레잇 정의들_ 에서 확인되지 않은 계약들의 �
 
 [`BTreeMap`] 은 불완전한 순서를 가지는 타입들에 쓰는 것은 말이 안 되기 때문에 키 역할을 하는 타입이 `Ord` 를 구현하도록 요구합니다. 
 하지만 `BTreeMap` 은 구현 내부에 불안전한 러스트 코드가 있습니다. 안전한 러스트 코드이긴 하겠지만, 부주의한 `Ord` 구현이 미정의 동작을 일으키는 것은 받아들일 수 없기 때문에, 
-BTreeMap에 있는 불안전한 코드는 완전하게 순서를 이루고 있지 않은 `Ord` 구현을 견딜 수 있도록 작성되어야 합니다 - 비록 그렇기 때문에 `Ord` 를 요구한다고 해도요.
+`BTreeMap` 에 있는 불안전한 코드는 완전하게 순서를 이루고 있지 않은 `Ord` 구현을 견딜 수 있도록 작성되어야 합니다 - 비록 그렇기 때문에 `Ord` 를 요구한다고 해도요.
 
+불안전한 러스트 코드는 안전한 러스트 코드가 잘 작성되었을 것이라고 마냥 믿을 수가 없습니다. 그래서 말하자면, `BTreeMap` 은 당신이 완전한 순서를 이루지 않는 값들을 집어넣으면 완전히 예측 불가능하게 행동할 겁니다. 다만 미정의 동작은 절대로 일으키지 않을 겁니다.
 
+이렇게 질문할 수도 있습니다, 만약 `BTreeMap` 이 `Ord` 가 안전해서 믿을 수 없다면, *다른* 안전한 코드는 어떻게 믿죠? 예를 들어 `BTreeMap` 은 정수들과 슬라이스 타입들이 올바르게 구현되었을 거라고 가정합니다. 그것들도 안전하잖아요, 그죠?
 
-The Unsafe Rust code just can't trust the Safe Rust code to be written correctly.
-That said, `BTreeMap` will still behave completely erratically if you feed in
-values that don't have a total ordering. It just won't ever cause Undefined
-Behavior.
+그 차이는 범위의 차이입니다. `BTreeMap` 이 정수들과 슬라이스들에 의존할 때, 그건 매우 특정한 구현에 의존하는 것입니다. 이것은 이득을 생각할 때 넘겨 버릴 수 있는, 일정한 부담입니다. 이 경우에서는 비용이 없다고 할 수 있습니다; 만약 정수들과 슬라이스들이 오류가 있다면, *모두가* 오류가 있는 거니까요. 게다가 그것들은 `BTreeMap` 을 관리하는 사람들의 손에 관리되기 때문에, 그 구현들을 지켜보기 쉽죠.
 
-One may wonder, if `BTreeMap` cannot trust `Ord` because it's Safe, why can it
-trust *any* Safe code? For instance `BTreeMap` relies on integers and slices to
-be implemented correctly. Those are safe too, right?
-
-The difference is one of scope. When `BTreeMap` relies on integers and slices,
-it's relying on one very specific implementation. This is a measured risk that
-can be weighed against the benefit. In this case there's basically zero risk;
-if integers and slices are broken, *everyone* is broken. Also, they're maintained
-by the same people who maintain `BTreeMap`, so it's easy to keep tabs on them.
+반면에 `BTreeMap` 의 키 타입은 제네릭입니다. 
 
 On the other hand, `BTreeMap`'s key type is generic. Trusting its `Ord` implementation
 means trusting every `Ord` implementation in the past, present, and future.
