@@ -59,14 +59,11 @@ _함수들_ 과 _트레잇 정의들_ 에서 확인되지 않은 계약들의 �
 
 그 차이는 범위의 차이입니다. `BTreeMap` 이 정수들과 슬라이스들에 의존할 때, 그건 매우 특정한 구현에 의존하는 것입니다. 이것은 이득을 생각할 때 넘겨 버릴 수 있는, 일정한 부담입니다. 이 경우에서는 비용이 없다고 할 수 있습니다; 만약 정수들과 슬라이스들이 오류가 있다면, *모두가* 오류가 있는 거니까요. 게다가 그것들은 `BTreeMap` 을 관리하는 사람들의 손에 관리되기 때문에, 그 구현들을 지켜보기 쉽죠.
 
-반면에 `BTreeMap` 의 키 타입은 제네릭입니다. 
+반면에 `BTreeMap` 의 키 타입은 제네릭입니다. 그 `Ord` 구현을 믿는 것은 과거, 현재, 미래의 모든 `Ord` 구현을 믿는 것과 같습니다. 
+여기서의 비용은 큽니다: 어디서 누군가는 실수를 해서 본인의 `Ord` 구현을 망치거나, 심지어는 "그냥 되는 것처럼 보여서" 완전한 순서를 가지는 것처럼 거짓말을 할 수도 있습니다. 
+그런 일이 벌어질 때 `BTreeMap` 은 대비해야 합니다.
 
-On the other hand, `BTreeMap`'s key type is generic. Trusting its `Ord` implementation
-means trusting every `Ord` implementation in the past, present, and future.
-Here the risk is high: someone somewhere is going to make a mistake and mess up
-their `Ord` implementation, or even just straight up lie about providing a total
-ordering because "it seems to work". When that happens, `BTreeMap` needs to be
-prepared.
+
 
 The same logic applies to trusting a closure that's passed to you to behave
 correctly.
