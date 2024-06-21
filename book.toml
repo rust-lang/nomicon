@@ -1,7 +1,7 @@
 [book]
 author = "러스트 프로젝트 개발자들"
 title = "러스토노미콘"
-description = "심오하고 비안전한 러스트 프로그래밍의 흑마법들"
+description = "심오하고 불안전한 러스트 프로그래밍의 흑마법들"
 
 [output.html]
 additional-css = ["theme/nomicon.css"]
