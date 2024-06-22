@@ -16,8 +16,6 @@ C와 다르게, 미정의 동작은 러스트에서는 꽤 제한되어 있습�
 * 달랑거리거나 정렬되어 있지 않은 포인터를 역참조하는 것 (`*` 연산자를 사용해서) (밑 참조)
 * [pointer aliasing rules][] 을 지키지 않는 것
 
-* Dereferencing (using the `*` operator on) dangling or unaligned pointers (see below)
-* Breaking the [pointer aliasing rules][]
 * Calling a function with the wrong call ABI or unwinding from a function with the wrong unwind ABI.
 * Causing a [data race][race]
 * Executing code compiled with [target features][] that the current thread of execution does
