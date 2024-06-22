@@ -14,10 +14,11 @@
 C와 다르게, 미정의 동작은 러스트에서는 꽤 제한되어 있습니다. 러스트의 코어 언어가 막으려고 하는 것들은 이런 것들입니다: 
 
 * 달랑거리거나 정렬되어 있지 않은 포인터를 역참조하는 것 (`*` 연산자를 사용해서) (밑 참조)
-* [pointer aliasing rules][] 을 지키지 않는 것
+* [레퍼런스 규칙][alias] 을 지키지 않는 것
+* 잘못된 호출 ABI를 이용해 함수를 호출하거나 잘못된 되감기 ABI를 가지고 있는 함수에서 되감는 것
+* [data race][race] 를 일으키는 것
 
-* Calling a function with the wrong call ABI or unwinding from a function with the wrong unwind ABI.
-* Causing a [data race][race]
+
 * Executing code compiled with [target features][] that the current thread of execution does
   not support
 * Producing invalid values (either alone or as a field of a compound type such
@@ -82,7 +83,7 @@ However any program that actually manages to do such a thing is *probably*
 incorrect. Rust provides lots of tools to make these things rare, but
 these problems are considered impractical to categorically prevent.
 
-[pointer aliasing rules]: references.html
+[alias]: references.html
 [uninitialized memory]: uninitialized.html
 [race]: races.html
 [target features]: ../reference/attributes/codegen.html#the-target_feature-attribute
