@@ -63,15 +63,10 @@ _함수들_ 과 _트레잇 정의들_ 에서 확인되지 않은 계약들의 �
 여기서의 비용은 큽니다: 어디서 누군가는 실수를 해서 본인의 `Ord` 구현을 망치거나, 심지어는 "그냥 되는 것처럼 보여서" 완전한 순서를 가지는 것처럼 거짓말을 할 수도 있습니다. 
 그런 일이 벌어질 때 `BTreeMap` 은 대비해야 합니다.
 
+당신에게 전달된 클로저가 올바르게 작동할 거라고 믿는 것에도 동일한 논리가 적용됩니다.
 
-
-The same logic applies to trusting a closure that's passed to you to behave
-correctly.
-
-This problem of unbounded generic trust is the problem that `unsafe` traits
-exist to resolve. The `BTreeMap` type could theoretically require that keys
-implement a new trait called `UnsafeOrd`, rather than `Ord`, that might look
-like this:
+광범위한 제네릭을 신뢰하는 이런 문제는 `unsafe` 트레잇을 이용하여 해결할 수 있습니다. 이론적으로 `BTreeMap` 는 키 타입이 `Ord` 가 아니라 `UnsafeOrd` 라고 불리는 새로운 트레잇을 구현하도록 요구할 수도 있습니다. 
+이 트레잇은 이렇게 생겼습니다:
 
 ```rust
 use std::cmp::Ordering;
@@ -81,45 +76,23 @@ unsafe trait UnsafeOrd {
 }
 ```
 
-Then, a type would use `unsafe` to implement `UnsafeOrd`, indicating that
-they've ensured their implementation maintains whatever contracts the
-trait expects. In this situation, the Unsafe Rust in the internals of
-`BTreeMap` would be justified in trusting that the key type's `UnsafeOrd`
-implementation is correct. If it isn't, it's the fault of the unsafe trait
-implementation, which is consistent with Rust's safety guarantees.
+그러면 타입이 `UnsafeOrd` 를 구현할 때 `unsafe` 키워드를 쓰겠지요. 그 말은 그들의 트레잇이 기대하는 계약을 지켰다는 것을 그들이 확인했다는 뜻일 겁니다. 
+이런 상황에서 `BTreeMap` 내부의 불안전 러스트는 키 타입의 `UnsafeOrd` 구현이 맞다고 신뢰하는 것이 정당화됩니다. 만약 그 구현이 틀렸다면 그것은 불안전한 트레잇 구현의 문제이고, 이것은 러스트의 안전성 보장에 부합합니다.
 
-The decision of whether to mark a trait `unsafe` is an API design choice. A
-safe trait is easier to implement, but any unsafe code that relies on it must
-defend against incorrect behavior. Marking a trait `unsafe` shifts this
-responsibility to the implementor. Rust has traditionally avoided marking
-traits `unsafe` because it makes Unsafe Rust pervasive, which isn't desirable.
+트레잇을 `unsafe` 로 표시할지는 API 디자인 선택입니다. 안전한 트레잇이 구현하기에는 더 쉽지만, 그 코드에 의존하는 모든 불안전한 코드는 잘못된 동작을 방어해야 합니다. 
+트레잇을 `unsafe` 로 표시하면 그 책임이 구현하는 사람에게로 넘어갑니다. 러스트는 전통적으로 트레잇들을 `unsafe` 로 표시하는 것을 피해 왔는데, 만약 그러면 불안전한 러스트를 널리 퍼지게 하고, 그것은 별로 바람직하지 않기 때문입니다.
 
-`Send` and `Sync` are marked unsafe because thread safety is a *fundamental
-property* that unsafe code can't possibly hope to defend against in the way it
-could defend against a buggy `Ord` implementation. Similarly, `GlobalAllocator`
-is keeping accounts of all the memory in the program and other things like
-`Box` or `Vec` build on top of it. If it does something weird (giving the same
-chunk of memory to another request when it is still in use), there's no chance
-to detect that and do anything about it.
+`Send` 와 `Sync` 는 불안전으로 표시되어 있는데, 그것은 스레드 안정성은 불안전한 코드가 방어할 수 없는 *근본적인 특성이라* 버그가 있는 `Ord` 구현을 방어할 때처럼 막을 수 없기 때문입니다. 
+마찬가지로, `GlobalAllocator` 는 프로그램의 모든 메모리를 관리하고, `Box` 나 `Vec` 같은 다른 것들이 그 위에 지어져 있습니다. 만약 이게 이상한 짓을 한다면 (이미 사용중인 메모리를 할당할 때 반환한다던가), 그것을 인지하거나 대비할 수 있는 가능성은 없습니다.
 
-The decision of whether to mark your own traits `unsafe` depends on the same
-sort of consideration. If `unsafe` code can't reasonably expect to defend
-against a broken implementation of the trait, then marking the trait `unsafe` is
-a reasonable choice.
+당신이 만든 트레잇들을 `unsafe` 로 표시할지 여부는 같은 종류의 고민을 해 봐야 합니다. 만약 `unsafe` 코드가 이 트레잇의 잘못된 구현을 방어할 수 없다고 합리적으로 생각될 때, 이 트레잇을 `unsafe` 로 표시하는 것은 합리적인 선택입니다.
 
-As an aside, while `Send` and `Sync` are `unsafe` traits, they are *also*
-automatically implemented for types when such derivations are provably safe
-to do. `Send` is automatically derived for all types composed only of values
-whose types also implement `Send`. `Sync` is automatically derived for all
-types composed only of values whose types also implement `Sync`. This minimizes
-the pervasive unsafety of making these two traits `unsafe`. And not many people
-are going to *implement* memory allocators (or use them directly, for that
-matter).
+한편 `Send` 와 `Sync` 가 `unsafe` 트레잇이지만, *동시에* 어떤 타입들에게는 자동으로 구현되는데, 이런 구현이 아마도 안전하다고 여겨지는 타입들입니다. `Send` 는 `Send` 를 구현하는 타입들로만 이루어진 타입에 자동으로 구현됩니다. 
+`Sync` 는 `Sync` 를 구현하는 타입들로만 이루어진 타입에 자동으로 구현됩니다. 이런 자동 구현은 이 두 트레잇들을 `unsafe` 로 만들어서 불안전성이 널리 퍼지는 것을 최소화합니다. 
+그리고 메모리 할당자를 *직접 만드는* 사람은 많지 않을 겁니다 (그것을 직접적으로 쓰는 사람도요).
 
-This is the balance between Safe and Unsafe Rust. The separation is designed to
-make using Safe Rust as ergonomic as possible, but requires extra effort and
-care when writing Unsafe Rust. The rest of this book is largely a discussion
-of the sort of care that must be taken, and what contracts Unsafe Rust must uphold.
+이것이 바로 안전한 러스트와 불안전한 러스트 사이의 균형입니다. 이런 구분은 최대한 자연스럽게 안전한 러스트를 쓸 수 있도록 하되, 불안전한 러스트를 쓸 때는 추가적인 노력과 주의를 요하게 설계되었습니다. 
+이 책의 나머지 부분은 주로 어떤 종류의 주의가 필요한지와 불안전한 러스트가 지켜야 할 계약들이 어떤 것들인지를 논합니다.
 
 [`Send`]: https://doc.rust-lang.org/std/marker/trait.Send.html
 [`Sync`]: https://doc.rust-lang.org/std/marker/trait.Sync.html
