@@ -1,20 +1,20 @@
-# What Unsafe Rust Can Do
+# 불안전한 러스트는 무엇을 할 수 있는가
 
-The only things that are different in Unsafe Rust are that you can:
+불안전한 러스트에서 다른 점은 이런 것들이 가능하다는 것뿐입니다:
 
-* Dereference raw pointers
-* Call `unsafe` functions (including C functions, compiler intrinsics, and the raw allocator)
-* Implement `unsafe` traits
-* Mutate statics
-* Access fields of `union`s
+* 생포인터 역참조하기
+* `unsafe` 함수 호출하기 (C 함수나, 컴파일러 내부, 그리고 할당자를 직접 호출하는 것 포함)
+* `unsafe` 트레잇 구현하기
+* `static` 변수의 값을 변경하기
+* `union` 의 필드를 접근하기
 
-That's it. The reason these operations are relegated to Unsafe is that misusing
-any of these things will cause the ever dreaded Undefined Behavior. Invoking
-Undefined Behavior gives the compiler full rights to do arbitrarily bad things
-to your program. You definitely *should not* invoke Undefined Behavior.
+이게 답니다. 이런 연산들이 불안전의 영역으로 추방된 이유는, 이것들 중 하나라도 잘못 사용할 경우 그토록 두렵던 미정의 동작을 일으키기 때문입니다. 
+미정의 동작을 일으키면 컴파일러가 당신의 프로그램에 임의의 나쁜 짓들을 할 수 있는 모든 권리를 얻게 됩니다. 당연하게도 미정의 동작은 *일으켜서는 안됩니다.*
 
-Unlike C, Undefined Behavior is pretty limited in scope in Rust. All the core
-language cares about is preventing the following things:
+C와 다르게, 미정의 동작은 러스트에서는 꽤 제한되어 있습니다. 러스트의 코어 언어가 막으려고 하는 것들은 이런 것들입니다: 
+
+* 달랑거리거나 정렬되어 있지 않은 포인터를 역참조하는 것 (`*` 연산자를 사용해서) (밑 참조)
+* [pointer aliasing rules][] 을 지키지 않는 것
 
 * Dereferencing (using the `*` operator on) dangling or unaligned pointers (see below)
 * Breaking the [pointer aliasing rules][]
