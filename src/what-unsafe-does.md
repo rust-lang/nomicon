@@ -16,11 +16,9 @@ C와 다르게, 미정의 동작은 러스트에서는 꽤 제한되어 있습�
 * 달랑거리거나 정렬되어 있지 않은 포인터를 역참조하는 것 (`*` 연산자를 사용해서) (밑 참조)
 * [레퍼런스 규칙][alias] 을 지키지 않는 것
 * 잘못된 호출 ABI를 이용해 함수를 호출하거나 잘못된 되감기 ABI를 가지고 있는 함수에서 되감는 것
-* [data race][race] 를 일으키는 것
+* [데이터 경합][race] 을 일으키는 것
+* 지금 실행하는 스레드가 지원하지 않는 [타겟 기능들][target] 로 컴파일된 코드를 실행하는 것
 
-
-* Executing code compiled with [target features][] that the current thread of execution does
-  not support
 * Producing invalid values (either alone or as a field of a compound type such
   as `enum`/`struct`/array/tuple):
   * a `bool` that isn't 0 or 1
@@ -84,9 +82,9 @@ incorrect. Rust provides lots of tools to make these things rare, but
 these problems are considered impractical to categorically prevent.
 
 [alias]: references.html
-[uninitialized memory]: uninitialized.html
+[uninit]: uninitialized.html
 [race]: races.html
-[target features]: ../reference/attributes/codegen.html#the-target_feature-attribute
+[target]: ../reference/attributes/codegen.html#the-target_feature-attribute
 [`NonNull`]: ../std/ptr/struct.NonNull.html
 [behavior-considered-undefined]: ../reference/behavior-considered-undefined.html
 [behavior-not-considered-unsafe]: ../reference/behavior-not-considered-unsafe.html
