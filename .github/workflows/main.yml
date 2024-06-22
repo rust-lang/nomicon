@@ -24,14 +24,18 @@ jobs:
       id: cache
       uses: actions/cache@v4.0.2
       with:
-        path: ${GITHUB_WORKSPACE}/linkcheck.sh
+        path: ~/linkchecker
         key: linkcheck-${{ runner.os }}
 
-    - name: Install linkcheck
+    - name: Install linkcheck and Check links
       if: steps.cache.outputs.cache-hit != 'true'
       run: |
         curl -sSLo linkcheck.sh \
           https://raw.githubusercontent.com/rust-lang/rust/master/src/tools/linkchecker/linkcheck.sh
+          sh linkcheck.sh --all nomicon
 
     - name: Check links
-      run: sh linkcheck.sh --all nomicon
+      if: steps.cache.outputs.cache-hit == 'true'
+      run: |
+        cd linkchecker
+        cargo run --release linkcheck
