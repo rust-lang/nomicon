@@ -12,6 +12,7 @@ jobs:
       with:
         toolchain: nightly
         components: rust-docs
+    - run: rustup default nightly
             
     - name: Install mdbook
       run: cargo install mdbook
