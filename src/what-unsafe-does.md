@@ -2,7 +2,7 @@
 
 불안전한 러스트에서 다른 점은 이런 것들이 가능하다는 것뿐입니다:
 
-* 생포인터 역참조하기
+* 생 포인터 역참조하기
 * `unsafe` 함수 호출하기 (C 함수나, 컴파일러 내부, 그리고 할당자를 직접 호출하는 것 포함)
 * `unsafe` 트레잇 구현하기
 * `static` 변수의 값을 변경하기
@@ -18,20 +18,19 @@ C와 다르게, 미정의 동작은 러스트에서는 꽤 제한되어 있습�
 * 잘못된 호출 ABI를 이용해 함수를 호출하거나 잘못된 되감기 ABI를 가지고 있는 함수에서 되감는 것
 * [데이터 경합][race] 을 일으키는 것
 * 지금 실행하는 스레드가 지원하지 않는 [타겟 기능들][target] 로 컴파일된 코드를 실행하는 것
+* 틀린 값을 생산하는 것 (혼자서나 `enum`/`struct`/배열/튜플과 같은 복합 타입의 필드로써나):
+    * 0도 1도 아닌 `bool`
+    * 유효하지 않은 형(形)을 사용하는 `enum`
+    * 널 `fn` 포인터
+    * [0x0, 0xD7FF] 와 [0xE000, 0x10FFFF] 범위를 벗어나는 `char`
+    * `!` 타입의 값 (이 타입의 모든 값은 유효하지 않습니다)
+    * [초기화되지 않은 메모리][uninit] 로부터 읽어들인 정수 (`i*`/`u*`), 부동소수점 값 (`f*`), 혹은 생 포인터, 혹은 `str` 안의 초기화되지 않은 메모리.
+    * 달랑거리거나, 정렬되지 않았거나, 유효하지 않은 값을 가리키는 레퍼런스/`Box`
+    * 잘못된 메타데이터를 가지고 있는 넓은 레퍼런스, `Box`, 혹은 생 포인터:
+        * `dyn Trait` 메타데이터는 그것이 `Trait`의 vtable이 아닐 경우 유효하지 않습니다
 
-* Producing invalid values (either alone or as a field of a compound type such
-  as `enum`/`struct`/array/tuple):
-  * a `bool` that isn't 0 or 1
-  * an `enum` with an invalid discriminant
-  * a null `fn` pointer
-  * a `char` outside the ranges [0x0, 0xD7FF] and [0xE000, 0x10FFFF]
-  * a `!` (all values are invalid for this type)
-  * an integer (`i*`/`u*`), floating point value (`f*`), or raw pointer read from
-    [uninitialized memory][], or uninitialized memory in a `str`.
-  * a reference/`Box` that is dangling, unaligned, or points to an invalid value.
-  * a wide reference, `Box`, or raw pointer that has invalid metadata:
-    * `dyn Trait` metadata is invalid if it is not a pointer to a vtable for
-      `Trait` that matches the actual dynamic trait the pointer or reference points to
+
+  
     * slice metadata is invalid if the length is not a valid `usize`
       (i.e., it must not be read from uninitialized memory)
   * a type with custom invalid values that is one of those values, such as a
@@ -84,7 +83,7 @@ these problems are considered impractical to categorically prevent.
 [alias]: references.html
 [uninit]: uninitialized.html
 [race]: races.html
-[target]: ../reference/attributes/codegen.html#the-target_feature-attribute
-[`NonNull`]: ../std/ptr/struct.NonNull.html
-[behavior-considered-undefined]: ../reference/behavior-considered-undefined.html
-[behavior-not-considered-unsafe]: ../reference/behavior-not-considered-unsafe.html
+[target]: https://doc.rust-lang.org/reference/attributes/codegen.html#the-target_feature-attribute
+[`NonNull`]: https://doc.rust-lang.org/std/ptr/struct.NonNull.html
+[behavior-considered-undefined]: https://doc.rust-lang.org/reference/behavior-considered-undefined.html
+[behavior-not-considered-unsafe]: https://doc.rust-lang.org/reference/behavior-not-considered-unsafe.html
