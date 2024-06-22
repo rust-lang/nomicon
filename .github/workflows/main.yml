@@ -20,22 +20,22 @@ jobs:
     - name: Run tests
       run: mdbook test
       
-    - name: Cache/Restore linkcheck
-      id: cache
-      uses: actions/cache@v4.0.2
-      with:
-        path: linkchecker
-        key: linkchecker-${{ runner.os }}
+    # - name: Cache/Restore linkcheck
+    #   id: cache
+    #   uses: actions/cache@v4.0.2
+    #   with:
+    #     path: linkchecker
+    #     key: linkchecker-${{ runner.os }}
 
     - name: Install linkcheck and Check links
-      if: steps.cache.outputs.cache-hit != 'true'
+      # if: steps.cache.outputs.cache-hit != 'true'
       run: |
         curl -sSLo linkcheck.sh \
           https://raw.githubusercontent.com/rust-lang/rust/master/src/tools/linkchecker/linkcheck.sh
           sh linkcheck.sh --all nomicon
 
-    - name: Check links
-      if: steps.cache.outputs.cache-hit == 'true'
-      run: |
-        cd linkchecker
-        cargo run --release linkcheck
+    # - name: Check links
+    #   if: steps.cache.outputs.cache-hit == 'true'
+    #   run: |
+    #     cd linkchecker
+    #     cargo run --release linkcheck
