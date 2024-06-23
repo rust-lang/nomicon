@@ -2,7 +2,7 @@
 #
 # To get started with mdBook see: https://rust-lang.github.io/mdBook/index.html
 #
-name: Deploy mdBook site to Pages
+name: mdBook >>= Pages
 
 on:
   # Runs on pushes targeting the default branch
@@ -28,8 +28,6 @@ jobs:
   # Build job
   build:
     runs-on: ubuntu-latest
-    env:
-      MDBOOK_VERSION: 0.4.36
     steps:
       - uses: actions/checkout@v4
       - name: Setup Rust Toolchain
