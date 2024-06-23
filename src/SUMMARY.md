@@ -5,7 +5,7 @@
 * [안전함과 불안전함을 마주하라](meet-safe-and-unsafe.md)
   * [안전함과 불안전함은 어떻게 상호작용하는가](safe-unsafe-meaning.md)
   * [불안전함은 어떤 것을 할 수 있는가](what-unsafe-does.md)
-  * [불안전함과 일하는 것](working-with-unsafe.md)
+  * [불안전함과 함께 일하는 것](working-with-unsafe.md)
 * [Data Layout](data.md)
   * [repr(Rust)](repr-rust.md)
   * [Exotically Sized Types](exotic-sizes.md)
