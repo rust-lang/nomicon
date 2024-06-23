@@ -51,17 +51,12 @@ C와 다르게, 미정의 동작은 러스트에서는 꽤 제한되어 있습�
 * [경합 조건][race] 이 있는 것
 * 메모리 누수
 * (`+` 등의 기본 연산자를 이용한) 정수 오버플로우
-* 
+* 프로그램 비정상적 종료
+* 프로덕션 데이터베이스 삭제하기
 
+더 자세한 정보는 [참조서][behavior-not-considered-unsafe] 를 참고하세요.
 
-* Abort the program
-* Delete the production database
-
-For more detailed information, you may refer to [the reference][behavior-not-considered-unsafe].
-
-However any program that actually manages to do such a thing is *probably*
-incorrect. Rust provides lots of tools to make these things rare, but
-these problems are considered impractical to categorically prevent.
+하지만 어떤 프로그램이 이런 것을 한다면 *아마도* 잘못된 것일 겁니다. 러스트는 이런 것들이 드물게 일어나게 하기 위해 많은 도구들을 제공하지만, 이런 종류의 문제를 아예 막기에는 비현실적이라고 판단됩니다.
 
 [alias]: references.html
 [uninit]: uninitialized.html
