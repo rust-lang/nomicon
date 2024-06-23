@@ -47,13 +47,13 @@ C와 다르게, 미정의 동작은 러스트에서는 꽤 제한되어 있습�
 
 러스트는 이 외의 다른 애매한 작업들에는 꽤나 관대합니다. 러스트는 이런 작업들을 "안전하다"고 판단합니다: 
 
-* 데드락
+* 데드락 (교착 상태)
 * [경합 조건][race] 이 있는 것
 * 메모리 누수
-* 정수 오버플로우 ()
+* (`+` 등의 기본 연산자를 이용한) 정수 오버플로우
+* 
 
 
-* Overflow integers (with the built-in operators such as `+` etc.)
 * Abort the program
 * Delete the production database
 
