@@ -14,11 +14,11 @@
 C와 다르게, 미정의 동작은 러스트에서는 꽤 제한되어 있습니다. 러스트의 코어 언어가 막으려고 하는 것들은 이런 것들입니다: 
 
 * 달랑거리거나 정렬되어 있지 않은 포인터를 역참조하는 것 (`*` 연산자를 사용해서) (밑 참조)
-* [레퍼런스 규칙][alias] 을 지키지 않는 것
+* [레퍼런스 규칙][alias] 을 어기는 것
 * 잘못된 호출 ABI를 이용해 함수를 호출하거나 잘못된 되감기 ABI를 가지고 있는 함수에서 되감는 것
 * [데이터 경합][race] 을 일으키는 것
 * 지금 실행하는 스레드가 지원하지 않는 [타겟 기능들][target] 로 컴파일된 코드를 실행하는 것
-* 틀린 값을 생산하는 것 (혼자서나 `enum`/`struct`/배열/튜플과 같은 복합 타입의 필드로써나):
+* 잘못된 값을 생산하는 것 (혼자서나 `enum`/`struct`/배열/튜플과 같은 복합 타입의 필드로써나):
     * 0도 1도 아닌 `bool`
     * 유효하지 않은 형(形)을 사용하는 `enum`
     * 널 `fn` 포인터
@@ -28,17 +28,12 @@ C와 다르게, 미정의 동작은 러스트에서는 꽤 제한되어 있습�
     * 달랑거리거나, 정렬되지 않았거나, 유효하지 않은 값을 가리키는 레퍼런스/`Box`
     * 잘못된 메타데이터를 가지고 있는 넓은 레퍼런스, `Box`, 혹은 생 포인터:
         * `dyn Trait` 메타데이터는 그것이 `Trait`의 vtable을 가리키는 포인터가 아닐 경우 유효하지 않습니다
+        * 슬라이스 메타데이터는 길이가 올바른 `usize` 가 아니면 유효하지 않습니다 (즉, 초기화되지 않은 메모리에서 읽어들이면 안됩니다)
+    * 널인 [`NonNull`] 같은, 커스텀으로 잘못된 값이 들어있는 타입 (커스텀으로 잘못된 값을 요청하는 것은 불안정한 기능이지만 `NonNull` 같은, 몇 가지 안정 버전의 표준 라이브러리 타입들은 이것을 사용합니다.)
+
+"미정의 동작"에 관해 더 자세한 설명이 필요하다면 [참조서][behavior-considered-undefined] 를 참고하셔도 됩니다.
 
 
-  
-    * slice metadata is invalid if the length is not a valid `usize`
-      (i.e., it must not be read from uninitialized memory)
-  * a type with custom invalid values that is one of those values, such as a
-    [`NonNull`] that is null. (Requesting custom invalid values is an unstable
-    feature, but some stable libstd types, like `NonNull`, make use of it.)
-
-For a more detailed explanation about "Undefined Bahavior", you may refer to
-[the reference][behavior-considered-undefined].
 
 "Producing" a value happens any time a value is assigned, passed to a
 function/primitive operation or returned from a function/primitive operation.
