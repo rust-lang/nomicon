@@ -14,13 +14,10 @@ fn index(idx: usize, arr: &[u8]) -> Option<u8> {
 }
 ```
 
-이 함수는 안전하고 올바릅니다. 우리는 인덱스가 범위 안에 있는지 확인하고, 그렇다면 더 이상 확인하지 않고 배열을 바로 인덱싱합니다. 이렇게 잘 구현된 불안전한 함수를 *견고하다* 고 하는데, 
+이 함수는 안전하고 올바릅니다. 우리는 인덱스가 범위 안에 있는지 확인하고, 그렇다면 더 이상 확인하지 않고 배열을 바로 인덱싱합니다. 이렇게 잘 구현된 불안전한 함수를 *건전하다* 고 하는데, 
 이것은 안전한 코드가 이 코드를 악용해서 미정의 동작을 유발할 수 없다는 뜻입니다 (이건 바로 안전한 러스트의 유일한 근본적 특성이었죠).
 
-
-
-But even in such a trivial function, the scope of the unsafe block is
-questionable. Consider changing the `<` to a `<=`:
+하지만 이런 흔한 함수 안에서도, 불안전한 코드 블럭의 범위는 모호합니다. 여기서 `<` 를 `<=` 로 바꾸는 경우를 생각해 보세요:
 
 ```rust
 fn index(idx: usize, arr: &[u8]) -> Option<u8> {
@@ -34,10 +31,10 @@ fn index(idx: usize, arr: &[u8]) -> Option<u8> {
 }
 ```
 
-This program is now *unsound*, Safe Rust can cause Undefined Behavior, and yet
-*we only modified safe code*. This is the fundamental problem of safety: it's
-non-local. The soundness of our unsafe operations necessarily depends on the
-state established by otherwise "safe" operations.
+이 프로그램은 이제 *불건전하고*, 안전한 러스트는 미정의 동작을 유발할 수 있지만, *우리는 안전한 코드만 수정했을 뿐입니다*. 이것이 바로 안전함의 근본적인 문제입니다: 지역적이지 않죠. 
+이 불안전한 연산의 건전성은 어쩔 수 없이 다른 "안전한" 연산들이 만든 상태에 의존하게 됩니다.
+
+
 
 Safety is modular in the sense that opting into unsafety doesn't require you
 to consider arbitrary other kinds of badness. For instance, doing an unchecked
