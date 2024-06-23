@@ -40,23 +40,19 @@ C와 다르게, 미정의 동작은 러스트에서는 꽤 제한되어 있습�
 길이 메타데이터가 너무 크지 않도록 하는 것이 중요해집니다 (특히, 할당량과 그에 따른 슬라이스와 문자열은 `isize::MAX` 바이트보다 클 수 없습니다). 만약 어떤 이유로 이것이 거추장스럽다면, 생 포인터를 쓰는 것을 고려해 보세요.
 
 그게 전부입니다. 그것이 러스트에 있는 미정의 동작의 모든 원인입니다. 물론 불안전한 함수들과 트레잇들은 프로그램이 지켜야 하는 임의의 다른 제약들을 걸 수 있고, 그것을 어기면 미정의 동작이 일어나겠죠. 
-예를 들어, 할당자 API는 
+예를 들어, 할당자 API는 할당되지 않은 메모리를 해제하는 것은 미정의 동작이라고 정의합니다.
 
-For
-instance, the allocator APIs declare that deallocating unallocated memory is
-Undefined Behavior.
+그러나 이런 제약들을 어기면 결국 위의 문제들 중 하나로 이어지게 될 것입니다. 어떤 추가적인 제약들은 컴파일러 내부가 코드를 최적화하는 과정에서 하는 특별한 가정들에서부터 비롯될 수도 있습니다. 
+예를 들어, `Vec` 과 `Box` 는 그들의 포인터가 항상 널이 아니도록 하는 내부 코드를 사용합니다. 
 
-However, violations of these constraints generally will just transitively lead to one of
-the above problems. Some additional constraints may also derive from compiler
-intrinsics that make special assumptions about how code can be optimized. For instance,
-Vec and Box make use of intrinsics that require their pointers to be non-null at all times.
+러스트는 이 외의 다른 애매한 작업들에는 꽤나 관대합니다. 러스트는 이런 작업들을 "안전하다"고 판단합니다: 
 
-Rust is otherwise quite permissive with respect to other dubious operations.
-Rust considers it "safe" to:
+* 데드락
+* [경합 조건][race] 이 있는 것
+* 메모리 누수
+* 정수 오버플로우 ()
 
-* Deadlock
-* Have a [race condition][race]
-* Leak memory
+
 * Overflow integers (with the built-in operators such as `+` etc.)
 * Abort the program
 * Delete the production database
