@@ -33,24 +33,16 @@ C와 다르게, 미정의 동작은 러스트에서는 꽤 제한되어 있습�
 
 "미정의 동작"에 관해 더 자세한 설명이 필요하다면 [참조서][behavior-considered-undefined] 를 참고하셔도 됩니다.
 
+값을 "생산하는" 일은 값이 할당되거나, 함수/기본 연산에 전달되거나, 함수/기본 연산에서 반환될 때 일어납니다.
 
+레퍼런스/포인터가 "달랑거린다"는 것은 그것이 널이거나 그것이 가리키는 바이트가 모두 같은 할당처에 있는 것이 아니라는 뜻입니다 (그 바이트들은 모두 *어떤* 할당처에는 있어야 합니다). 
+그것이 가리키는 바이트들의 너비는 포인터 값과 참조되는 타입의 크기에 따라 결정됩니다. 따라서 만약 너비가 비어 있다면, "달랑거리는" 것은 "널"인 것과 같습니다. 슬라이스와 문자열은 그들의 전체 범위를 가리킨다는 것을 유의한다면, 
+길이 메타데이터가 너무 크지 않도록 하는 것이 중요해집니다 (특히, 할당량과 그에 따른 슬라이스와 문자열은 `isize::MAX` 바이트보다 클 수 없습니다). 만약 어떤 이유로 이것이 거추장스럽다면, 생 포인터를 쓰는 것을 고려해 보세요.
 
-"Producing" a value happens any time a value is assigned, passed to a
-function/primitive operation or returned from a function/primitive operation.
+그게 전부입니다. 그것이 러스트에 있는 미정의 동작의 모든 원인입니다. 물론 불안전한 함수들과 트레잇들은 프로그램이 지켜야 하는 임의의 다른 제약들을 걸 수 있고, 그것을 어기면 미정의 동작이 일어나겠죠. 
+예를 들어, 할당자 API는 
 
-A reference/pointer is "dangling" if it is null or not all of the bytes it
-points to are part of the same allocation (so in particular they all have to be
-part of *some* allocation). The span of bytes it points to is determined by the
-pointer value and the size of the pointee type. As a consequence, if the span is
-empty, "dangling" is the same as "null". Note that slices and strings point
-to their entire range, so it's important that the length metadata is never too
-large (in particular, allocations and therefore slices and strings cannot be
-bigger than `isize::MAX` bytes). If for some reason this is too cumbersome,
-consider using raw pointers.
-
-That's it. That's all the causes of Undefined Behavior baked into Rust. Of
-course, unsafe functions and traits are free to declare arbitrary other
-constraints that a program must maintain to avoid Undefined Behavior. For
+For
 instance, the allocator APIs declare that deallocating unallocated memory is
 Undefined Behavior.
 
