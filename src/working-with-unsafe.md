@@ -1,4 +1,4 @@
-# 불안전함과 일하는 것
+# 불안전함과 함께 일하는 것
 
 러스트는 일반적으로 우리가 불안전한 러스트와 이야기할 때 정해진 범위 안에서, 이진수의 방식으로 이야기하는 도구만 줍니다. 불행하게도 현실은 그것보다 훨씬 복잡하죠. 예를 들어, 다음의 간단한 함수를 생각해 볼까요:
 
@@ -31,33 +31,25 @@ fn index(idx: usize, arr: &[u8]) -> Option<u8> {
 }
 ```
 
-이 프로그램은 이제 *불건전하고*, 안전한 러스트는 미정의 동작을 유발할 수 있지만, *우리는 안전한 코드만 수정했을 뿐입니다*. 이것이 바로 안전함의 근본적인 문제입니다: 지역적이지 않죠. 
+이 프로그램은 이제 *불건전하고*, 안전한 러스트는 미정의 동작을 유발할 수 있지만, *우리는 안전한 코드만 수정했을 뿐입니다*. 이것이 바로 안전함의 근본적인 문제입니다: 지역에 한정되어 있지 않죠. 
 이 불안전한 연산의 건전성은 어쩔 수 없이 다른 "안전한" 연산들이 만든 상태에 의존하게 됩니다.
 
+불안전함을 도입하는 것이 임의의 다른 종류의 유해함을 고려하지 않아도 되는 점에서, 안전성은 경계가 있습니다. 예를 들어, 슬라이스에 확인되지 않은 인덱싱을 하는 것은 갑자기 슬라이스가 널이 되거나 초기화되지 않은 메모리를 포함하게 되는 경우를 걱정해야 하는 것은 아닙니다. 근본적으로 변하는 것은 없습니다. 하지만 프로그램이 본질적으로 상태를 가지게 되는 것과 당신의 불안전한 작업들이 임의의 다른 상태에 의존할 수 있게 된다는 점에서, 안전성은 분리되어 있지는 않습니다.
 
-
-Safety is modular in the sense that opting into unsafety doesn't require you
-to consider arbitrary other kinds of badness. For instance, doing an unchecked
-index into a slice doesn't mean you suddenly need to worry about the slice being
-null or containing uninitialized memory. Nothing fundamentally changes. However
-safety *isn't* modular in the sense that programs are inherently stateful and
-your unsafe operations may depend on arbitrary other state.
-
-This non-locality gets much worse when we incorporate actual persistent state.
-Consider a simple implementation of `Vec`:
+이런 지역에 한정되지 않는 특성은 우리가 실제로 지속되는 상태를 포함하게 되면 더욱 심해집니다. 다음의 간단한 `Vec` 구현을 생각해 보세요: 
 
 ```rust
 use std::ptr;
 
-// Note: This definition is naive. See the chapter on implementing Vec.
+// 주의: 이 정의는 순진합니다. Vec을 구현하는 챕터를 참고하세요.
 pub struct Vec<T> {
     ptr: *mut T,
     len: usize,
     cap: usize,
 }
 
-// Note this implementation does not correctly handle zero-sized types.
-// See the chapter on implementing Vec.
+// 이 구현은 무량 타입을 제대로 다루지 못하니 주의하세요.
+// Vec을 구현하는 챕터를 보세요.
 impl<T> Vec<T> {
     pub fn push(&mut self, elem: T) {
         if self.len == self.cap {
@@ -75,13 +67,12 @@ impl<T> Vec<T> {
 # fn main() {}
 ```
 
-This code is simple enough to reasonably audit and informally verify. Now consider
-adding the following method:
+이 코드는 합리적으로 검사하고 편하게 확인할 수 있을 만큼 간단합니다. 이제 이런 메서드를 추가하는 것을 생각해 보세요: 
 
 <!-- ignore: simplified code -->
 ```rust,ignore
 fn make_room(&mut self) {
-    // grow the capacity
+    // 용량을 늘립니다
     self.cap += 1;
 }
 ```
