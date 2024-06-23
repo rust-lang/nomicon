@@ -77,6 +77,8 @@ fn make_room(&mut self) {
 }
 ```
 
+이 코드는 100% 안전한 러스트이지만, 동시에 완전히 불건전합니다. 용량을 변경하는 것은 Vec의 불변의 원칙을 파괴합니다. 
+
 This code is 100% Safe Rust but it is also completely unsound. Changing the
 capacity violates the invariants of Vec (that `cap` reflects the allocated space
 in the Vec). This is not something the rest of Vec can guard against. It *has*
