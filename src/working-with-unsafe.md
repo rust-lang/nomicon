@@ -77,22 +77,16 @@ fn make_room(&mut self) {
 }
 ```
 
-이 코드는 100% 안전한 러스트이지만, 동시에 완전히 불건전합니다. 용량을 변경하는 것은 Vec의 불문율(`cap` 이 Vec의 할당된 용량을 반영한다는 것)을 파괴합니다. 이것은 Vec의 나머지 코드가 방어할 수 있는 것이 아닙니다. Vec은 `cap` 필드를 검증할 방법이 없기 때문에 믿는 *수밖에 없습니다*.
+이 코드는 100% 안전한 러스트이지만, 동시에 완전히 불건전합니다. 용량을 변경하는 것은 `Vec`의 불문율(`cap` 이 `Vec`의 할당된 용량을 반영한다는 것)을 파괴합니다. 이것은 `Vec`의 나머지 코드가 방어할 수 있는 것이 아닙니다. `Vec`은 `cap` 필드를 검증할 방법이 없기 때문에 믿는 *수밖에 없습니다*.
 
-이 `unsafe` 코드는 구조체 필드의 불문율에 의존하기 때문에, 한 함수 전체를 오염시키는 것보다 더한 짓을 합니다: 한 *모듈* 전체를 오염시키죠. 
+이 `unsafe` 코드는 구조체 필드의 불문율에 의존하기 때문에, 한 함수 전체를 오염시키는 것보다 더한 짓을 합니다: 한 *모듈* 전체를 오염시키죠. 일반적으로 불안전한 코드의 범위를 제한하는, 오류 없는 유일한 방법은 모듈 경계에서 `private`를 이용하는 것입니다.
 
-Generally, the only bullet-proof way to limit the scope of unsafe code is at the
-module boundary with privacy.
+그렇지만 이 코드는 *완벽하게* 동작합니다. `make_room`의 존재는, 우리가 그것을 `pub` 으로 표시하지 않았기 때문에, Vec의 건전성에 문제가 되지 *않습니다.* 이 함수를 정의한 모듈만 이것을 호출할 수 있기 때문입니다. 
+또, `make_room`은 `Vec`의 `private` 필드를 직접적으로 접근하므로, `Vec`과 같은 모듈에서 작성될 수밖에 없습니다.
 
-However this works *perfectly*. The existence of `make_room` is *not* a
-problem for the soundness of Vec because we didn't mark it as public. Only the
-module that defines this function can call it. Also, `make_room` directly
-accesses the private fields of Vec, so it can only be written in the same module
-as Vec.
+그러므로 우리는 복잡한 불문율에 의지하는, 완전히 안전한 추상화를 작성할 수 있게 됩니다. 이것은 안전한 러스트와 불안전한 러스트 사이의 관계에 있어서 *필수적입니다.*
 
-It is therefore possible for us to write a completely safe abstraction that
-relies on complex invariants. This is *critical* to the relationship between
-Safe Rust and Unsafe Rust.
+
 
 We have already seen that Unsafe code must trust *some* Safe code, but shouldn't
 trust *generic* Safe code. Privacy is important to unsafe code for similar reasons:
