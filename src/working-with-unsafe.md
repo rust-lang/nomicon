@@ -1,8 +1,6 @@
-# Working with Unsafe
+# 불안전함과 일하는 것
 
-Rust generally only gives us the tools to talk about Unsafe Rust in a scoped and
-binary manner. Unfortunately, reality is significantly more complicated than
-that. For instance, consider the following toy function:
+러스트는 일반적으로 우리가 불안전한 러스트와 이야기할 때 정해진 범위 안에서, 이진수의 방식으로 이야기하는 도구만 줍니다. 불행하게도 현실은 그것보다 훨씬 복잡하죠. 예를 들어, 다음의 간단한 함수를 생각해 볼까요:
 
 ```rust
 fn index(idx: usize, arr: &[u8]) -> Option<u8> {
@@ -16,11 +14,10 @@ fn index(idx: usize, arr: &[u8]) -> Option<u8> {
 }
 ```
 
-This function is safe and correct. We check that the index is in bounds, and if
-it is, index into the array in an unchecked manner. We say that such a correct
-unsafely implemented function is *sound*, meaning that safe code cannot cause
-Undefined Behavior through it (which, remember, is the single fundamental
-property of Safe Rust).
+이 함수는 안전하고 올바릅니다. 우리는 인덱스가 범위 안에 있는지 확인하고, 그렇다면 더 이상 확인하지 않고 배열을 바로 인덱싱합니다. 이렇게 잘 구현된 불안전한 함수를 *견고하다* 고 하는데, 
+이것은 안전한 코드가 이 코드를 악용해서 미정의 동작을 유발할 수 없다는 뜻입니다 (이건 바로 안전한 러스트의 유일한 근본적 특성이었죠).
+
+
 
 But even in such a trivial function, the scope of the unsafe block is
 questionable. Consider changing the `<` to a `<=`:
