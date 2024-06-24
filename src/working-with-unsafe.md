@@ -86,11 +86,7 @@ fn make_room(&mut self) {
 
 그러므로 우리는 복잡한 불문율에 의지하는, 완전히 안전한 추상화를 작성할 수 있게 됩니다. 이것은 안전한 러스트와 불안전한 러스트 사이의 관계에 있어서 *필수적입니다.*
 
+우리는 이미 불안전한 러스트가 *일부의* 안전한 코드를 믿어야 하지만, *일반적인* 안전한 코드는 믿으면 안된다는 것을 보았습니다. 공개 상태(`pub` 을 이용한)도 비슷한 이유로 불안전한 코드에 있어서 중요합니다: 
+우리가 믿고 있는 상태를 망가트리지 않을 거라고 믿으며 온 우주에 있는 모든 안전한 코드를 의지할 필요가 없으니까요.
 
-
-We have already seen that Unsafe code must trust *some* Safe code, but shouldn't
-trust *generic* Safe code. Privacy is important to unsafe code for similar reasons:
-it prevents us from having to trust all the safe code in the universe from messing
-with our trusted state.
-
-Safety lives!
+안전함은 살았습니다!
