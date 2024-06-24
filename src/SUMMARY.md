@@ -6,7 +6,7 @@
   * [안전함과 불안전함은 어떻게 상호작용하는가](safe-unsafe-meaning.md)
   * [불안전함은 어떤 것을 할 수 있는가](what-unsafe-does.md)
   * [불안전함과 함께 일하는 것](working-with-unsafe.md)
-* [Data Layout](data.md)
+* [데이터 레이아웃](data.md)
   * [repr(Rust)](repr-rust.md)
   * [Exotically Sized Types](exotic-sizes.md)
   * [Other reprs](other-reprs.md)
