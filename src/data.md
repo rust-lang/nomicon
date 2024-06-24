@@ -2,15 +2,11 @@
 
 저수준 프로그래밍은 데이터 레이아웃에 많은 신경을 씁니다. 그것은 중요하거든요. 이것은 또한 언어의 전반적인 부분에 영향을 주기 때문에, 우리는 러스트에서 데이터가 어떻게 표현되는지를 파헤쳐 보면서 시작하겠습니다.
 
+이 챕터는 이상적으로는 [참조서의 타입 레이아웃 섹션][ref-type-layout]과 동의하는 내용이고, 중복으로 이 책에 표시되었습니다. 이 책이 처음 쓰여질 때 참조서는 완전히 황폐한 상태였고, 
+러스토노미콘은 참조서에 대한 부분적인 대안으로 제공하려고 시도했습니다. 이제 참조서는 그렇지 않으므로, 이 챕터 전체는 이상적으로는 삭제되어도 될 겁니다.
 
+우리는 이 챕터를 조금 더 놔둘 거지만, 이상적으로는 새로운 사실이나 개선점을 기여하고 싶다면 참조서에 대신 기여해 주세요.
 
-This chapter is ideally in agreement with, and rendered redundant by,
-the [Type Layout section of the Reference][ref-type-layout]. When this
-book was first written, the reference was in complete disrepair, and the
-Rustonomicon was attempting to serve as a partial replacement for the reference.
-This is no longer the case, so this whole chapter can ideally be deleted.
-
-We'll keep this chapter around for a bit longer, but ideally you should be
-contributing any new facts or improvements to the Reference instead.
+(*번역자: 현재 러스트 참조서는 한국어로 번역되지 않은 상태이므로, 한국어 노미콘에 우선 기여해주시면 감사하겠습니다!*)
 
 [ref-type-layout]: https://doc.rust-lang.org/reference/type-layout.html
