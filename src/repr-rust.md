@@ -79,11 +79,8 @@ struct Foo<T, U> {
     data2: U,
 }
 ```
-
-Now consider the monomorphizations of `Foo<u32, u16>` and `Foo<u16, u32>`. If
-Rust lays out the fields in the order specified, we expect it to pad the
-values in the struct to satisfy their alignment requirements. So if Rust
-didn't reorder fields, we would expect it to produce the following:
+이제 이 구조체의 한 버전인 `Foo<u32, u16>`와 `Foo<u16, u32>`를 생각해 보세요. 만약 러스트가 특정된 순서로 필드를 배치한다면, 그 정렬선 문제를 해결하기 위해 구조체 안에 여백의 값을 집어넣기를 우리는 기대할 것입니다. 
+따라서 만약 러스트가 필드를 재정렬하지 않았다면, 이런 식으로 출력이 나오겠지요: 
 
 <!-- ignore: explanation code -->
 ```rust,ignore
@@ -102,10 +99,9 @@ struct Foo<u32, u16> {
 }
 ```
 
-The latter case quite simply wastes space. An optimal use of space
-requires different monomorphizations to have *different field orderings*.
+후자의 경우는 꽤나 공간을 낭비합니다. 공간 사용을 최적화하려면 일반화의 다른 버전마다 *다른 필드 순서가* 필요하겠군요.
 
-Enums make this consideration even more complicated. Naively, an enum such as:
+열거형은 이런 고민을 더욱 복잡하게 만듭니다. 순진하게 보자면, 이런 열거형은: 
 
 ```rust
 enum Foo {
@@ -115,7 +111,7 @@ enum Foo {
 }
 ```
 
-might be laid out as:
+이렇게 배치될 수 있겠습니다: 
 
 ```rust
 struct FooRepr {
