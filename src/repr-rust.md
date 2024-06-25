@@ -1,13 +1,9 @@
 # repr(Rust)
 
-첫번째로 그리고 가장 중요하게도, 모든 타입은 바이트로 특정되는 정렬선이 있습니다. 
+첫번째로 그리고 가장 중요하게도, 모든 타입은 바이트로 특정되는 정렬선이 있습니다. 타입의 정렬선은 값을 어떤 주소에 저장하는 게 유효한지를 특정해 줍니다. `n`의 정렬선을 가지고 있는 값은 `n`의 배수인 주소에만 저장할 수 있습니다. 
+따라서 정렬선이 2이면 짝수인 주소에 저장되어야 한다는 뜻이고, 1이라면 어디든지 저장될 수 있다는 뜻입니다. 정렬선은 최소 1이고, 항상 2의 거듭제곱입니다.
 
-The
-alignment of a type specifies what addresses are valid to store the value at. A
-value with alignment `n` must only be stored at an address that is a multiple of
-`n`. So alignment 2 means you must be stored at an even address, and 1 means
-that you can be stored anywhere. Alignment is at least 1, and always a power
-of 2.
+
 
 Primitives are usually aligned to their size, although this is
 platform-specific behavior. For example, on x86 `u64` and `f64` are often
