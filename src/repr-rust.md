@@ -126,11 +126,8 @@ struct FooRepr {
 하나의 `()`을 가진 형(예를 들어 `None`)과 (중첩될 수도 있는) 널이 될 수 없는 포인터를 가진 형(예를 들어 `Some(&T)`)이 있는 열거형은 태그가 필요하지 않습니다. 널 포인터는 안전하게 `()` 형(`None`)으로 해석할 수 있거든요. 
 최종적인 결과는, 예를 들어, 이렇게 됩니다: `size_of::<Option<&T>>() == size_of::<&T>()`
 
-러스트에는 널이 될 수 없는 타입이나, 이를 포함하는 타입들이 많이 있는데, `Box<T>`, `Vec<T>`, `String`, `&T`, 그리고 `&mut T` 같은 것들입니다. Similarly, one can imagine
-nested enums pooling their tags into a single discriminant, as they are by
-definition known to have a limited range of valid values. In principle enums could
-use fairly elaborate algorithms to store bits throughout nested types with
-forbidden values. As such it is *especially* desirable that
-we leave enum layout unspecified today.
+러스트에는 널이 될 수 없는 타입이나, 이를 포함하는 타입들이 많이 있는데, `Box<T>`, `Vec<T>`, `String`, `&T`, 그리고 `&mut T` 같은 것들입니다. 
+비슷하게, 중첩된 열거형들이 태그를 하나의 형으로 뭉치는 경우도 생각할 수 있는데, 그것은 그들이 정의에 의해서 유효한 값의 범위가 정해져 있기 때문입니다. 
+원칙상 열거형은 꽤나 정교한 알고리즘을 써서 중첩된 타입에 있는 비트들을 금지된 값들과 함께 저장할 수 있습니다. 따라서 오늘날 우리는 열거형의 배치 상태를 밝혀지지 않은 상태로 놔두는 것이 *특별히* 좋습니다.
 
 [dst]: exotic-sizes.html#dynamically-sized-types-dsts
