@@ -1,9 +1,8 @@
-# Exotically Sized Types
+# 이량(異量) 타입
 
-Most of the time, we expect types to have a statically known and positive size.
-This isn't always the case in Rust.
+거의 항상, 우리는 타입이 정적으로 알려져 있고 양수의 크기를 가지고 있다고 생각합니다. 러스트에서 이것은 항상 그렇지는 않습니다.
 
-## Dynamically Sized Types (DSTs)
+## 동량(動量) 타입 (DST)
 
 Rust supports Dynamically Sized Types (DSTs): types without a statically
 known size or alignment. On the surface, this is a bit nonsensical: Rust *must*
