@@ -8,7 +8,7 @@
   * [불안전함과 함께 일하는 것](working-with-unsafe.md)
 * [데이터 레이아웃](data.md)
   * [repr(Rust)](repr-rust.md)
-  * [이량 타입](exotic-sizes.md)
+  * [이량(異量) 타입](exotic-sizes.md)
   * [Other reprs](other-reprs.md)
 * [Ownership](ownership.md)
   * [References](references.md)
