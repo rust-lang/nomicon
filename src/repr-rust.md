@@ -1,6 +1,8 @@
 # repr(Rust)
 
-First and foremost, all types have an alignment specified in bytes. The
+첫번째로 그리고 가장 중요하게도, 모든 타입은 바이트로 특정되는 정렬선이 있습니다. 
+
+The
 alignment of a type specifies what addresses are valid to store the value at. A
 value with alignment `n` must only be stored at an address that is a multiple of
 `n`. So alignment 2 means you must be stored at an even address, and 1 means
