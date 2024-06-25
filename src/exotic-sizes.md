@@ -4,18 +4,14 @@
 
 ## 동량(動量) 타입 (DST)
 
-Rust supports Dynamically Sized Types (DSTs): types without a statically
-known size or alignment. On the surface, this is a bit nonsensical: Rust *must*
-know the size and alignment of something in order to correctly work with it! In
-this regard, DSTs are not normal types. Because they lack a statically known
-size, these types can only exist behind a pointer. Any pointer to a
-DST consequently becomes a *wide* pointer consisting of the pointer and the
-information that "completes" them (more on this below).
+러스트는 동량(動量) 타입(DST)을 지원합니다: 정적으로 알려진 크기나 정렬선이 없는 타입을 말이죠. 표면적으로는 이것은 좀 말이 되지 않습니다: 러스트는 무언가와 올바르게 작업하기 위해서는 그것의 크기와 정렬선을 *알아야 하거든요!* 
+이런 면에서 DST는 보통의 타입이 아닙니다. 정적으로 알려진 크기가 없기 때문에, 이런 타입들은 포인터 뒤에서만 존재할 수 있습니다. 
+따라서 DST를 가리키는 포인터는 포인터와 DST를 "완성하는" 정보로 이루어진 *넓은* 포인터가 됩니다 (밑에서 더 설명합니다).
 
-There are two major DSTs exposed by the language:
+언어에서 보이는 주요한 DST는 두 가지가 있습니다: 
 
-* trait objects: `dyn MyTrait`
-* slices: [`[T]`][slice], [`str`], and others
+* 트레잇 객체: `dyn MyTrait`
+* 슬라이스: [`[T]`][slice], [`str`], 등등
 
 A trait object represents some type that implements the traits it specifies.
 The exact original type is *erased* in favor of runtime reflection
