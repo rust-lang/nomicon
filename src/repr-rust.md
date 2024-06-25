@@ -5,20 +5,18 @@
 
 기본 타입들은 그들의 크기에 맞춰 정렬됩니다. 플랫폼에 따라 다르긴 하지만요. 예를 들어, x86에서는 `u64`와 `f64`는 보통 4바이트(32비트)마다 정렬됩니다.
 
-A type's size must always be a multiple of its alignment (Zero being a valid size
-for any alignment). This ensures that an array of that type may always be indexed
-by offsetting by a multiple of its size. Note that the size and alignment of a
-type may not be known statically in the case of [dynamically sized types][dst].
+타입의 크기는 항상 정렬선의 배수여야 합니다 (0은 어떤 정렬선이든 인정되는 크기입니다). 이것은 그 타입의 배열이 언제나 그 크기의 배수로 인덱싱되는 것을 보장합니다. 
+[동량 타입][dst]의 경우에는 타입의 크기와 정렬선이 컴파일할 때 모를 수도 있다는 것을 주의하세요.
 
-Rust gives you the following ways to lay out composite data:
+러스트는 복잡한 데이터를 다음의 방법으로 가지런하게 놓을 수 있게 해 줍니다: 
 
-* structs (named product types)
-* tuples (anonymous product types)
-* arrays (homogeneous product types)
-* enums (named sum types -- tagged unions)
-* unions (untagged unions)
+* 구조체 (곱 타입이라고 부름)
+* 튜플 (이름 없는 곱 타입)
+* 배열 (동형의 곱 타입)
+* 열거형 (합 타입 또는 태그가 있는 공용체라고 부름)
+* 공용체 (태그 없는 공용체)
 
-An enum is said to be *field-less* if none of its variants have associated data.
+열거형은 그 형(形)이 모두 연관된 데이터가 없으면 *필드가 없다*고 합니다.
 
 By default, composite structures have an alignment equal to the maximum
 of their fields' alignments. Rust will consequently insert padding where
