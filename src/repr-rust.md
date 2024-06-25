@@ -3,11 +3,7 @@
 첫번째로 그리고 가장 중요하게도, 모든 타입은 바이트로 특정되는 정렬선이 있습니다. 타입의 정렬선은 값을 어떤 주소에 저장하는 게 유효한지를 특정해 줍니다. `n`의 정렬선을 가지고 있는 값은 `n`의 배수인 주소에만 저장할 수 있습니다. 
 따라서 정렬선이 2이면 짝수인 주소에 저장되어야 한다는 뜻이고, 1이라면 어디든지 저장될 수 있다는 뜻입니다. 정렬선은 최소 1이고, 항상 2의 거듭제곱입니다.
 
-
-
-Primitives are usually aligned to their size, although this is
-platform-specific behavior. For example, on x86 `u64` and `f64` are often
-aligned to 4 bytes (32 bits).
+기본 타입들은 그들의 크기에 맞춰 정렬됩니다. 플랫폼에 따라 다르긴 하지만요. 예를 들어, x86에서는 `u64`와 `f64`는 보통 4바이트(32비트)마다 정렬됩니다.
 
 A type's size must always be a multiple of its alignment (Zero being a valid size
 for any alignment). This ensures that an array of that type may always be indexed
