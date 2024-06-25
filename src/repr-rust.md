@@ -1,6 +1,6 @@
 # repr(Rust)
 
-첫번째로 그리고 가장 중요하게도, 모든 타입은 바이트로 특정되는 정렬선이 있습니다. 타입의 정렬선은 값을 어떤 주소에 저장하는 게 유효한지를 특정해 줍니다. `n`의 정렬선을 가지고 있는 값은 `n`의 배수인 주소에만 저장할 수 있습니다. 
+첫번째로 그리고 가장 중요하게도, 모든 타입은 바이트로 표시되는 정렬선이 있습니다. 타입의 정렬선은 값을 어떤 주소에 저장하는 게 유효한지를 특정해 줍니다. `n`의 정렬선을 가지고 있는 값은 `n`의 배수인 주소에만 저장할 수 있습니다. 
 따라서 정렬선이 2이면 짝수인 주소에 저장되어야 한다는 뜻이고, 1이라면 어디든지 저장될 수 있다는 뜻입니다. 정렬선은 최소 1이고, 항상 2의 거듭제곱입니다.
 
 기본 타입들은 그들의 크기에 맞춰 정렬됩니다. 플랫폼에 따라 다르긴 하지만요. 예를 들어, x86에서는 `u64`와 `f64`는 보통 4바이트(32비트)마다 정렬됩니다.
@@ -28,11 +28,7 @@ struct A {
 }
 ```
 
-32비트로 정렬될 것입니다.
-
-will be 32-bit aligned on a target that aligns these primitives to their
-respective sizes. The whole struct will therefore have a size that is a multiple
-of 32-bits. It may become:
+이런 기본 타입들을 그들의 해당되는 크기로 정렬하는 타겟 플랫폼에서 32비트로 정렬될 것입니다. 따라서 구조체 전체는 32비트의 배수를 크기로 가지게 될 겁니다. 이 구조체는 이렇게 될 수도 있습니다: 
 
 ```rust
 struct A {
@@ -44,7 +40,7 @@ struct A {
 }
 ```
 
-or maybe:
+아니면 이렇게도요: 
 
 ```rust
 struct A {
@@ -54,6 +50,8 @@ struct A {
     _pad: u8,
 }
 ```
+
+
 
 There is *no indirection* for these types; all data is stored within the struct,
 as you would expect in C. However with the exception of arrays (which are
