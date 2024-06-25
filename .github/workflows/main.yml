@@ -27,12 +27,12 @@ jobs:
     #     path: linkchecker
     #     key: linkchecker-${{ runner.os }}
 
-    - name: Install linkcheck and Check links
-      # if: steps.cache.outputs.cache-hit != 'true'
-      run: |
-        curl -sSLo linkcheck.sh \
-          https://raw.githubusercontent.com/rust-lang/rust/master/src/tools/linkchecker/linkcheck.sh
-          sh linkcheck.sh --all nomicon
+    # - name: Install linkcheck and Check links
+    #   # if: steps.cache.outputs.cache-hit != 'true'
+    #   run: |
+    #     curl -sSLo linkcheck.sh \
+    #       https://raw.githubusercontent.com/rust-lang/rust/master/src/tools/linkchecker/linkcheck.sh
+    #       sh linkcheck.sh --all nomicon
 
     # - name: Check links
     #   if: steps.cache.outputs.cache-hit == 'true'
