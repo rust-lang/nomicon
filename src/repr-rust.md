@@ -66,15 +66,11 @@ struct B {
 }
 ```
 
-Rust *does* guarantee that two instances of A have their data laid out in
-exactly the same way. However Rust *does not* currently guarantee that an
-instance of A has the same field ordering or padding as an instance of B.
+러스트는 `A` 타입의 두 값은 그 데이터가 정확히 똑같은 식으로 정렬될 것은 *보장합니다.* 그러나 러스트는, 현재로써는, `A` 타입의 값이 `B` 타입의 값과 같은 필드 순서나 여백을 가질지는 *보장하지 않습니다.*
 
-With A and B as written, this point would seem to be pedantic, but several other
-features of Rust make it desirable for the language to play with data layout in
-complex ways.
+`A`와 `B`가 이렇게 적혔으니 학술적인 느낌일 것 같지만, 러스트의 몇 가지 다른 기능들이 데이터 정렬을 여러 가지 복잡한 방법으로 가지고 놀기 좋게 해 줍니다.
 
-For instance, consider this struct:
+예를 들어, 이 구조체를 생각해 보세요: 
 
 ```rust
 struct Foo<T, U> {
