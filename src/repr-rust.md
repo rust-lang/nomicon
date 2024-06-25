@@ -18,10 +18,7 @@
 
 열거형은 그 형(形)이 모두 연관된 데이터가 없으면 *필드가 없다*고 합니다.
 
-By default, composite structures have an alignment equal to the maximum
-of their fields' alignments. Rust will consequently insert padding where
-necessary to ensure that all fields are properly aligned and that the overall
-type's size is a multiple of its alignment. For instance:
+기본적으로, 복합적인 자료구조는 그 필드들의 정렬선들 중 최댓값을 정렬선으로 갖습니다. 러스트는 따라서 필요한 곳에 여백을 넣음으로써 모든 필드가 잘 정렬되고, 타입의 총 크기가 그 정렬선의 배수가 되도록 합니다. 예를 들어 다음의 구조체는: 
 
 ```rust
 struct A {
@@ -30,6 +27,8 @@ struct A {
     c: u16,
 }
 ```
+
+32비트로 정렬될 것입니다.
 
 will be 32-bit aligned on a target that aligns these primitives to their
 respective sizes. The whole struct will therefore have a size that is a multiple
