@@ -33,10 +33,10 @@ struct A {
 ```rust
 struct A {
     a: u8,
-    _pad1: [u8; 3], // to align `b`
+    _pad1: [u8; 3], // `b`를 정렬하기 위해서입니다
     b: u32,
     c: u16,
-    _pad2: [u8; 2], // to make overall size multiple of 4
+    _pad2: [u8; 2], // 전체 크기가 4바이트의 배수가 되게 하기 위해서입니다
 }
 ```
 
@@ -51,12 +51,8 @@ struct A {
 }
 ```
 
-
-
-There is *no indirection* for these types; all data is stored within the struct,
-as you would expect in C. However with the exception of arrays (which are
-densely packed and in-order), the layout of data is not specified by default.
-Given the two following struct definitions:
+이런 타입들에는 *간접적인 조치는 없습니다;* 모든 데이터는 C에서 그럴 것 같이, 구조체 안에 저장됩니다. 그러나 배열은 예외인데 (순서대로, 그리고 밀집되어 할당되어 있으니까요), 기본적으로 데이터의 정렬선은 특정되지 않습니다. 
+다음의 두 구조체 정의를 볼 때: 
 
 ```rust
 struct A {
