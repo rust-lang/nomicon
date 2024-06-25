@@ -124,7 +124,9 @@ struct FooRepr {
 
 하지만 어떤 몇 가지 경우에서는 이런 표현은 비효율적입니다. 전통적인 경우는 러스트의 "널 포인터 최적화"입니다: 
 하나의 `()`을 가진 형(예를 들어 `None`)과 (중첩될 수도 있는) 널이 될 수 없는 포인터를 가진 형(예를 들어 `Some(&T)`)이 있는 열거형은 태그가 필요하지 않습니다. 널 포인터는 안전하게 `()` 형(`None`)으로 해석할 수 있거든요. 
-최종적인 결과는, 예를 들어, `size_of::<Option<&T>>() == size_of::<&T>()`이게 됩니다.
+최종적인 결과는, 예를 들어, 이랗게 됩니다: `size_of::<Option<&T>>() == size_of::<&T>()`
+
+
 
 There are many types in Rust that are, or contain, non-nullable pointers such as
 `Box<T>`, `Vec<T>`, `String`, `&T`, and `&mut T`. Similarly, one can imagine
