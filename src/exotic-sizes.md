@@ -13,11 +13,9 @@
 * 트레잇 객체: `dyn MyTrait`
 * 슬라이스: [`[T]`][slice], [`str`], 등등
 
-A trait object represents some type that implements the traits it specifies.
-The exact original type is *erased* in favor of runtime reflection
-with a vtable containing all the information necessary to use the type.
-The information that completes a trait object pointer is the vtable pointer.
-The runtime size of the pointee can be dynamically requested from the vtable.
+트레잇 객체는 그것이 특정하는 트레잇을 구현하는 어떤 타입을 표현합니다. 정확한 원래 타입은 런타임 리플렉션을 위해 *지워지고,* 타입을 쓰기 위해 필요한 모든 정보를 담고 있는 vtable로 대체됩니다. 트레잇 객체를 완성하는 정보는 이 vtable의 포인터입니다. 포인터가 가리키는 대상의 런타임 크기는 vtable에서 동적으로 요청될 수 있습니다. 
+
+
 
 A slice is simply a view into some contiguous storage -- typically an array or
 `Vec`. The information that completes a slice pointer is just the number of elements
