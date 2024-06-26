@@ -51,7 +51,7 @@ fn main() {
 
 (네, 커스텀 동량 타입은 지긍으로써는 매우 설익은 기능입니다.)
 
-## Zero Sized Types (ZSTs)
+## 무량(無量) 타입 (ZST)
 
 Rust also allows types to be specified that occupy no space:
 
