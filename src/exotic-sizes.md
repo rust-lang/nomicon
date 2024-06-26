@@ -15,27 +15,20 @@
 
 트레잇 객체는 그것이 특정하는 트레잇을 구현하는 어떤 타입을 표현합니다. 정확한 원래 타입은 런타임 리플렉션을 위해 *지워지고,* 타입을 쓰기 위해 필요한 모든 정보를 담고 있는 vtable로 대체됩니다. 트레잇 객체를 완성하는 정보는 이 vtable의 포인터입니다. 포인터가 가리키는 대상의 런타임 크기는 vtable에서 동적으로 요청될 수 있습니다. 
 
+슬라이스는 어떤 연속적인 저장소에 대한 뷰일 뿐입니다 -- 보통 이 저장소는 배열이거나 `Vec`입니다. 슬라이스 포인터를 완성시키는 정보는 가리키고 있는 원소들의 갯수입니다. 
+가리키는 대상의 런타임 크기는 그냥 한 원소의 정적으로 알려진 크기와 원소들의 갯수를 곱한 것입니다.
 
-
-A slice is simply a view into some contiguous storage -- typically an array or
-`Vec`. The information that completes a slice pointer is just the number of elements
-it points to. The runtime size of the pointee is just the statically known size
-of an element multiplied by the number of elements.
-
-Structs can actually store a single DST directly as their last field, but this
-makes them a DST as well:
+구조체는 사실 마지막 필드로써 하나의 동량 타입을 직접 저장할 수 있지만, 그러면 그들 자신도 동량 타입이 됩니다: 
 
 ```rust
-// Can't be stored on the stack directly
+// 직접적으로 스택에 저장할 수 없음
 struct MySuperSlice {
     info: u32,
     data: [u8],
 }
 ```
 
-Although such a type is largely useless without a way to construct it. Currently the
-only properly supported way to create a custom DST is by making your type generic
-and performing an *unsizing coercion*:
+이런 타입은 생성할 방법이 없으면 별로 쓸모가 없지만 말이죠. 현재 유일하게 제대로 지원되는, 커스텀 동량 타입을 만들 방법은 타입을 제네릭으로 만들고 *크기 강제 망각*을 실행하는 것입니다: 
 
 ```rust
 struct MySuperSliceable<T: ?Sized> {
@@ -56,7 +49,7 @@ fn main() {
 }
 ```
 
-(Yes, custom DSTs are a largely half-baked feature for now.)
+(네, 커스텀 동량 타입은 지긍으로써는 매우 설익은 기능입니다.)
 
 ## Zero Sized Types (ZSTs)
 
