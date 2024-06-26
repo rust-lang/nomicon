@@ -105,7 +105,7 @@ references, must be non-null and suitably aligned. Dereferencing a null or
 unaligned pointer to a ZST is [undefined behavior][ub], just like for any other
 type.
 
-[alloc]: ../std/alloc/trait.GlobalAlloc.html#tymethod.alloc
+[alloc]: https://doc.rust-lang.org/std/alloc/trait.GlobalAlloc.html#tymethod.alloc
 [ub]: what-unsafe-does.html
 
 ## Empty Types
@@ -172,5 +172,5 @@ should behave][extern-types-issue].
 
 [extern-types]: https://github.com/rust-lang/rfcs/blob/master/text/1861-extern-types.md
 [extern-types-issue]: https://github.com/rust-lang/rust/issues/43467
-[`str`]: ../std/primitive.str.html
-[slice]: ../std/primitive.slice.html
+[`str`]: https://doc.rust-lang.org/std/primitive.str.html
+[slice]: https://doc.rust-lang.org/std/primitive.slice.html
