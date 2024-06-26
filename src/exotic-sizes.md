@@ -49,30 +49,28 @@ fn main() {
 }
 ```
 
-(네, 커스텀 동량 타입은 지긍으로써는 매우 설익은 기능입니다.)
+(네, 커스텀 동량 타입은 지금으로써는 매우 설익은 기능입니다.)
 
 ## 무량(無量) 타입 (ZST)
 
-Rust also allows types to be specified that occupy no space:
+러스트는 타입이 공간을 차지하지 않는다고 말하는 것도 허용합니다: 
 
 ```rust
-struct Nothing; // No fields = no size
+struct Nothing; // 필드 없음 = 크기 없음
 
-// All fields have no size = no size
+// 모든 필드가 크기 없음 = 크기 없음
 struct LotsOfNothing {
     foo: Nothing,
-    qux: (),      // empty tuple has no size
-    baz: [u8; 0], // empty array has no size
+    qux: (),      // 빈 튜플은 크기가 없습니다
+    baz: [u8; 0], // 빈 배열은 크기가 없습니다
 }
 ```
 
-On their own, Zero Sized Types (ZSTs) are, for obvious reasons, pretty useless.
-However as with many curious layout choices in Rust, their potential is realized
-in a generic context: Rust largely understands that any operation that produces
-or stores a ZST can be reduced to a no-op. First off, storing it doesn't even
-make sense -- it doesn't occupy any space. Also there's only one value of that
-type, so anything that loads it can just produce it from the aether -- which is
-also a no-op since it doesn't occupy any space.
+무량(無量) 타입(ZST)은, 당연하게도 그 자체로는, 별로 쓸모가 없습니다. 하지만 러스트의 많은 기이한 레이아웃 선택들이 그렇듯이, 그들의 잠재력은 제네릭한 환경에서 빛나게 됩니다: 
+러스트는 무량 타입의 값을 생성하거나 저장하는 모든 작업이 아무 작업도 하지 않는 것과 같을 수 있다는 사실을 매우 이해하거든요. 일단 값을 저장한다는 것부터가 말이 안됩니다 -- 차지하는 공간도 없는걸요. 
+또 그 타입의 값은 오직 하나이므로, 어떤 값이 읽히든 그냥 무에서 값을 만들어내면 됩니다 -- 이것 또한 차지하는 공간이 없기 때문에, 아무것도 하지 않는 것과 같습니다.
+
+
 
 One of the most extreme examples of this is Sets and Maps. Given a
 `Map<Key, Value>`, it is common to implement a `Set<Key>` as just a thin wrapper
