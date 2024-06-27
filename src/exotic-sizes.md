@@ -92,12 +92,10 @@ struct LotsOfNothing {
 ```rust
 enum Void {} // 형 없음 = 비어 있음
 ```
+빈 타입은 무량 타입보다도 더 작습니다. 빈 타입의 예시로 들 만한 것은 타입 측면에서의 접근불가성입니다. 예를 들어, 어떤 API가 일반적으로 `Result`를 반환해야 하지만, 어떤 경우에서는 실패할 수 없다고 합시다. 
+우리는 이것을 `Result<T, Void>`를 반환함으로써 타입 레벨에서 소통할 수 있습니다. 
 
-Empty types are even more marginal than ZSTs. The primary motivating example for
-an empty type is type-level unreachability. For instance, suppose an API needs to
-return a Result in general, but a specific case actually is infallible. It's
-actually possible to communicate this at the type level by returning a
-`Result<T, Void>`. Consumers of the API can confidently unwrap such a Result
+Consumers of the API can confidently unwrap such a Result
 knowing that it's *statically impossible* for this value to be an `Err`, as
 this would require providing a value of type `Void`.
 
