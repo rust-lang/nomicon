@@ -70,24 +70,16 @@ struct LotsOfNothing {
 러스트는 무량 타입의 값을 생성하거나 저장하는 모든 작업이 아무 작업도 하지 않는 것과 같을 수 있다는 사실을 매우 이해하거든요. 일단 값을 저장한다는 것부터가 말이 안됩니다 -- 차지하는 공간도 없는걸요. 
 또 그 타입의 값은 오직 하나이므로, 어떤 값이 읽히든 그냥 무에서 값을 만들어내면 됩니다 -- 이것 또한 차지하는 공간이 없기 때문에, 아무것도 하지 않는 것과 같습니다.
 
+이것의 가장 극단적인 예시 중 하나가 `Map`과 `Set`입니다. `Map<Key, Value>`가 주어졌을 때, `Set<Key>`를 `Map<Key, UselessJunk>`를 적당히 감싸는 자료구조로 만드는 것은 흔하게 볼 수 있습니다. 
+많은 언어들에서 이것은 `UselessJunk` 타입을 위한 공간을 할당하고, `UselessJunk`를 가지고 아무것도 하지 않기 위해서 그 값을 저장하고 읽는 작업을 강제할 겁니다. 
+이 작업이 불필요하다는 것을 증명하려면 컴파일러는 복잡한 분석을 해야 할 겁니다.
+
+그러나 러스트에서는 우리는 그냥 `Set<Key> = Map<Key, ()>`라고 말할 수 있습니다. 이제 러스트는 컴파일할 때 모든 메모리 읽기와 저장은 의미가 없고, 저장 공간을 할당할 필요도 없다는 것을 알게 됩니다. 
+결과적으로 나오는 코드는 그냥 `HashSet`의 커스텀 구현일 뿐이고, `HashMap`이 값을 처리할 때의 연산은 존재하지 않게 됩니다.
+
+안전한 코드는 무량 타입에 대해서 걱정하지 않아도 되지만, *불안전한* 코드는 크기가 없는 타입의 중요성을 신경써야 합니다. 특히 포인터 오프셋은 아무 작업도 하지 않는 것과 같고, 할당자는 보통 [0이 아닌 크기를 요구합니다][alloc].
 
 
-One of the most extreme examples of this is Sets and Maps. Given a
-`Map<Key, Value>`, it is common to implement a `Set<Key>` as just a thin wrapper
-around `Map<Key, UselessJunk>`. In many languages, this would necessitate
-allocating space for UselessJunk and doing work to store and load UselessJunk
-only to discard it. Proving this unnecessary would be a difficult analysis for
-the compiler.
-
-However in Rust, we can just say that  `Set<Key> = Map<Key, ()>`. Now Rust
-statically knows that every load and store is useless, and no allocation has any
-size. The result is that the monomorphized code is basically a custom
-implementation of a HashSet with none of the overhead that HashMap would have to
-support values.
-
-Safe code need not worry about ZSTs, but *unsafe* code must be careful about the
-consequence of types with no size. In particular, pointer offsets are no-ops,
-and allocators typically [require a non-zero size][alloc].
 
 Note that references to ZSTs (including empty slices), just like all other
 references, must be non-null and suitably aligned. Dereferencing a null or
