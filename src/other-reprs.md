@@ -1,16 +1,15 @@
-# Alternative representations
+# 다른 데이터 표현들
 
-Rust allows you to specify alternative data layout strategies from the default.
-There's also the [unsafe code guidelines] (note that it's **NOT** normative).
+러스트는 기본으로부터 다른 데이터 설계 전략을 구성하게 해 줍니다. 
+
+[불안전 코드 가이드라인][unsafe_guide]도 있습니다 (**비표준이니** 주의하세요).
 
 ## repr(C)
 
-This is the most important `repr`. It has fairly simple intent: do what C does.
-The order, size, and alignment of fields is exactly what you would expect from C
-or C++. Any type you expect to pass through an FFI boundary should have
-`repr(C)`, as C is the lingua-franca of the programming world. This is also
-necessary to soundly do more elaborate tricks with data layout such as
-reinterpreting values as a different type.
+이것을 가장 중요한 `repr`입니다. 이것은 매우 간단한 의도를 가지고 있습니다: C가 하는대로 하라는 것이죠. 필드들의 정렬 순서, 크기, 정렬선은 C나 C++에서 되는 것 같이 될 겁니다. 
+어떤 타입이든 FFI 경계를 넘겨 보내려면 `repr(C)`로 표현되어야 하는데, 이는 C가 프로그래밍 세계의 공용어이기 때문입니다. 이것은 값을 다른 타입으로 재해석하는 것과 같은, 데이터 레이아웃을 가지고 정교한 장난을 수월하게 칠 수 있기 위해서 필수적입니다. 
+
+
 
 We strongly recommend using [rust-bindgen] and/or [cbindgen] to manage your FFI
 boundaries for you. The Rust team works closely with those projects to ensure
@@ -152,9 +151,9 @@ kinds of concurrent code).
 This is a modifier on `repr(C)` and `repr(Rust)`. It is incompatible with
 `repr(packed)`.
 
-[unsafe code guidelines]: https://rust-lang.github.io/unsafe-code-guidelines/layout.html
-[drop flags]: drop-flags.html
-[ub loads]: https://github.com/rust-lang/rust/issues/27060
+[unsafe_guide]: https://rust-lang.github.io/unsafe-code-guidelines/layout.html
+[drop_flags]: drop-flags.html
+[ub_loads]: https://github.com/rust-lang/rust/issues/27060
 [issue-60405]: https://github.com/rust-lang/rust/issues/60405
 [`UnsafeCell`]: ../std/cell/struct.UnsafeCell.html
 [rfc-transparent]: https://github.com/rust-lang/rfcs/blob/master/text/1758-repr-transparent.md
