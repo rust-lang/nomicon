@@ -101,8 +101,6 @@ API의 사용자들은 이런 `Result`의 값이 `Err`가 되기에 *정적으�
 
 다음의 코드도 컴파일 *될 수도 있을* 겁니다: 
 
-The following *could* also compile:
-
 ```rust,compile_fail
 enum Void {}
 
@@ -112,19 +110,14 @@ let res: Result<u32, Void> = Ok(0);
 let Ok(num) = res;
 ```
 
-But this trick doesn't work yet.
+하지만 아직 이 꼼수는 통하지 않습니다.
 
-One final subtle detail about empty types is that raw pointers to them are
-actually valid to construct, but dereferencing them is Undefined Behavior
-because that wouldn't make sense.
+빈 타입에 대한 마지막 하나의 조그만 사실은, 빈 타입을 가리키는 생 포인터는 놀랍게도 유효하게 생성할 수 있지만, 그것을 역참조하는 것은 말이 안되기 때문에 미정의 동작이라는 것입니다.
 
-We recommend against modelling C's `void*` type with `*const Void`.
-A lot of people started doing that but quickly ran into trouble because
-Rust doesn't really have any safety guards against trying to instantiate
-empty types with unsafe code, and if you do it, it's Undefined Behavior.
-This was especially problematic because developers had a habit of converting
-raw pointers to references and `&Void` is *also* Undefined Behavior to
-construct.
+우리는 C의 `void*` 타입을 `*const Void`로 설계하는 것을 추천하지 않습니다. 많은 사람들이 이렇게 했지만 얼마 지나지 않아 문제에 부딪혔는데, 러스트는 불안전한 코드로 빈 타입의 값을 만드려고 하는 것을 막는 안전 장치가 없고, 
+만약 빈 타입의 값을 만들면, 그것은 미정의 동작이기 때문입니다. 이것은 특별히 문제가 되었는데, 개발자들이 생 포인터를 레퍼런스로 바꾸는 습관이 있었고 `&Void` 값을 만드는 것 *역시* 미정의 동작이기 때문입니다.
+
+
 
 `*const ()` (or equivalent) works reasonably well for `void*`, and can be made
 into a reference without any safety problems. It still doesn't prevent you from
