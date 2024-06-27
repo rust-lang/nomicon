@@ -117,20 +117,13 @@ let Ok(num) = res;
 우리는 C의 `void*` 타입을 `*const Void`로 설계하는 것을 추천하지 않습니다. 많은 사람들이 이렇게 했지만 얼마 지나지 않아 문제에 부딪혔는데, 러스트는 불안전한 코드로 빈 타입의 값을 만드려고 하는 것을 막는 안전 장치가 없고, 
 만약 빈 타입의 값을 만들면, 그것은 미정의 동작이기 때문입니다. 이것은 특별히 문제가 되었는데, 개발자들이 생 포인터를 레퍼런스로 바꾸는 습관이 있었고 `&Void` 값을 만드는 것 *역시* 미정의 동작이기 때문입니다.
 
+`*const ()` (혹은 비슷한 타입)은 `void*`에 대응해서 무리 없이 잘 동작하고, 안전성의 문제 없이 레퍼런스로 만들 수 있습니다.
+값을 읽고 쓰려고 하는 시도를 막는 것은 여전히 하지 않지만, 최소한 미정의 동작보다는 아무 작업도 하지 않는 것으로 컴파일됩니다.
 
+## 외래 타입
 
-`*const ()` (or equivalent) works reasonably well for `void*`, and can be made
-into a reference without any safety problems. It still doesn't prevent you from
-trying to read or write values, but at least it compiles to a no-op instead
-of Undefined Behavior.
-
-## Extern Types
-
-There is [an accepted RFC][extern-types] to add proper types with an unknown size,
-called *extern types*, which would let Rust developers model things like C's `void*`
-and other "declared but never defined" types more accurately. However as of
-Rust 2018, [the feature is stuck in limbo over how `size_of_val::<MyExternType>()`
-should behave][extern-types-issue].
+*외래 타입*으로 불리는, 알 수 없는 크기의 타입을 추가하여 러스트 개발자들이 C의 `void*`나 다른 "선언되었지만 정의되지 않은" 타입들을 좀더 정확하게 설계하자는, [승인된 RFC가][extern-types] 있습니다. 
+하지만 러스트 2018 기준으로, [이 기능은 `size_of_val::<MyExternType>()`이 어떻게 작동해야 하는지에 걸려서 대기 상태에 갇혀 있습니다][extern-types-issue].
 
 [extern-types]: https://github.com/rust-lang/rfcs/blob/master/text/1861-extern-types.md
 [extern-types-issue]: https://github.com/rust-lang/rust/issues/43467
