@@ -9,7 +9,7 @@
 * [데이터 레이아웃](data.md)
   * [repr(Rust)](repr-rust.md)
   * [이량(異量) 타입](exotic-sizes.md)
-  * [Other reprs](other-reprs.md)
+  * [다른 표현 방식들](other-reprs.md)
 * [Ownership](ownership.md)
   * [References](references.md)
   * [Aliasing](aliasing.md)
