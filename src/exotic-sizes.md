@@ -86,14 +86,11 @@ struct LotsOfNothing {
 
 ## 빈 타입
 
-러스트는 또한 *그 타입의 값을 만들 수조차 없는* 타입을 정의하는 것도 지원합니다. 
-
-These
-types can only be talked about at the type level, and never at the value level.
-Empty types can be declared by specifying an enum with no variants:
+러스트는 또한 *그 타입의 값을 만들 수조차 없는* 타입을 정의하는 것도 지원합니다. 이런 타입들은 타입 측면에서만 말할 수 있고, 값 측면에서는 절대 말할 수 없습니다. 
+빈 타입은 형이 없는 열거형을 정의함으로써 만들 수 있습니다: 
 
 ```rust
-enum Void {} // No variants = EMPTY
+enum Void {} // 형 없음 = 비어 있음
 ```
 
 Empty types are even more marginal than ZSTs. The primary motivating example for
