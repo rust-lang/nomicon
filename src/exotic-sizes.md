@@ -94,16 +94,12 @@ enum Void {} // 형 없음 = 비어 있음
 ```
 빈 타입은 무량 타입보다도 더 작습니다. 빈 타입의 예시로 들 만한 것은 타입 측면에서의 접근불가성입니다. 예를 들어, 어떤 API가 일반적으로 `Result`를 반환해야 하지만, 어떤 경우에서는 실패할 수 없다고 합시다. 
 우리는 이것을 `Result<T, Void>`를 반환함으로써 타입 레벨에서 소통할 수 있습니다. 
+API의 사용자들은 이런 `Result`의 값이 `Err`가 되기에 *정적으로 불가능하다는 것을* 알고 자신 있게 `unwrap`할 수 있을 겁니다, 왜냐하면 `Err` 값이 있으려면 `Void` 타입의 값이 생산되어야 하거든요.
 
-Consumers of the API can confidently unwrap such a Result
-knowing that it's *statically impossible* for this value to be an `Err`, as
-this would require providing a value of type `Void`.
+원칙적으로는 러스트가 이런 사실에 기반하여 몇 가지 흥미로운 분석과 최적화를 수행할 수 있을 겁니다. 예를 들어 `Result<T, Void>`는 `Err` 형이 실제로 존재하지 않기에, 그냥 `T`로 표현할 수 있겠죠 
+(엄격하게 말하면, 이것은 보장되지 않은 최적화일 뿐이고, `T`와 `Result<T, Void>` 중 하나를 다른 하나로 변질시키는 것은 아직 미정의 동작입니다).
 
-In principle, Rust can do some interesting analyses and optimizations based
-on this fact. For instance, `Result<T, Void>` is represented as just `T`,
-because the `Err` case doesn't actually exist (strictly speaking, this is only
-an optimization that is not guaranteed, so for example transmuting one into the
-other is still Undefined Behavior).
+다음의 코드도 컴파일 *될 수도 있을* 겁니다: 
 
 The following *could* also compile:
 
@@ -112,7 +108,7 @@ enum Void {}
 
 let res: Result<u32, Void> = Ok(0);
 
-// Err doesn't exist anymore, so Ok is actually irrefutable.
+// Err 형이 존재하지 않으므로, Ok 형은 사실 패턴 매칭이 실패할 수 없습니다.
 let Ok(num) = res;
 ```
 
