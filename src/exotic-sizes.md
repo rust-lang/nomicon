@@ -79,19 +79,16 @@ struct LotsOfNothing {
 
 안전한 코드는 무량 타입에 대해서 걱정하지 않아도 되지만, *불안전한* 코드는 크기가 없는 타입의 중요성을 신경써야 합니다. 특히 포인터 오프셋은 아무 작업도 하지 않는 것과 같고, 할당자는 보통 [0이 아닌 크기를 요구합니다][alloc].
 
-
-
-Note that references to ZSTs (including empty slices), just like all other
-references, must be non-null and suitably aligned. Dereferencing a null or
-unaligned pointer to a ZST is [undefined behavior][ub], just like for any other
-type.
+무량 타입을 가리키는 레퍼런스(빈 슬라이스 포함)는 다른 레퍼런스와 마찬가지로, 널이 아니고 잘 정렬되어 있어야 합니다. 무량 타입을 가리키지만 널이나 정렬되지 않은 포인터를 역참조하는 것 역시, 다른 타입들과 마찬가지로 [미정의 동작][ub]입니다.
 
 [alloc]: https://doc.rust-lang.org/std/alloc/trait.GlobalAlloc.html#tymethod.alloc
 [ub]: what-unsafe-does.html
 
-## Empty Types
+## 빈 타입
 
-Rust also enables types to be declared that *cannot even be instantiated*. These
+러스트는 또한 *그 타입의 값을 만들 수조차 없는* 타입을 정의하는 것도 지원합니다. 
+
+These
 types can only be talked about at the type level, and never at the value level.
 Empty types can be declared by specifying an enum with no variants:
 
