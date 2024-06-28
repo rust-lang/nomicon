@@ -20,22 +20,17 @@
 
 * 필드가 있는 열거형 또한 C와 C++에서 없는 개념이지만, 타입 사이의 유효한 변환이 [정의되어 있습니다][really-tagged].
 
-* 만약 `T`가 [FFI로 보내도 안전하고 널이 아닌 포인터 타입이라면][ffi.html#the-nullable-pointer-optimization], `Option<T>`는 `T`와 같은 데이터 표현과 ABI를 갖추고, 따라서 FFI로 보내도 안전하다는 것이 보장됩니다. 이 글을 쓰는 시점에서, 이것은 `&`, `&mut`, 그리고 함수 포인터들에 해당하는데, 이것들은 전부 널이 될 수 없기 때문입니다.
+* 만약 `T`가 [FFI로 보내도 안전하고 널이 아닌 포인터 타입이라면](ffi.html#the-nullable-pointer-optimization), `Option<T>`는 `T`와 같은 데이터 표현과 ABI를 갖추고, 따라서 FFI로 보내도 안전하다는 것이 보장됩니다. 이 글을 쓰는 시점에서, 이것은 `&`, `&mut`, 그리고 함수 포인터들에 해당하는데, 이것들은 전부 널이 될 수 없기 때문입니다.
 
 * 튜플 구조체는 `repr(C)`에서는 일반 구조체와 같은데, 일반 구조체와 다른 점은 필드의 이름이 없다는 것뿐이기 때문입니다.
 
 * 필드가 없는 열거형에 있어서는 `repr(C)`는 `repr(u*)` (다음 섹션을 보세요) 중 하나와 같습니다. 여기서 선택되는 바이트 크기는 타겟 플랫폼의 C 애플리케이션 이진 인터페이스(ABI)에서의 기본 열거형 크기입니다. 주의할 점은 C에서의 데이터 표현은 구현에 따라 다르게 정의되어 있으므로, 이것은 "최선의 추측"이라는 점입니다. 특별히, 관련된 C 코드가 특정한 플래그로 컴파일되면 이 설명이 맞지 않을 수도 있습니다.
 
-* `repr(C)`나 `repr(u*)`로 표현되는 필드 없는 열거형은 
-
-* Fieldless enums with `repr(C)` or `repr(u*)` still may not be set to an
-integer value without a corresponding variant, even though this is
-permitted behavior in C or C++. It is undefined behavior to (unsafely)
-construct an instance of an enum that does not match one of its
-variants. (This allows exhaustive matches to continue to be written and
-compiled as normal.)
+* `repr(C)`나 `repr(u*)`로 표현되는 필드 없는 열거형은, 여전히 대응하는 형이 없는 정수 값으로 설정하면 안됩니다, C나 C++에서는 허용되는 동작이지만 말이죠. 열거형의 형이 대응하지 않는 열거형의 값을 (불안전하게) 만들어내는 것은 미정의 동작입니다. (이렇게 함으로써 패턴 완전 매칭이 잘 작성되고 컴파일되게 됩니다.)
 
 ## repr(transparent)
+
+`repr(transparent)`은 
 
 `#[repr(transparent)]` can only be used on a struct or single-variant enum that has a single non-zero-sized field (there may be additional zero-sized fields).
 The effect is that the layout and ABI of the whole struct/enum is guaranteed to be the same as that one field.
