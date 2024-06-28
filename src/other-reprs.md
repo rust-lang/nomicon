@@ -12,22 +12,15 @@
 우리는 [rust-bindgen]과 [cbindgen]를 둘 다, 혹은 둘 중 하나를 써서 당신 대신 FFI 경계를 관리하기를 매우 권장합니다. 러스트 팀은 이 프로젝트들과 긴밀하게 작업하여 이들이 튼튼하게 작동하고, 
 타입 레이아웃과 `repr`들에 대한 현재와 미래의 보장에 잘 맞도록 신경쓰고 있습니다.
 
+`repr(C)`와 러스트의 (C보다) 이상한 데이터 설계 기능의 상호작용은 주의해야 합니다. "FFI를 위한" 것과 "데이터 표현을 바꾸기" 위한 두 가지 목적이 동시에 있기 때문에, `repr(C)`는 FFI 경계로 보내면 말이 안되거나 문제가 생길 수 있는 타입들에 적용할 수 있습니다.
+
+* 무량 타입(ZST)은 그대로 크기가 0으로 되는데, 이것은 C에서 표준 동작이 아니고, C++에서 빈 타입의 동작과 분명하게 반대되는데, C++에서는 빈 타입이라도 한 바이트의 공간을 차지해야 한다고 말하기 때문입니다.
+
+* 동량 타입(DST)의 포인터(넓은 포인터)와 튜플은 C에서 없는 개념이므로, FFI로 보내면 절대 안전하지 않습니다.
+
+* 필드가 있는 열거형 또한 C와 C++에서 없는 개념이지만, 타입 사이의 유효한 변환이 [정의되어 있습니다][really-tagged].
 
 
-The interaction of `repr(C)` with Rust's more exotic data layout features must be
-kept in mind. Due to its dual purpose as "for FFI" and "for layout control",
-`repr(C)` can be applied to types that will be nonsensical or problematic if
-passed through the FFI boundary.
-
-* ZSTs are still zero-sized, even though this is not a standard behavior in
-C, and is explicitly contrary to the behavior of an empty type in C++, which
-says they should still consume a byte of space.
-
-* DST pointers (wide pointers) and tuples are not a concept
-  in C, and as such are never FFI-safe.
-
-* Enums with fields also aren't a concept in C or C++, but a valid bridging
-  of the types [is defined][really-tagged].
 
 * If `T` is an [FFI-safe non-nullable pointer
   type](ffi.html#the-nullable-pointer-optimization),
