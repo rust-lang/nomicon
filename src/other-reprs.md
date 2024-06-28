@@ -9,12 +9,10 @@
 이것을 가장 중요한 `repr`입니다. 이것은 매우 간단한 의도를 가지고 있습니다: C가 하는대로 하라는 것이죠. 필드들의 정렬 순서, 크기, 정렬선은 C나 C++에서 되는 것 같이 될 겁니다. 
 어떤 타입이든 FFI 경계를 넘겨 보내려면 `repr(C)`로 표현되어야 하는데, 이는 C가 프로그래밍 세계의 공용어이기 때문입니다. 이것은 값을 다른 타입으로 재해석하는 것과 같은, 데이터 레이아웃을 가지고 정교한 장난을 수월하게 칠 수 있기 위해서 필수적입니다. 
 
+우리는 [rust-bindgen]과 [cbindgen]를 둘 다, 혹은 둘 중 하나를 써서 당신 대신 FFI 경계를 관리하기를 매우 권장합니다. 러스트 팀은 이 프로젝트들과 긴밀하게 작업하여 이들이 튼튼하게 작동하고, 
+타입 레이아웃과 `repr`들에 대한 현재와 미래의 보장에 잘 맞도록 신경쓰고 있습니다.
 
 
-We strongly recommend using [rust-bindgen] and/or [cbindgen] to manage your FFI
-boundaries for you. The Rust team works closely with those projects to ensure
-that they work robustly and are compatible with current and future guarantees
-about type layouts and `repr`s.
 
 The interaction of `repr(C)` with Rust's more exotic data layout features must be
 kept in mind. Due to its dual purpose as "for FFI" and "for layout control",
