@@ -30,13 +30,13 @@
 
 ## repr(transparent)
 
-`repr(transparent)`은 
+`#[repr(transparent)]`은 크기가 0이 아닌 하나의 필드를 가지고 있는 (무량 필드는 더 있어도 됩니다) 구조체나 형이 하나인 열거형에만 쓰일 수 있습니다. 
+이것의 효과는 구조체/열거형의 전체 레이아웃과 ABI가 그 하나의 필드와 완전히 동일하도록 보장된다는 것입니다.
 
-`#[repr(transparent)]` can only be used on a struct or single-variant enum that has a single non-zero-sized field (there may be additional zero-sized fields).
-The effect is that the layout and ABI of the whole struct/enum is guaranteed to be the same as that one field.
+> 주의: `repr(transparent)`를 공용체에 적용하는 `transparent_unions` nightly 기능이 있지만,
+> 디자인 문제 때문에 표준화되지 않았습니다. 더 자세한 내용은 [tracking issue][issue-60405]를 참고하세요.
 
-> NOTE: There's a `transparent_unions` nightly feature to apply `repr(transparent)` to unions,
-> but it hasn't been stabilized due to design concerns. See the [tracking issue][issue-60405] for more details.
+
 
 The goal is to make it possible to transmute between the single field and the
 struct/enum. An example of that is [`UnsafeCell`], which can be transmuted into
