@@ -108,7 +108,7 @@ compiler might be able to paper over alignment issues with shifts and masks.
 However if you take a reference to a packed field, it's unlikely that the
 compiler will be able to emit code to avoid an unaligned load.
 
-[As this can cause undefined behavior][ub loads], the lint has been implemented
+[As this can cause undefined behavior][ub_loads], the lint has been implemented
 and it will become a hard error.
 
 `repr(packed)` is not to be used lightly. Unless you have extreme requirements,
