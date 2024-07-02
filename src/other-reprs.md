@@ -36,12 +36,9 @@
 > 주의: `repr(transparent)`를 공용체에 적용하는 `transparent_unions` nightly 기능이 있지만,
 > 디자인 문제 때문에 표준화되지 않았습니다. 더 자세한 내용은 [이슈][issue-60405]를 참고하세요.
 
+이것의 목표는 구조체/열거형과 그의 유일한 필드 간에 변환을 가능하게 하는 것입니다. 이것의 한 예는 [`UnsafeCell`]인데, 이것은 자신이 감싸고 있는 타입으로 변환될 수 있습니다 ([`UnsafeCell`]은 또한 불안정한 [no_niche][no-niche-pull]를 쓰기 때문에, 이것의 ABI는 다른 타입 속에 들어갔을 때에 동일하다고 보장되지는 않습니다).
 
 
-The goal is to make it possible to transmute between the single field and the
-struct/enum. An example of that is [`UnsafeCell`], which can be transmuted into
-the type it wraps ([`UnsafeCell`] also uses the unstable [no_niche][no-niche-pull],
-so its ABI is not actually guaranteed to be the same when nested in other types).
 
 Also, passing the struct/enum through FFI where the inner field type is expected on
 the other side is guaranteed to work. In particular, this is necessary for
