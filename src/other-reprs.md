@@ -129,7 +129,7 @@ This is a modifier on `repr(C)` and `repr(Rust)`. It is incompatible with
 [drop_flags]: drop-flags.html
 [ub_loads]: https://github.com/rust-lang/rust/issues/27060
 [issue-60405]: https://github.com/rust-lang/rust/issues/60405
-[`UnsafeCell`]: ../std/cell/struct.UnsafeCell.html
+[`UnsafeCell`]: https://doc.rust-lang.org/std/cell/struct.UnsafeCell.html
 [rfc-transparent]: https://github.com/rust-lang/rfcs/blob/master/text/1758-repr-transparent.md
 [rfc-transparent-unions-enums]: https://rust-lang.github.io/rfcs/2645-transparent-unions.html
 [really-tagged]: https://github.com/rust-lang/rfcs/blob/master/text/2195-really-tagged-unions.md
