@@ -40,15 +40,13 @@
 
 또, 그 유일한 필드가 FFI로 보내도 괜찮은 타입이라면, 그 유일한 필드가 있는 구조체/열거형을 FFI로 보내는 작업도 잘 작동하는 것이 보장됩니다. 예를 들어, 이것은 `struct Foo(f32)`나 `enum Foo { Bar(f32) }`가 `f32`와 항상 동일한 ABI를 가지게 하도록 하기 위해서 꼭 필요합니다.
 
-이 표현 방식은 타입의 유일한 필드가 `pub`이거나, 그 레이아웃이
+이 표현 방식은 타입의 유일한 필드가 `pub`이거나, 그 레이아웃이 단순하게 묘사되었을 경우에만 공개 ABI의 한 부분으로 인정됩니다. 그렇지 않다면 이 레이아웃은 다른 크레이트들이 의존해서는 안됩니다.
 
-This repr is only considered part of the public ABI of a type if either the single
-field is `pub`, or if its layout is documented in prose. Otherwise, the layout should
-not be relied upon by other crates.
-
-More details are in the [RFC 1758][rfc-transparent] and the [RFC 2645][rfc-transparent-unions-enums].
+더 자세한 내용은 [RFC 1758][rfc-transparent]과 [RFC 2645][rfc-transparent-unions-enums]에 있습니다.
 
 ## repr(u*), repr(i*)
+
+이것들은 필드 없는 열거형을 만들기 위한 크기를 지정합니다. 
 
 These specify the size to make a fieldless enum. If the discriminant overflows
 the integer it has to fit in, it will produce a compile-time error. You can
