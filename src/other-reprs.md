@@ -87,25 +87,19 @@ assert_eq!(16, size_of::<MyReprOption<&u16>>());
 
 
 
-[As this can cause undefined behavior][ub_loads], the lint has been implemented
-and it will become a hard error.
+[이것이 미정의 동작을 일으킬 수 있기 때문에][ub_loads], 린트가 구현되었고 지금은 아주 심각한 오류가 될 것입니다.
 
-`repr(packed)` is not to be used lightly. Unless you have extreme requirements,
-this should not be used.
+`repr(packed)`는 가볍게 사용되어서는 안됩니다. 극심하게 이것이 필요하지 않다면 이것은 쓰여져서는 안됩니다.
 
-This repr is a modifier on `repr(C)` and `repr(Rust)`.
+이 표현은 `repr(C)`나 `repr(Rust)`와 함께 쓸 수 있습니다.
 
 ## repr(align(n))
 
-`repr(align(n))` (where `n` is a power of two) forces the type to have an
-alignment of *at least* n.
+`repr(align(n))`은 (`n`은 2의 거듭제곱입니다) 타입이 *최소* n의 정렬선을 가지도록 요구합니다.
 
-This enables several tricks, like making sure neighboring elements of an array
-never share the same cache line with each other (which may speed up certain
-kinds of concurrent code).
+이것은 여러 가지 장난을 가능하게 해 주는데, 예를 들어 배열의 이웃하는 원소들이 서로의 캐시 선을 절대 공유하지 않도록 하는 것이 있습니다 (이것으로 어떤 종류의 동시성 코드는 빠르게 할 수 있습니다).
 
-This is a modifier on `repr(C)` and `repr(Rust)`. It is incompatible with
-`repr(packed)`.
+이 표현은 `repr(C)`나 `repr(Rust)`와 함께 쓸 수 있지만, `repr(packed)`와는 함께 쓸 수 없습니다.
 
 [unsafe_guide]: https://rust-lang.github.io/unsafe-code-guidelines/layout.html
 [drop_flags]: drop-flags.html
