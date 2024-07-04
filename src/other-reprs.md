@@ -38,11 +38,9 @@
 
 이것의 목표는 구조체/열거형과 그의 유일한 필드 간에 변환을 가능하게 하는 것입니다. 이것의 한 예는 [`UnsafeCell`]인데, 이것은 자신이 감싸고 있는 타입으로 변환될 수 있습니다 ([`UnsafeCell`]은 또한 불안정한 [no_niche][no-niche-pull]를 쓰기 때문에, 이것의 ABI는 다른 타입 속에 들어갔을 때에 동일하다고 보장되지는 않습니다).
 
+또, 그 유일한 필드가 FFI로 보내도 괜찮은 타입이라면, 그 유일한 필드가 있는 구조체/열거형을 FFI로 보내는 작업도 잘 작동하는 것이 보장됩니다. 예를 들어, 이것은 `struct Foo(f32)`나 `enum Foo { Bar(f32) }`가 `f32`와 항상 동일한 ABI를 가지게 하도록 하기 위해서 꼭 필요합니다.
 
 
-Also, passing the struct/enum through FFI where the inner field type is expected on
-the other side is guaranteed to work. In particular, this is necessary for
-`struct Foo(f32)` or `enum Foo { Bar(f32) }` to always have the same ABI as `f32`.
 
 This repr is only considered part of the public ABI of a type if either the single
 field is `pub`, or if its layout is documented in prose. Otherwise, the layout should
