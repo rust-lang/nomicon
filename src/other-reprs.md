@@ -46,28 +46,18 @@
 
 ## repr(u*), repr(i*)
 
-이것들은 필드 없는 열거형을 만들기 위한 크기를 지정합니다. 
+이것들은 필드 없는 열거형을 만들기 위한 크기를 지정합니다. 식별자가 이 크기를 벗어나서 오버플로우되면 컴파일할 때 에러가 발생할 겁니다. 하지만 이것을 러스트에서 허용할 수도 있습니다: 오버플로우된 순간 0이 되게 명시적으로 말하는 것이죠. 
+그러나 러스트는 열거형의 두 개의 형이 같은 식별자를 가지는 것을 허용하지 않을 겁니다.
 
-These specify the size to make a fieldless enum. If the discriminant overflows
-the integer it has to fit in, it will produce a compile-time error. You can
-manually ask Rust to allow this by setting the overflowing element to explicitly
-be 0. However Rust will not allow you to create an enum where two variants have
-the same discriminant.
+"필드 없는 열거형"이라는 용어는 단지 열거형이 그 형에서 데이터를 가지지 않는다는 것을 말합니다. `repr(u*)`나 `repr(C)`가 없는 필드 없는 열거형은 여전히 러스트 타입이고, 안정적인 ABI 표현이 존재하지 않습니다. 
+`repr`을 더하는 것은 ABI를 위해 이 열거형이 지정된 크기의 정수로 다뤄지게 합니다.
 
-The term "fieldless enum" only means that the enum doesn't have data in any
-of its variants. A fieldless enum without a `repr(u*)` or `repr(C)` is
-still a Rust native type, and does not have a stable ABI representation.
-Adding a `repr` causes it to be treated exactly like the specified
-integer size for ABI purposes.
+만약 열거형이 필드가 있다면, 타입의 정해진 레이아웃이 있다는 점에서 효과는 `repr(C)`의 효과와 비슷하게 됩니다. 이것은 열거형을 C 코드에 넘기고, 그 타입의 실제 표현을 접근하고 직접 그 태그와 필드를 조작할 수 있게 해 줍니다. 
+자세한 내용은 [RFC][really-tagged]를 참고하세요.
 
-If the enum has fields, the effect is similar to the effect of `repr(C)`
-in that there is a defined layout of the type. This makes it possible to
-pass the enum to C code, or access the type's raw representation and directly
-manipulate its tag and fields. See [the RFC][really-tagged] for details.
+이 `repr`은 구조체에는 아무 효과도 없습니다.
 
-These `repr`s have no effect on a struct.
-
-Adding an explicit `repr(u*)`, `repr(i*)`, or `repr(C)` to an enum with fields suppresses the null-pointer optimization, like:
+필드가 있는 열거형에 명시적인 `repr(u*)`, `repr(i*)`, 혹은 `repr(C)`를 추가하는 것은 널 포인터 최적화를 억제하는데, 이것은 다음과 같습니다:
 
 ```rust
 # use std::mem::size_of;
@@ -85,21 +75,17 @@ enum MyReprOption<T> {
 assert_eq!(8, size_of::<MyOption<&u16>>());
 assert_eq!(16, size_of::<MyReprOption<&u16>>());
 ```
-
-This optimization still applies to fieldless enums with an explicit `repr(u*)`, `repr(i*)`, or `repr(C)`.
+이 최적화는 필드가 없는 열거형에 명시적으로 `repr(u*)`, `repr(i*)`, 혹은 `repr(C)`가 적용된 경우에는 여전히 작동합니다.
 
 ## repr(packed)
 
-`repr(packed)` forces Rust to strip any padding, and only align the type to a
-byte. This may improve the memory footprint, but will likely have other negative
-side-effects.
+`repr(packed)`는 타입에 어떤 여백도 제거하고, 한 바이트에 정렬하도록 러스트에 강제합니다. 이것은 메모리 사용량은 줄여주지만, 아마 다른 부작용들을 초래할 것입니다.
 
-In particular, most architectures *strongly* prefer values to be aligned. This
-may mean the unaligned loads are penalized (x86), or even fault (some ARM
-chips). For simple cases like directly loading or storing a packed field, the
-compiler might be able to paper over alignment issues with shifts and masks.
-However if you take a reference to a packed field, it's unlikely that the
-compiler will be able to emit code to avoid an unaligned load.
+더 자세히 말하자면, 대부분의 아키텍쳐는 값들이 제대로 정렬되는 것을 *매우* 선호합니다. 이것은 제대로 정렬되지 않은 읽기는 뒤로 미뤄지거나 (x86), 심지어는 강제종료됩니다 (일부의 ARM 칩들). 
+이렇게 "압축"된 필드를 직접 읽거나 저장하는 간단한 경우들에서는, 컴파일러가 쉬프트나 마스크 같은 것들로 정렬 문제를 간단히 수정할 수 있을지도 모릅니다. 
+그러나 그 압축된 필드에 레퍼런스를 단다면, 컴파일러가 정렬되지 않은 읽기를 피할 수 있는 코드를 낼 수 있을 것 같지는 않습니다.
+
+
 
 [As this can cause undefined behavior][ub_loads], the lint has been implemented
 and it will become a hard error.
