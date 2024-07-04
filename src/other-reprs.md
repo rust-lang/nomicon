@@ -40,7 +40,7 @@
 
 또, 그 유일한 필드가 FFI로 보내도 괜찮은 타입이라면, 그 유일한 필드가 있는 구조체/열거형을 FFI로 보내는 작업도 잘 작동하는 것이 보장됩니다. 예를 들어, 이것은 `struct Foo(f32)`나 `enum Foo { Bar(f32) }`가 `f32`와 항상 동일한 ABI를 가지게 하도록 하기 위해서 꼭 필요합니다.
 
-
+이 표현 방법은 타입의 
 
 This repr is only considered part of the public ABI of a type if either the single
 field is `pub`, or if its layout is documented in prose. Otherwise, the layout should
