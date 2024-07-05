@@ -1,65 +1,45 @@
-# Ownership and Lifetimes
+# 소유권과 수명
 
-Ownership is the breakout feature of Rust. It allows Rust to be completely
-memory-safe and efficient, while avoiding garbage collection. Before getting
-into the ownership system in detail, we will consider the motivation of this
-design.
+소유권은 러스트의 혁신적인 기능입니다. 이것은 러스트가 쓰레기 수집을 피하면서, 완전히 메모리 안전과 효율성을 챙길 수 있게 해 줍니다. 소유권 시스템을 깊게 살펴보기 전에, 이런 설계의 동기를 생각해 보겠습니다.
 
-We will assume that you accept that garbage collection (GC) is not always an
-optimal solution, and that it is desirable to manually manage memory in some
-contexts. If you do not accept this, might I interest you in a different
-language?
+우리는 당신이 쓰레기 수집(GC)이 항상 최선의 해결책은 아니고, 어떤 상황에서는 메모리를 수동으로 관리하는 것이 낫다는 것을 수긍한다고 가정하겠습니다. 만약 이것을 수긍하지 않는다면, 다른 언어를 찾아보시는 건 어떨까요?
 
-Regardless of your feelings on GC, it is pretty clearly a *massive* boon to
-making code safe. You never have to worry about things going away *too soon*
-(although whether you still wanted to be pointing at that thing is a different
-issue...). This is a pervasive problem that C and C++ programs need to deal
-with. Consider this simple mistake that all of us who have used a non-GC'd
-language have made at one point:
+GC에 대한 당신의 생각과 상관없이, 코드를 안전하게 만드는 것은 꽤나 확실하게 *엄청난* 축복입니다. 절대로 값들이 *너무 빨리* 없어지는 것을 걱정하지 않아도 되니까요 (그래도 그 값을 가리키고 싶었는지 여부는 조금 다른 문제이지만 말이죠...). 
+이것은 C와 C++ 프로그램들이 해결해야 하는, 프로그램 어디에서나 볼 수 있는 문제입니다. 비 GC 언어를 사용해본 사람들이라면 한번쯤은 저질러 보았을 이런 간단한 실수를 생각해 보세요:
 
 ```rust,compile_fail
 fn as_str(data: &u32) -> &str {
-    // compute the string
+    // String 만들기
     let s = format!("{}", data);
 
-    // OH NO! We returned a reference to something that
-    // exists only in this function!
-    // Dangling pointer! Use after free! Alas!
-    // (this does not compile in Rust)
+    // OH NO! 이 함수 안에서만 존재하는
+    // 값의 레퍼런스를 반환했군요!
+    // 달랑거리는 포인터 발생! 해제 후 사용! 이런!
+    // (러스트에서는 컴파일되지 않습니다)
     &s
 }
 ```
 
-This is exactly what Rust's ownership system was built to solve.
-Rust knows the scope in which the `&s` lives, and as such can prevent it from
-escaping. However this is a simple case that even a C compiler could plausibly
-catch. Things get more complicated as code gets bigger and pointers get fed through
-various functions. Eventually, a C compiler will fall down and won't be able to
-perform sufficient escape analysis to prove your code unsound. It will consequently
-be forced to accept your program on the assumption that it is correct.
+바로 이런 문제를 해결하기 위해서 러스트의 소유권 시스템이 만들어졌습니다. 러스트는 `&s`가 살아있는 범위를 알고 있고, 이것으로 이 레퍼런스의 탈출을 막을 수 있습니다. 그러나 이 문제는 C 컴파일러라도 그럴듯하게 잡을 수 있는 간단한 경우입니다. 
+코드가 커지고 포인터들이 다양한 함수들에 인자로 넘겨지면 상황은 더 복잡해집니다. 결국 C 컴파일러는 과부하를 일으키게 되고, 당신의 코드가 불건전하다는 것을 증명하기에 충분한 포인터 분석을 하지 못하게 됩니다. 
+이렇게 되면 당신의 프로그램이 그냥 맞다고 생각하고 받아들여야만 하겠죠.
 
-This will never happen to Rust. It's up to the programmer to prove to the
-compiler that everything is sound.
+러스트에서는 이런 일이 절대 일어나지 않을 것입니다. 컴파일러에게 모든 것이 건전하다는 것을 증명하는 것은 프로그래머의 몫입니다. 
 
-Of course, Rust's story around ownership is much more complicated than just
-verifying that references don't escape the scope of their referent. That's
-because ensuring pointers are always valid is much more complicated than this.
-For instance in this code,
+물론, 러스트의 소유권 시스템은 그냥 레퍼런스들이 그 본체의 범위를 벗어나지 않는 것을 검증하는 것보다 훨씬 복잡합니다. 그것은 포인터들이 언제나 유효하도록 보장하는 것은 이것보다 훨씬 복잡하기 때문입니다. 예를 들어 이 코드에서,
 
 ```rust,compile_fail
 let mut data = vec![1, 2, 3];
-// get an internal reference
+// 내부 값의 레퍼런스를 받아옵니다
 let x = &data[0];
 
-// OH NO! `push` causes the backing storage of `data` to be reallocated.
-// Dangling pointer! Use after free! Alas!
-// (this does not compile in Rust)
+// OH NO! `push`는 `data`의 포인터가 재할당되도록 유도합니다.
+// 달랑거리는 포인터! 해제 후 사용! 이런!
+// (러스트에서는 컴파일되지 않습니다)
 data.push(4);
 
 println!("{}", x);
 ```
 
-naive scope analysis would be insufficient to prevent this bug, because `data`
-does in fact live as long as we needed. However it was *changed* while we had
-a reference into it. This is why Rust requires any references to freeze the
-referent and its owners.
+이 버그를 잡기 위해서는 단순한 범위 분석으로는 부족한데, 그것은 `data`가 우리가 필요한 만큼 오래 살기 때문입니다. 그러나 우리가 레퍼런스를 가지고 있는 동안 *바뀌었지요*. 
+그래서 러스트는 레퍼런스가 본체와 다른 레퍼런스들을 수정하지 못하게 막는 것입니다.
