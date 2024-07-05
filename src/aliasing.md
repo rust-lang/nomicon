@@ -74,15 +74,11 @@ if *input > 5 {     // 거짓 (*input == 1)
 
 이런 최적화는 또한 루프 벡터화, 상수 전파, 죽은 코드 제거 등의 더 큰 최적화의 건전함을 증명하게 되는 경향이 있습니다.
 
+이전의 예제에서, 우리는 `&mut u32`가 복제될 수 없다는 사실을 이용해서 `*output`에 쓰는 작업이 `*input`에 영향을 줄 수 없다는 것을 증명했습니다. 이러면 우리는 레지스터에 `*input`을 캐싱해서, 읽기 작업을 제거할 수 있습니다.
+
+이 읽기 작업을 캐싱함으로써, 우리는 `> 10` 분기에서 있는 쓰기 작업이 `> 5` 분기를 택하는지 여부를 영향주지 못한다는 것을 알게 되고, `*input > 10`일 때에 읽고, 수정하고, 다시 쓰는 작업(`*output`을 2배로 하는 작업)을 제거할 수 있게 됩니다.
 
 
-In the previous example, we used the fact that `&mut u32` can't be aliased to prove
-that writes to `*output` can't possibly affect `*input`. This lets us cache `*input`
-in a register, eliminating a read.
-
-By caching this read, we knew that the write in the `> 10` branch couldn't
-affect whether we take the `> 5` branch, allowing us to also eliminate a
-read-modify-write (doubling `*output`) when `*input > 10`.
 
 The key thing to remember about alias analysis is that writes are the primary
 hazard for optimizations. That is, the only thing that prevents us
