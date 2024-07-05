@@ -45,32 +45,27 @@ fn compute(input: &u32, output: &mut u32) {
 러스트에서는 이런 최적화가 건전할 것입니다. 거의 모든 다른 언어에서는 그렇지 않을 것입니다 (전역 분석을 제외하면). 이것은 이 최적화가 복제가 일어나지 않는다는 것에 의존하기 때문인데, 많은 언어들이 이것에 있어서 자유롭게 풀어두죠. 
 특별히 우리는 `input`과 `output`이 겹치는 함수 매개변수들, 예를 들면 `compute(&x, &mut x)` 같은 것들을 걱정해야 합니다.
 
-
-
-With that input, we could get this execution:
+이런 입력으로는 이런 실행이 가능합니다:
 
 <!-- ignore: expanded code -->
 ```rust,ignore
                     //  input ==  output == 0xabad1dea
                     // *input == *output == 20
-if *input > 10 {    // true  (*input == 20)
-    *output = 1;    // also overwrites *input, because they are the same
+if *input > 10 {    // 참  (*input == 20)
+    *output = 1;    // *input 에도 씀, *output 과 같기 때문
 }
-if *input > 5 {     // false (*input == 1)
+if *input > 5 {     // 거짓 (*input == 1)
     *output *= 2;
 }
                     // *input == *output == 1
 ```
 
-Our optimized function would produce `*output == 2` for this input, so the
-correctness of our optimization relies on this input being impossible.
+우리의 최적화된 함수는 이런 입력에 `*output == 2`라는 결과를 도출할 것이고, 따라서 우리의 최적화가 올바른지의 문제는 이런 입력이 불가능하다는 것에 기반합니다.
 
-In Rust we know this input should be impossible because `&mut` isn't allowed to be
-aliased. So we can safely reject its possibility and perform this optimization.
-In most other languages, this input would be entirely possible, and must be considered.
+우리는 러스트에서는 `&mut`를 복제하는 것이 허락되지 않기 때문에, 이런 입력이 불가능하다는 것을 압니다. 따라서 우리는 안전하게 그런 가능성을 거부하고 최적화를 실행할 수 있게 됩니다. 
+다른 대부분의 언어들에서는 이런 입력 또한 완전히 가능할 것이고, 고려되어야 할 것입니다.
 
-This is why alias analysis is important: it lets the compiler perform useful
-optimizations! Some examples:
+이것이 바로 복제 분석이 중요한 이유입니다: 유용한 최적화를 컴파일러가 실행하도록 해 주거든요! 몇 가지 예를 들자면:
 
 * keeping values in registers by proving no pointers access the value's memory
 * eliminating reads by proving some memory hasn't been written to since last we read it
