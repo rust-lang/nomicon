@@ -12,7 +12,7 @@
   * [다른 표현 방식들](other-reprs.md)
 * [소유권](ownership.md)
   * [레퍼런스](references.md)
-  * [Aliasing](aliasing.md)
+  * [복제](aliasing.md)
   * [Lifetimes](lifetimes.md)
   * [Limits of Lifetimes](lifetime-mismatch.md)
   * [Lifetime Elision](lifetime-elision.md)
