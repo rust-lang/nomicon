@@ -67,13 +67,14 @@ if *input > 5 {     // 거짓 (*input == 1)
 
 이것이 바로 복제 분석이 중요한 이유입니다: 유용한 최적화를 컴파일러가 실행하도록 해 주거든요! 몇 가지 예를 들자면:
 
-* keeping values in registers by proving no pointers access the value's memory
-* eliminating reads by proving some memory hasn't been written to since last we read it
-* eliminating writes by proving some memory is never read before the next write to it
-* moving or reordering reads and writes by proving they don't depend on each other
+* 값의 메모리를 접근하는 포인터가 없다는 것을 증명함으로써 값들을 레지스터에 그대로 두는 것
+* 어떤 메모리는 마지막으로 읽은 후에 쓴 적이 없다는 것을 증명함으로써 읽기 작업들을 제거하는 것
+* 어떤 메모리는 다음 쓰기 작업 전에 읽은 적이 없다는 것을 증명함으로써 쓰기 작업들을 제거하는 것
+* 읽기 작업들이나 쓰기 작업들이 서로에 의존하지 않는다는 것을 증명함으로써 작업들을 옭기거나 순서를 바꾸는 것
 
-These optimizations also tend to prove the soundness of bigger optimizations
-such as loop vectorization, constant propagation, and dead code elimination.
+이런 최적화는 또한 루프 벡터화, 상수 전파, 죽은 코드 제거 등의 더 큰 최적화의 건전함을 증명하게 되는 경향이 있습니다.
+
+
 
 In the previous example, we used the fact that `&mut u32` can't be aliased to prove
 that writes to `*output` can't possibly affect `*input`. This lets us cache `*input`
