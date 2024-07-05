@@ -78,17 +78,9 @@ if *input > 5 {     // 거짓 (*input == 1)
 
 이 읽기 작업을 캐싱함으로써, 우리는 `> 10` 분기에서 있는 쓰기 작업이 `> 5` 분기를 택하는지 여부를 영향주지 못한다는 것을 알게 되고, `*input > 10`일 때에 읽고, 수정하고, 다시 쓰는 작업(`*output`을 2배로 하는 작업)을 제거할 수 있게 됩니다.
 
-복제 분석에 대해 꼭 기억해야 할 것은 쓰기 작업이 최적화를 방해하는 주된 걸림돌이라는 것입니다. 
+복제 분석에 대해 꼭 기억해야 할 것은 쓰기 작업이 최적화를 방해하는 주된 걸림돌이라는 것입니다. 이 말은, 읽기 작업을 프로그램의 다른 곳으로 옮기는 것을 방해하는 유일한 것은 우리가 그것과 같은 메모리 위치에 쓰는 작업과 함께 순서를 바꾸는 것입니다.
 
-The key thing to remember about alias analysis is that writes are the primary
-hazard for optimizations. That is, the only thing that prevents us
-from moving a read to any other part of the program is the possibility of us
-re-ordering it with a write to the same location.
-
-For instance, we have no concern for aliasing in the following modified version
-of our function, because we've moved the only write to `*output` to the very
-end of our function. This allows us to freely reorder the reads of `*input` that
-occur before it:
+예를 들어, 우리의 함수를 이렇게 수정한 버전이라면 우리는 복제에 대해서 걱정할 필요가 없는데, 왜냐하면 `*output`에 쓰는 유일한 작업을 함수의 가장 끝으로 옮겼기 때문입니다. 이는 우리가 이 쓰기 작업 이전에 있는, `*input`을 읽는 작업들을 자유롭게 재배치할 수 있다는 것을 의미합니다:
 
 ```rust
 fn compute(input: &u32, output: &mut u32) {
@@ -102,6 +94,8 @@ fn compute(input: &u32, output: &mut u32) {
     *output = temp;
 }
 ```
+
+
 
 We're still relying on alias analysis to assume that `input` doesn't alias
 `temp`, but the proof is much simpler: the value of a local variable can't be
