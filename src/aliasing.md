@@ -1,24 +1,18 @@
-# Aliasing
+# 복제
 
-First off, let's get some important caveats out of the way:
+먼저, 몇 가지 짚고 넘어가겠습니다:
 
-* We will be using the broadest possible definition of aliasing for the sake
-of discussion. Rust's definition will probably be more restricted to factor
-in mutations and liveness.
+* 논의를 위해 가능한 한 가장 넓은 복제의 정의를 사용할 것입니다. 러스트의 정의는 아마 변형이나 살아있음 여부에 대해서는 조금 더 제한적일 것입니다.
 
-* We will be assuming a single-threaded, interrupt-free, execution. We will also
-be ignoring things like memory-mapped hardware. Rust assumes these things
-don't happen unless you tell it otherwise. For more details, see the
-[Concurrency Chapter](concurrency.html).
+* 우리는 한 스레드에서, 인터럽트 없는 실행을 가정하겠습니다. 또한 메모리-매핑된 하드웨어 같은 것들은 무시하겠습니다. 러스트는 당신이 말하지 않는 한 이런 것들이 일어나지 않는다고 가정합니다. 더 자세한 내용은 [동시성 챕터를](concurrency.html) 참고하세요.
 
-With that said, here's our working definition: variables and pointers *alias*
-if they refer to overlapping regions of memory.
+이런 것들을 말했으니, 이제 우리의 아직 작업중인 정의를 말해보겠습니다: 변수들과 포인터들은 메모리의 겹쳐지는 지역을 가리킬 때 *복제되었다*고 합니다.
 
-## Why Aliasing Matters
+## 복제가 중요한 이유
 
-So why should we care about aliasing?
+그래서 왜 우리가 복제를 신경써야 할까요?
 
-Consider this simple function:
+이런 간단한 함수를 생각해 보세요:
 
 ```rust
 fn compute(input: &u32, output: &mut u32) {
@@ -28,19 +22,19 @@ fn compute(input: &u32, output: &mut u32) {
     if *input > 5 {
         *output *= 2;
     }
-    // remember that `output` will be `2` if `input > 10`
+    // `input > 10`일 경우 `output`은 `2`가 될 것이라는 것을 기억하세요
 }
 ```
 
-We would *like* to be able to optimize it to the following function:
+이 함수를 다음의 함수로 최적화할 수 있다면 *좋겠네요*:
 
 ```rust
 fn compute(input: &u32, output: &mut u32) {
-    let cached_input = *input; // keep `*input` in a register
+    let cached_input = *input; // `*input`을 레지스터에 저장합니다.
     if cached_input > 10 {
-        // If the input is greater than 10, the previous code would set the output to 1 and then double it,
-        // resulting in an output of 2 (because `>10` implies `>5`).
-        // Here, we avoid the double assignment and just set it directly to 2.
+        // `input`이 10보다 크면, 이전 코드는 `output`을 1로 지정했다가 2를 곱하니, 
+        // `output`은 최종적으로 2가 됩니다 (`>10`이면 `>5`일 테니까요).
+        // 여기서는 두번 할당하는 것을 피하고 한번에 2로 설정합니다.
         *output = 2;
     } else if cached_input > 5 {
         *output *= 2;
@@ -48,11 +42,10 @@ fn compute(input: &u32, output: &mut u32) {
 }
 ```
 
-In Rust, this optimization should be sound. For almost any other language, it
-wouldn't be (barring global analysis). This is because the optimization relies
-on knowing that aliasing doesn't occur, which most languages are fairly liberal
-with. Specifically, we need to worry about function arguments that make `input`
-and `output` overlap, such as `compute(&x, &mut x)`.
+러스트에서는 이런 최적화가 건전할 것입니다. 거의 모든 다른 언어에서는 그렇지 않을 것입니다 (전역 분석을 제외하면). 이것은 이 최적화가 복제가 일어나지 않는다는 것에 의존하기 때문인데, 많은 언어들이 이것에 있어서 자유롭게 풀어두죠. 
+특별히 우리는 `input`과 `output`이 겹치는 함수 매개변수들, 예를 들면 `compute(&x, &mut x)` 같은 것들을 걱정해야 합니다.
+
+
 
 With that input, we could get this execution:
 
