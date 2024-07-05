@@ -1,18 +1,18 @@
-# References
+# 레퍼런스
 
-There are two kinds of reference:
+레퍼런스에는 두 가지 종류가 있습니다:
 
-* Shared reference: `&`
-* Mutable reference: `&mut`
+* 불변 레퍼런스: `&`
+* 가변 레퍼런스: `&mut`
 
-Which obey the following rules:
+이것들은 다음의 규칙들을 지킵니다:
 
-* A reference cannot outlive its referent
-* A mutable reference cannot be aliased
+* 레퍼런스는 그 본체보다 오래 살 수 없다
+* 가변 레퍼런스는 복제할 수 없다
 
-That's it. That's the whole model references follow.
+이게 다입니다. 이것이 레퍼런스가 따르는 모델 전부입니다.
 
-Of course, we should probably define what *aliased* means.
+물론, 우리는 *복제한다*는 것이 어떤 의미인지 정의해야겠죠.
 
 ```text
 error[E0425]: cannot find value `aliased` in this scope
@@ -24,8 +24,6 @@ error[E0425]: cannot find value `aliased` in this scope
 error: aborting due to previous error
 ```
 
-Unfortunately, Rust hasn't actually defined its aliasing model. 🙀
+아쉽게도, 러스트는 아직 복제 모델을 정의하지 않았습니다. 🙀
 
-While we wait for the Rust devs to specify the semantics of their language,
-let's use the next section to discuss what aliasing is in general, and why it
-matters.
+러스트 개발자들이 언어의 의미를 확실히 정하는 동안, 다음 섹션에서 복제가 무엇인지, 왜 중요한지 논해 보겠습니다.
