@@ -95,19 +95,10 @@ fn compute(input: &u32, output: &mut u32) {
 }
 ```
 
-우리는 아직도 `input`이 `temp`의 복제가 아니라는 것을 짐작하기 위해 복제 분석에 의존하지만, 증명은 훨씬 간단해집니다: 지역 변수의 값은 그것이 정의되기 전에 존재하던 것
+우리는 아직도 `input`이 `temp`의 복제가 아니라는 것을 짐작하기 위해 복제 분석에 의존하지만, 증명은 훨씬 간단해집니다: 지역 변수의 값은 그것이 정의되기 전에 존재하던 것으로 복제할 수 없기 때문입니다. 
+이것은 모든 언어가 자유롭게 하는 짐작이고, 그래서 이 버전의 함수는 어느 언어에서든 우리가 원하는 대로 최적화시킬 수 있게 됩니다.
 
-We're still relying on alias analysis to assume that `input` doesn't alias
-`temp`, but the proof is much simpler: the value of a local variable can't be
-aliased by things that existed before it was declared. This is an assumption
-every language freely makes, and so this version of the function could be
-optimized the way we want in any language.
+이것이 바로 러스트가 쓰는 "복제"의 정의가 살아있음과 변경 같은 개념이 동반되는 이유입니다: 실제로 메모리에 쓰는 작업이 없으면, 복제가 일어나도 상관없기 때문입니다.
 
-This is why the definition of "alias" that Rust will use likely involves some
-notion of liveness and mutation: we don't actually care if aliasing occurs if
-there aren't any actual writes to memory happening.
-
-Of course, a full aliasing model for Rust must also take into consideration things like
-function calls (which may mutate things we don't see), raw pointers (which have
-no aliasing requirements on their own), and UnsafeCell (which lets the referent
-of an `&` be mutated).
+물론, 러스트를 위한 총체적인 복제 모델은 함수 호출(보이지 않는 것들을 변경할 수도 있음)이나, 생 포인터 (그들 자체로는 복제의 요구사항이 없음), 
+그리고 `UnsafeCell` (`&`로 참조한 레퍼런스의 주체의 값이 변경되도록 허용함) 같은 것들도 고려해야만 합니다.
