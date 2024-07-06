@@ -41,10 +41,7 @@ let z = &y;
 
 와. 이건... 별로네요. 러스트가 이런 것들을 간단하게 만들어 준다는 것을 감사하는 우리가 됩시다.
 
-
-
-Actually passing references to outer scopes will cause Rust to infer
-a larger lifetime:
+외부 범위에 레퍼런스를 넘기면 러스트는 더 긴 수명을 추론하게 됩니다:
 
 ```rust
 let x = 0;
@@ -60,8 +57,8 @@ z = y;
     'b: {
         let z: &'b i32;
         'c: {
-            // Must use 'b here because the reference to x is
-            // being passed to the scope 'b.
+            // x의 레퍼런스가 'b 구역으로 넘겨지기 때문에 
+            // 'b 가 됩니다.
             let y: &'b i32 = &'b x;
             z = y;
         }
@@ -69,7 +66,7 @@ z = y;
 }
 ```
 
-## Example: references that outlive referents
+## 예제: 본체보다 오래 사는 레퍼런스들
 
 Alright, let's look at some of those examples from before:
 
