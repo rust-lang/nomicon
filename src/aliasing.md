@@ -95,7 +95,7 @@ fn compute(input: &u32, output: &mut u32) {
 }
 ```
 
-
+우리는 아직도 `input`이 `temp`의 복제가 아니라는 것을 짐작하기 위해 복제 분석에 의존하지만, 증명은 훨씬 간단해집니다: 지역 변수의 값은 그것이 정의되기 전에 존재하던 것
 
 We're still relying on alias analysis to assume that `input` doesn't alias
 `temp`, but the proof is much simpler: the value of a local variable can't be
