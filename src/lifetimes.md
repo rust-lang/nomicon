@@ -7,14 +7,9 @@
 우리의 예제 대부분, 수명은 코드 구역과 대응할 것입니다. 이것은 우리의 예제가 간단하기 때문입니다. 그렇게 대응되지 않는 복잡한 경우는 밑에 서술하겠습니다.
 
 함수 본문 안에서 러스트는 보통 관련된 수명을 명시적으로 쓰게 하지 않습니다. 이것은 지역적인 문맥에서 수명에 대해 말하는 것은 대부분 별로 필요없기 때문입니다: 러스트는 모든 정보를 가지고 있고, 
-모든 것들이 가능한 한 최적으로 동작하도록 할 수 있기 때문입니다. 컴파일러가 아니라면 일일히 작성해야 하는 많은 무명 
+모든 것들이 가능한 한 최적으로 동작하도록 할 수 있기 때문입니다. 컴파일러가 아니라면 일일히 작성해야 하는 많은 무명 구역과 경계들을 컴파일러가 대신해 주어서 당신의 코드가 "그냥 작동하게" 해 줍니다.
 
-Within a function body, Rust generally doesn't let you explicitly name the
-lifetimes involved. This is because it's generally not really necessary
-to talk about lifetimes in a local context; Rust has all the information and
-can work out everything as optimally as possible. Many anonymous scopes and
-temporaries that you would otherwise have to write are often introduced to
-make your code Just Work.
+그러나 일단 함수 경계를 건너고 나면 수명에 대해서 이야기해야만 합니다. 수명은 보통 작은 따옴표로 표시됩니다: `'a`, `'static` 처럼요. 수명이라는 주제에 발가락을 담그기 위해서, 우리는 코드 구역을 수명으로 수식할 수 있는 척을 하며, 이 챕터의 시작부터 있는 예제들의 문법적 설탕을 해독해 보겠습니다.
 
 However once you cross the function boundary, you need to start talking about
 lifetimes. Lifetimes are denoted with an apostrophe: `'a`, `'static`. To dip
