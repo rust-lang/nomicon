@@ -13,7 +13,7 @@
 * [소유권](ownership.md)
   * [레퍼런스](references.md)
   * [복제](aliasing.md)
-  * [Lifetimes](lifetimes.md)
+  * [수명](lifetimes.md)
   * [Limits of Lifetimes](lifetime-mismatch.md)
   * [Lifetime Elision](lifetime-elision.md)
   * [Unbounded Lifetimes](unbounded-lifetimes.md)
