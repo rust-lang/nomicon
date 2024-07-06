@@ -11,21 +11,11 @@
 
 그러나 일단 함수 경계를 건너고 나면 수명에 대해서 이야기해야만 합니다. 수명은 보통 작은 따옴표로 표시됩니다: `'a`, `'static` 처럼요. 수명이라는 주제에 발가락을 담그기 위해서, 우리는 코드 구역을 수명으로 수식할 수 있는 척을 하며, 이 챕터의 시작부터 있는 예제들의 문법적 설탕을 해독해 보겠습니다.
 
-However once you cross the function boundary, you need to start talking about
-lifetimes. Lifetimes are denoted with an apostrophe: `'a`, `'static`. To dip
-our toes with lifetimes, we're going to pretend that we're actually allowed
-to label scopes with lifetimes, and desugar the examples from the start of
-this chapter.
+원래 우리의 예제들은 코드 구역과 수명에 대해서 *공격적인* 문법적 설탕-- 심지어는 고당 옥수수 시럽 --을 이용했는데, 모든 것들을 명시적으로 적는 것은 *굉장히 요란하기* 때문입니다. 
+모든 러스트 코드는 공격적인 추론과 "뻔한" 것들을 생략하는 것에 의존합니다. 
 
-Originally, our examples made use of *aggressive* sugar -- high fructose corn
-syrup even -- around scopes and lifetimes, because writing everything out
-explicitly is *extremely noisy*. All Rust code relies on aggressive inference
-and elision of "obvious" things.
-
-One particularly interesting piece of sugar is that each `let` statement
-implicitly introduces a scope. For the most part, this doesn't really matter.
-However it does matter for variables that refer to each other. As a simple
-example, let's completely desugar this simple piece of Rust code:
+문법적 설탕 중 하나의 특별한 조각은 모든 `let` 문장이 암시적으로 코드 구역을 시작한다는 점입니다. 대부분의 경우에는 이것이 문제가 되지는 않습니다. 그러나 서로 참조하는 변수들에게는 문제가 됩니다. 
+간단한 예제로, 이런 간단한 러스트 코드 조각을 해독해 봅시다:
 
 ```rust
 let x = 0;
