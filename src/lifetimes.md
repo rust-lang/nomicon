@@ -1,17 +1,13 @@
-# Lifetimes
+# 수명
 
-Rust enforces these rules through *lifetimes*. Lifetimes are named
-regions of code that a reference must be valid for. Those regions
-may be fairly complex, as they correspond to paths of execution
-in the program. There may even be holes in these paths of execution,
-as it's possible to invalidate a reference as long as it's reinitialized
-before it's used again. Types which contain references (or pretend to)
-may also be tagged with lifetimes so that Rust can prevent them from
-being invalidated as well.
+러스트는 이런 규칙들을 *수명*을 통해서 강제합니다. 수명은 레퍼런스가 유효해야 하는, 이름이 지어진 코드의 지역입니다. 이 지역들은 꽤나 복잡할 수 있는데, 프로그램의 실행 분기에 대응하기 때문입니다. 
+또한 이런 실행 분기에는 구멍까지도 있을 수 있는데, 레퍼런스가 다시 쓰이기 전에 재초기화된다면, 이 레퍼런스를 무효화할 수 있기 때문입니다. 
+레퍼런스를 포함하는 (또는 포함하는 척하는) 타입도 수명을 붙여서 러스트가 그것을 무효화하는 것을 막게 할 수 있습니다. 
 
-In most of our examples, the lifetimes will coincide with scopes. This is
-because our examples are simple. The more complex cases where they don't
-coincide are described below.
+우리의 예제 대부분, 수명은 코드 구역과 대응할 것입니다. 이것은 우리의 예제가 간단하기 때문입니다. 그렇게 대응되지 않는 복잡한 경우는 밑에 서술하겠습니다.
+
+함수 본문 안에서 러스트는 보통 관련된 수명을 명시적으로 쓰게 하지 않습니다. 이것은 지역적인 문맥에서 수명에 대해 말하는 것은 대부분 별로 필요없기 때문입니다: 러스트는 모든 정보를 가지고 있고, 
+모든 것들이 가능한 한 최적으로 동작하도록 할 수 있기 때문입니다. 컴파일러가 아니라면 일일히 작성해야 하는 많은 무명 
 
 Within a function body, Rust generally doesn't let you explicitly name the
 lifetimes involved. This is because it's generally not really necessary
