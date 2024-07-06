@@ -68,7 +68,7 @@ z = y;
 
 ## 예제: 본체보다 오래 사는 레퍼런스들
 
-Alright, let's look at some of those examples from before:
+좋습니다, 예전의 예제 중 몇 가지를 살펴봅시다:
 
 ```rust,compile_fail
 fn as_str(data: &u32) -> &str {
@@ -77,7 +77,7 @@ fn as_str(data: &u32) -> &str {
 }
 ```
 
-desugars to:
+이렇게 해독됩니다:
 
 <!-- ignore: desugared code -->
 ```rust,ignore
@@ -89,12 +89,9 @@ fn as_str<'a>(data: &'a u32) -> &'a str {
 }
 ```
 
-This signature of `as_str` takes a reference to a u32 with *some* lifetime, and
-promises that it can produce a reference to a str that can live *just as long*.
-Already we can see why this signature might be trouble. That basically implies
-that we're going to find a str somewhere in the scope the reference
-to the u32 originated in, or somewhere *even earlier*. That's a bit of a tall
-order.
+`as_str`의 시그니처는 *어떤* 수명을 가지고 있는, u32의 레퍼런스를 받고 *딱 그만큼 사는*, str의 레퍼런스를 만들 수 있다고 약속하고 있습니다. 이미 여기서 우리는 왜 이 시그니처가 문제가 있을 수도 있는지 알 수 있습니다. 이것은 우리가 str을 u32의 레퍼런스가 있던 코드 구역에서, 혹은 *더 이전의 구역에서* 찾을 것을 내포하고 있습니다. 이것은 좀 무리한 요구입니다.
+
+
 
 We then proceed to compute the string `s`, and return a reference to it. Since
 the contract of our function says the reference must outlive `'a`, that's the
