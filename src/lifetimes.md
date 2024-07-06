@@ -23,7 +23,7 @@ let y = &x;
 let z = &y;
 ```
 
-"빌림 검사기"는 항상 수명의 길이를 최소화하려고 하기 때문에, 아마 이런 식으로 해독할 것입니다:
+대여 검사기는 항상 수명의 길이를 최소화하려고 하기 때문에, 아마 이런 식으로 해독할 것입니다:
 
 <!-- ignore: desugared code -->
 ```rust,ignore
@@ -31,17 +31,17 @@ let z = &y;
 'a: {
     let x: i32 = 0;
     'b: {
-        // lifetime used is 'b because that's good enough.
         let y: &'b i32 = &'b x;
         'c: {
-            // ditto on 'c
-            let z: &'c &'b i32 = &'c y; // "a reference to a reference to an i32" (with lifetimes annotated)
+            let z: &'c &'b i32 = &'c y; // "i32의 레퍼런스의 레퍼런스" (수명이 표시되어 있음)
         }
     }
 }
 ```
 
-Wow. That's... awful. Let's all take a moment to thank Rust for making this easier.
+와. 이건... 별로네요. 러스트가 이런 것들을 간단하게 만들어 준다는 것을 감사하는 우리가 됩시다.
+
+
 
 Actually passing references to outer scopes will cause Rust to infer
 a larger lifetime:
