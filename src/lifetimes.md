@@ -110,25 +110,27 @@ fn main() {
     'c: {
         let x: u32 = 0;
         'd: {
-            // An anonymous scope is introduced because the borrow does not
-            // need to last for the whole scope x is valid for. The return
-            // of as_str must find a str somewhere before this function
-            // call. Obviously not happening.
+            // x가 유효한 범위 전체 동안 빌림이 유지될 필요가 
+            // 없기 때문에 새로운 구역을 집어넣었습니다. as_str의 반환값은 
+            // 이 함수 호출 이전에 존재하는 str을 찾아야만 합니다.
+            // 당연히 일어나지 않을 일이죠.
             println!("{}", as_str::<'d>(&'d x));
         }
     }
 }
 ```
 
-Shoot!
+젠장!
 
-Of course, the right way to write this function is as follows:
+이 함수를 올바르게 작성하는 방법은 물론 다음과 같습니다:
 
 ```rust
 fn to_string(data: &u32) -> String {
     format!("{}", data)
 }
 ```
+
+우리는 함수 안에서 소유한 값을 생성해서 반환해야 합니다! 
 
 We must produce an owned value inside the function to return it! The only way
 we could have returned an `&'a str` would have been if it was in a field of the
