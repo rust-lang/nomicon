@@ -39,9 +39,11 @@ let z = &y;
 }
 ```
 
-와. 이건... 별로네요. 러스트가 이런 것들을 간단하게 만들어 준다는 것을 감사하는 우리가 됩시다.
+와. 이건... 별로네요. 러스트가 이런 것들을 간단하게 만들어 준다는 것을 잠시 감사하는 시간을 가집시다.
 
-외부 범위에 레퍼런스를 넘기면 러스트는 더 긴 수명을 추론하게 됩니다:
+...
+
+자, 계속하자면, 외부 범위에 레퍼런스를 넘기면 러스트는 더 긴 수명을 추론하게 됩니다:
 
 ```rust
 let x = 0;
@@ -91,18 +93,9 @@ fn as_str<'a>(data: &'a u32) -> &'a str {
 
 `as_str`의 시그니처는 *어떤* 수명을 가지고 있는, u32의 레퍼런스를 받고 *딱 그만큼 사는*, str의 레퍼런스를 만들 수 있다고 약속하고 있습니다. 이미 여기서 우리는 왜 이 시그니처가 문제가 있을 수도 있는지 알 수 있습니다. 이것은 우리가 str을 u32의 레퍼런스가 있던 코드 구역에서, 혹은 *더 이전의 구역에서* 찾을 것을 내포하고 있습니다. 이것은 좀 무리한 요구입니다.
 
+그 다음 우리는 String `s`를 계산하고, 그것을 가리키는 레퍼런스를 반환합니다. 우리의 함수가 체결한 계약은 레퍼런스가 `'a`보다 더 살아야 한다고 되어 있으므로, 이것이 바로 우리가 이 레퍼런스에 할당해야 하는 수명입니다. 불행하게도 `s`는 `'b` 구역에서 정의되었으므로, 이 코드가 건전할 수 있는 유일한 방법은 `'b`가 `'a`를 포함하는 것입니다 -- `'a`는 함수 호출 자체를 포함해야 하므로, 이는 명백하게 성립하지 않습니다. 그러므로 우리는 그 수명이 본체를 능가하는 레퍼런스를 만들었는데, 이것은 *말 그대로* 레퍼런스가 할 수 없다고 우리가 말했던 가장 첫번째 것입니다. 컴파일러는 당연히 우리 눈앞에서 터질 겁니다.
 
-
-We then proceed to compute the string `s`, and return a reference to it. Since
-the contract of our function says the reference must outlive `'a`, that's the
-lifetime we infer for the reference. Unfortunately, `s` was defined in the
-scope `'b`, so the only way this is sound is if `'b` contains `'a` -- which is
-clearly false since `'a` must contain the function call itself. We have therefore
-created a reference whose lifetime outlives its referent, which is *literally*
-the first thing we said that references can't do. The compiler rightfully blows
-up in our face.
-
-To make this more clear, we can expand the example:
+좀더 확실하게 하기 위해 이 예제를 확장해 볼 수 있습니다:
 
 <!-- ignore: desugared code -->
 ```rust,ignore
