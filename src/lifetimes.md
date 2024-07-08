@@ -132,15 +132,11 @@ fn to_string(data: &u32) -> String {
 
 우리는 함수 안에서 소유한 값을 생성해서 반환해야 합니다! 우리가 이렇게 `&'a str`을 반환하려면 이것이 `&'a u32`의 필드 안에 있어야만 하는데, 당연히 이 경우에는 말이 안됩니다.
 
-(사실 우리는 
+(사실 우리는 문자열 상수값을 반환할 수도 있었습니다. 이 상수값은 스택의 맨 밑바닥에 있다고 생각할 수 있습니다. 이 구현이 우리가 원하는 것을 *조금* 제한하기는 하지만요.)
 
-(Actually we could have also just returned a string literal, which as a global
-can be considered to reside at the bottom of the stack; though this limits
-our implementation *just a bit*.)
+## 예제: 가변 레퍼런스의 복제
 
-## Example: aliasing a mutable reference
-
-How about the other example:
+다른 예제를 볼까요:
 
 ```rust,compile_fail
 let mut data = vec![1, 2, 3];
