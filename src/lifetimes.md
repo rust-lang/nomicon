@@ -130,11 +130,9 @@ fn to_string(data: &u32) -> String {
 }
 ```
 
-우리는 함수 안에서 소유한 값을 생성해서 반환해야 합니다! 
+우리는 함수 안에서 소유한 값을 생성해서 반환해야 합니다! 우리가 이렇게 `&'a str`을 반환하려면 이것이 `&'a u32`의 필드 안에 있어야만 하는데, 당연히 이 경우에는 말이 안됩니다.
 
-We must produce an owned value inside the function to return it! The only way
-we could have returned an `&'a str` would have been if it was in a field of the
-`&'a u32`, which is obviously not the case.
+(사실 우리는 
 
 (Actually we could have also just returned a string literal, which as a global
 can be considered to reside at the bottom of the stack; though this limits
