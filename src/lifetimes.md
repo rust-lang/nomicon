@@ -166,10 +166,7 @@ println!("{}", x);
 여기서 문제는 조금 더 감추어져 있고 흥미롭습니다. 우리는 다음의 이유로 러스트가 이 프로그램을 거부하기를 원합니다: 우리는 `data`의 하위 변수를 참조하는, 살아있는 불변 레퍼런스 `x`를 가지고 있는데, 
 이 동안 `data`에 `push` 함수를 호출하여 가변 레퍼런스를 취하려고 합니다. 
 
-The problem here is a bit more subtle and interesting. We want Rust to
-reject this program for the following reason: We have a live shared reference `x`
-to a descendant of `data` when we try to take a mutable reference to `data`
-to `push`. This would create an aliased mutable reference, which would
+This would create an aliased mutable reference, which would
 violate the *second* rule of references.
 
 However this is *not at all* how Rust reasons that this program is bad. Rust
