@@ -150,18 +150,21 @@ println!("{}", x);
 'a: {
     let mut data: Vec<i32> = vec![1, 2, 3];
     'b: {
-        // 'b is as big as we need this borrow to be
-        // (just need to get to `println!`)
+        // 'b 는 우리가 이 레퍼런스가 필요한 동안 유지됩니다
+        // (`println!`까지 가야 하죠)
         let x: &'b i32 = Index::index::<'b>(&'b data, 0);
         'c: {
-            // Temporary scope because we don't need the
-            // &mut to last any longer.
+            // &mut가 더 오래 살아남을 필요가 없기 때문에
+            // 임시 구역을 추가합니다
             Vec::push(&'c mut data, 4);
         }
         println!("{}", x);
     }
 }
 ```
+
+여기서 문제는 조금 더 감추어져 있고 흥미롭습니다. 우리는 다음의 이유로 러스트가 이 프로그램을 거부하기를 원합니다: 우리는 `data`의 하위 변수를 참조하는, 살아있는 불변 레퍼런스 `x`를 가지고 있는데, 
+이 동안 `data`에 `push` 함수를 호출하여 가변 레퍼런스를 취하려고 합니다. 
 
 The problem here is a bit more subtle and interesting. We want Rust to
 reject this program for the following reason: We have a live shared reference `x`
