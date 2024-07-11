@@ -170,20 +170,15 @@ println!("{}", x);
 러스트가 *보는* 것은 `x`가 출력되기 위해서는 `'b`만큼 살아야 한다는 것입니다. `Index::index`의 시그니처가 그 다음에 요구하는 것은 우리가 `data`에서 만든 레퍼런스가 `'b`만큼 살아야 한다는 것입니다. 
 우리가 `push`를 호출하려고 할 때, 러스트는 우리가 `&'c mut data`를 만드려고 한다는 것을 보게 됩니다. 러스트는 `'c`가 `'b` 안에 있다는 것을 알게 되고, `&'b data`가 아직 살아 있어야 하기 때문에 우리의 프로그램을 거부합니다!
 
-
-
-Here we see that the lifetime system is much more coarse than the reference
-semantics we're actually interested in preserving. For the most part, *that's
-totally ok*, because it keeps us from spending all day explaining our program
-to the compiler. However it does mean that several programs that are totally
-correct with respect to Rust's *true* semantics are rejected because lifetimes
-are too dumb.
+여기서 우리는 우리가 보존하는 데에 실제로 관심이 있는 레퍼런스 의미론보다 수명 시스템이 훨씬 헐거운 것을 볼 수 있습니다. 대부분의 경우에는 *이것은 아무 문제가 없습니다*, 
+왜냐하면 이것은 우리가 우리의 프로그램을 컴파일러에게 하루종일 설명하는 것을 방지해 주기 때문입니다. 그러나 이것은 러스트의 *진정한* 의미론에 잘 부합하는 몇 가지의 프로그램들이, 수명이 너무 멍청하기 때문에, 
+거부되는 것은 의미하는 것이 맞습니다.
 
 ## The area covered by a lifetime
 
-A reference (sometimes called a *borrow*) is *alive* from the place it is
-created to its last use. The borrowed value needs to outlive only borrows that
-are alive. This looks simple, but there are a few subtleties.
+레퍼런스(종종 *빌림*이라고 불립니다)는 창조된 곳부터 마지막으로 쓰이는 곳까지 *살아있습니다*. 빌려진 값은 살아있는 빌림들보다만 오래 살면 됩니다. 이것은 간단하게 보이지만, 몇 가지 미묘한 것들이 있습니다.
+
+
 
 The following snippet compiles, because after printing `x`, it is no longer
 needed, so it doesn't matter if it is dangling or aliased (even though the
