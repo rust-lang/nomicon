@@ -174,27 +174,21 @@ println!("{}", x);
 왜냐하면 이것은 우리가 우리의 프로그램을 컴파일러에게 하루종일 설명하는 것을 방지해 주기 때문입니다. 그러나 이것은 러스트의 *진정한* 의미론에 잘 부합하는 몇 가지의 프로그램들이, 수명이 너무 멍청하기 때문에, 
 거부되는 것은 의미하는 것이 맞습니다.
 
-## The area covered by a lifetime
+## 수명이 차지하는 영역
 
 레퍼런스(종종 *빌림*이라고 불립니다)는 창조된 곳부터 마지막으로 쓰이는 곳까지 *살아있습니다*. 빌려진 값은 살아있는 빌림들보다만 오래 살면 됩니다. 이것은 간단하게 보이지만, 몇 가지 미묘한 것들이 있습니다.
 
-
-
-The following snippet compiles, because after printing `x`, it is no longer
-needed, so it doesn't matter if it is dangling or aliased (even though the
-variable `x` *technically* exists to the very end of the scope).
+다음의 코드 조각은 컴파일되는데, `x`를 출력하고 난 후에는 더이상 필요하지 않아지므로, 이것이 달랑거리거나 복제되어도 상관없기 때문입니다 (변수 `x`가 *실제로는* 이 구역 끝까지 존재한다고 해도 말이죠).
 
 ```rust
 let mut data = vec![1, 2, 3];
 let x = &data[0];
 println!("{}", x);
-// This is OK, x is no longer needed
+// 이건 괜찮습니다, x는 더 이상 필요하지 않습니다
 data.push(4);
 ```
 
-However, if the value has a destructor, the destructor is run at the end of the
-scope. And running the destructor is considered a use ‒ obviously the last one.
-So, this will *not* compile.
+하지만, 만약 값이 소멸자가 있다면, 그 소멸자는 그 구역 끝에서 실행됩니다. 그리고 소멸자를 실행하는 것은 그 값을 사용하는 것으로 간주되죠 - 당연하게도 마지막으로요. 따라서, 이것은 컴파일되지 *않을* 것입니다.
 
 ```rust,compile_fail
 #[derive(Debug)]
@@ -208,10 +202,12 @@ let mut data = vec![1, 2, 3];
 let x = X(&data[0]);
 println!("{:?}", x);
 data.push(4);
-// Here, the destructor is run and therefore this'll fail to compile.
+//여기서 소멸자가 실행되고 따라서 이 코드 조각은 컴파일에 실패합니다
 ```
 
-One way to convince the compiler that `x` is no longer valid is by using `drop(x)` before `data.push(4)`.
+컴파일러에게 `x`가 더 이상 유효하지 않다고 설득하는 방법 중 하나는 `data.push(4)` 전에 `drop(x)`를 사용하는 것입니다.
+
+더 나아가서, 
 
 Furthermore, there might be multiple possible last uses of the borrow, for
 example in each branch of a condition.
