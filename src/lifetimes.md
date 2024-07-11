@@ -164,19 +164,13 @@ println!("{}", x);
 ```
 
 여기서 문제는 조금 더 감추어져 있고 흥미롭습니다. 우리는 다음의 이유로 러스트가 이 프로그램을 거부하기를 원합니다: 우리는 `data`의 하위 변수를 참조하는, 살아있는 불변 레퍼런스 `x`를 가지고 있는데, 
-이 동안 `data`에 `push` 함수를 호출하여 가변 레퍼런스를 취하려고 합니다. 
+이 동안 `data`에 `push` 함수를 호출하여 가변 레퍼런스를 취하려고 합니다. 이러면 복제된 가변 레퍼런스를 생성할 테고, 이것은 레퍼런스의 *두번째* 규칙을 위반할 것입니다.
 
-This would create an aliased mutable reference, which would
-violate the *second* rule of references.
+하지만 이것은 러스트가 이 프로그램이 나쁘다고 알아내는 방법이 *전혀* 아닙니다. 러스트는 `x`가 `data`의 일부의 레퍼런스라는 것을 이해하지 못합니다. 러스트는 `Vec`을 아예 이해하지 못합니다. 
+러스트가 *보는* 것은 `x`가 출력되기 위해서는 `'b`만큼 살아야 한다는 것입니다. `Index::index`의 시그니처가 그 다음에 요구하는 것은 우리가 `data`에서 만든 레퍼런스가 `'b`만큼 살아야 한다는 것입니다. 
+우리가 `push`를 호출하려고 할 때, 러스트는 우리가 `&'c mut data`를 만드려고 한다는 것을 보게 됩니다. 러스트는 `'c`가 `'b` 안에 있다는 것을 알게 되고, `&'b data`가 아직 살아 있어야 하기 때문에 우리의 프로그램을 거부합니다!
 
-However this is *not at all* how Rust reasons that this program is bad. Rust
-doesn't understand that `x` is a reference to a subpath of `data`. It doesn't
-understand `Vec` at all. What it *does* see is that `x` has to live for `'b` in
-order to be printed. The signature of `Index::index` subsequently demands that
-the reference we take to `data` has to survive for `'b`. When we try to call
-`push`, it then sees us try to make an `&'c mut data`. Rust knows that `'c` is
-contained within `'b`, and rejects our program because the `&'b data` must still
-be alive!
+
 
 Here we see that the lifetime system is much more coarse than the reference
 semantics we're actually interested in preserving. For the most part, *that's
