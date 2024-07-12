@@ -172,7 +172,7 @@ println!("{}", x);
 
 여기서 우리는 우리가 보존하는 데에 실제로 관심이 있는 레퍼런스 의미론보다 수명 시스템이 훨씬 헐거운 것을 볼 수 있습니다. 대부분의 경우에는 *이것은 아무 문제가 없습니다*, 
 왜냐하면 이것은 우리가 우리의 프로그램을 컴파일러에게 하루종일 설명하는 것을 방지해 주기 때문입니다. 그러나 이것은 러스트의 *진정한* 의미론에 잘 부합하는 몇 가지의 프로그램들이, 수명이 너무 멍청하기 때문에, 
-거부되는 것은 의미하는 것이 맞습니다.
+거부되는 것을 의미하기는 합니다.
 
 ## 수명이 차지하는 영역
 
@@ -207,10 +207,7 @@ data.push(4);
 
 컴파일러에게 `x`가 더 이상 유효하지 않다고 설득하는 방법 중 하나는 `data.push(4)` 전에 `drop(x)`를 사용하는 것입니다.
 
-더 나아가서, 
-
-Furthermore, there might be multiple possible last uses of the borrow, for
-example in each branch of a condition.
+더 나아가서, 빌림의 가능한 마지막 사용처들이 여러 개 있을 수 있는데, 예를 들면 조건문의 각 가지입니다.
 
 ```rust
 # fn some_condition() -> bool { true }
@@ -218,14 +215,16 @@ let mut data = vec![1, 2, 3];
 let x = &data[0];
 
 if some_condition() {
-    println!("{}", x); // This is the last use of `x` in this branch
-    data.push(4);      // So we can push here
+    println!("{}", x); // 이것이 이 가지에서 `x`의 마지막 사용입니다
+    data.push(4);      // 따라서 여기서 push할 수 있죠
 } else {
-    // There's no use of `x` in here, so effectively the last use is the
-    // creation of x at the top of the example.
+    // 여기에는 `x`의 사용이 없으므로, 사실상 마지막 사용은
+    // 이 예제 맨 위에서 x의 정의 시점입니다.
     data.push(5);
 }
 ```
+
+
 
 And a lifetime can have a pause in it. Or you might look at it as two distinct
 borrows just being tied to the same local variable. This often happens around
