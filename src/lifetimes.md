@@ -224,7 +224,7 @@ if some_condition() {
 }
 ```
 
-
+그리고 수명은 잠시 일시정지될 수 있습니다. 
 
 And a lifetime can have a pause in it. Or you might look at it as two distinct
 borrows just being tied to the same local variable. This often happens around
