@@ -14,7 +14,7 @@
   * [레퍼런스](references.md)
   * [복제](aliasing.md)
   * [수명](lifetimes.md)
-  * [Limits of Lifetimes](lifetime-mismatch.md)
+  * [수명의 한계](lifetime-mismatch.md)
   * [Lifetime Elision](lifetime-elision.md)
   * [Unbounded Lifetimes](unbounded-lifetimes.md)
   * [Higher-Rank Trait Bounds](hrtb.md)
