@@ -224,26 +224,19 @@ if some_condition() {
 }
 ```
 
-그리고 수명은 잠시 일시정지될 수 있습니다. 
-
-And a lifetime can have a pause in it. Or you might look at it as two distinct
-borrows just being tied to the same local variable. This often happens around
-loops (writing a new value of a variable at the end of the loop and using it for
-the last time at the top of the next iteration).
+그리고 수명은 잠시 일시정지될 수 있습니다. 아니면 당신은 이것을 두 개의 별개의 빌림들이 같은 지역변수에 묶여 있다고 볼 수도 있습니다. 이것은 반복문 주변에서 종종 일어납니다 
+(반복문의 끝에서 변수에 새로운 값을 쓰고, 다음 차례 반복의 첫째 줄에서 그것을 마지막으로 사용하는 것이죠).
 
 ```rust
 let mut data = vec![1, 2, 3];
-// This mut allows us to change where the reference points to
+// 이 mut은 레퍼런스가 가리키는 곳을 바꿀 수 있게 해 줍니다
 let mut x = &data[0];
 
-println!("{}", x); // Last use of this borrow
+println!("{}", x); // 이 빌림의 마지막 사용
 data.push(4);
-x = &data[3]; // We start a new borrow here
+x = &data[3]; // 여기서 새로운 빌림이 시작합니다
 println!("{}", x);
 ```
 
-Historically, Rust kept the borrow alive until the end of scope, so these
-examples might fail to compile with older compilers. Also, there are still some
-corner cases where Rust fails to properly shorten the live part of the borrow
-and fails to compile even when it looks like it should. These'll be solved over
-time.
+역사적으로 러스트는 빌림을 그 구역의 끝까지 살려 놓았으므로, 이런 예제들은 예전의 컴파일러에서는 컴파일에 실패할 수도 있습니다. 또한, 러스트가 빌림의 살아있는 범위를 제대로 줄이지 못하고, 
+컴파일되어야 할 것 같은 때에도 컴파일에 실패하는 희귀한 경우들이 있습니다. 이런 것들은 시간이 지나면서 해결될 것입니다.
