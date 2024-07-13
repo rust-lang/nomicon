@@ -108,4 +108,4 @@ error[E0499]: cannot borrow `*map` as mutable more than once at a time
    | |_____- returning this value requires that `*map` is borrowed for `'m`
 ```
 
-[ex2]: lifetimes.html#example-aliasing-a-mutable-reference
+[ex2]: lifetimes.html#예제-가변-레퍼런스의-복제
