@@ -63,12 +63,9 @@ fn main() {
 
 이 프로그램은 우리가 실제로 신경쓰는 레퍼런스 의미론에 따르면 명확히 옳지만, 수명 체계는 그것을 전달하기에 너무 헐겁습니다.
 
-## Improperly reduced borrows
+## 제대로 줄어들지 않은 빌림
 
-The following code fails to compile, because Rust sees that a variable, `map`,
-is borrowed twice, and can not infer that the first borrow ceases to be needed
-before the second one occurs. This is caused by Rust conservatively falling back
-to using a whole scope for the first borrow. This will eventually get fixed.
+다음의 코드는 컴파일되지 않는데, 이는 러스트가 `map`이라는 변수가 두 번 빌려졌다고 보고, 첫번째 빌림이 두번째 빌림이 시작하기 전에 필요가 없어진다는 것을 추론할 수 없기 때문입니다. 이것은 첫번째 빌림이 구역 전체 동안 사용된다고 러스트가 보수적으로 판단했기 때문입니다. 이 문제는 나중에는 고쳐질 것입니다.
 
 ```rust,compile_fail
 # use std::collections::HashMap;
@@ -88,8 +85,7 @@ where
 }
 ```
 
-Because of the lifetime restrictions imposed, `&mut map`'s lifetime
-overlaps other mutable borrows, resulting in a compile error:
+주어진 수명의 제한 때문에 `&mut map`의 수명은 다른 가변 빌림과 겹치게 되고, 컴파일 에러로 이어집니다:
 
 ```text
 error[E0499]: cannot borrow `*map` as mutable more than once at a time
