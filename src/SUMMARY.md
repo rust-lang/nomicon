@@ -15,7 +15,7 @@
   * [복제](aliasing.md)
   * [수명](lifetimes.md)
   * [수명의 한계](lifetime-mismatch.md)
-  * [Lifetime Elision](lifetime-elision.md)
+  * [수명 생략](lifetime-elision.md)
   * [Unbounded Lifetimes](unbounded-lifetimes.md)
   * [Higher-Rank Trait Bounds](hrtb.md)
   * [Subtyping and Variance](subtyping.md)
