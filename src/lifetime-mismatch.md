@@ -1,6 +1,6 @@
-# Limits of Lifetimes
+# 수명의 한계
 
-Given the following code:
+다음 코드가 주어졌을 때:
 
 ```rust,compile_fail
 #[derive(Debug)]
@@ -19,11 +19,9 @@ fn main() {
 }
 ```
 
-One might expect it to compile. We call `mutate_and_share`, which mutably
-borrows `foo` temporarily, but then returns only a shared reference. Therefore
-we would expect `foo.share()` to succeed as `foo` shouldn't be mutably borrowed.
+이것이 컴파일이 되기를 기댜할 수도 있습니다. 우리는 `mutate_and_share`를 호출하는데, 이것은 `foo`를 잠시 가변으로 빌리지만, 불변 레퍼런스만 반환하기 때문입니다. 따라서 `foo`는 가변으로 빌린 상태가 아니므로 우리는 `foo.share()`가 성공할 것이라고 기대할 것입니다.
 
-However when we try to compile it:
+하지만 우리가 이것을 컴파일하려고 하면:
 
 ```text
 error[E0502]: cannot borrow `foo` as immutable because it is also borrowed as mutable
@@ -36,9 +34,7 @@ error[E0502]: cannot borrow `foo` as immutable because it is also borrowed as mu
 13 |     println!("{:?}", loan);
 ```
 
-What happened? Well, we got the exact same reasoning as we did for
-[Example 2 in the previous section][ex2]. We desugar the program and we get
-the following:
+무슨 일이 일어난 걸까요? 음, 이것은 [전 섹션의 2번째 예제][ex2]와 정확히 동일한 논법입니다. 우리가 이 프로그램을 해독하면 다음을 얻습니다:
 
 <!-- ignore: desugared code -->
 ```rust,ignore
@@ -63,13 +59,9 @@ fn main() {
 }
 ```
 
-The lifetime system is forced to extend the `&mut foo` to have lifetime `'c`,
-due to the lifetime of `loan` and `mutate_and_share`'s signature. Then when we
-try to call `share`, it sees we're trying to alias that `&'c mut foo` and
-blows up in our face!
+수명 체계는 `&mut foo`의 수명을 `'c`로 늘려야 할 수밖에 없는데, 이는 `loan`의 수명과 `mutate_and_share`의 시그니처 때문입니다. 그 다음 우리가 `share`르ㄹ 호출하려 할 때, 수명 체계는 우리가 `&'c mut foo`를 복제하려는 것을 알아차리고 우리 눈 앞에서 터집니다!
 
-This program is clearly correct according to the reference semantics we actually
-care about, but the lifetime system is too coarse-grained to handle that.
+이 프로그램은 우리가 실제로 신경쓰는 레퍼런스 의미론에 따르면 명확히 옳지만, 수명 체계는 그것을 전달하기에 너무 헐겁습니다.
 
 ## Improperly reduced borrows
 
