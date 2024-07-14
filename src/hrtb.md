@@ -1,7 +1,6 @@
-# Higher-Rank Trait Bounds (HRTBs)
+# 상계 트레잇 제한 (Higher-Rank Trait Bounds, HRTBs)
 
-Rust's `Fn` traits are a little bit magic. For instance, we can write the
-following code:
+러스트의 `Fn` 트레잇은 조금 마법 같습니다. 예를 들어, 다음의 코드를 쓸 수 있겠습니다:
 
 ```rust
 struct Closure<F> {
@@ -25,12 +24,11 @@ fn main() {
 }
 ```
 
-If we try to naively desugar this code in the same way that we did in the
-[lifetimes section][lt], we run into some trouble:
+만약 우리가 순진하게 [수명 섹션][lt]에서 했던 대로 이 코드를 해독하려 하면, 좀 문제가 발생합니다:
 
 <!-- ignore: desugared code -->
 ```rust,ignore
-// NOTE: `&'b data.0` and `'x: {` is not valid syntax!
+// 주의: `&'b data.0`와 `'x: {`은 올바른 문법이 아닙니다!
 struct Closure<F> {
     data: (u8, u16),
     func: F,
@@ -53,6 +51,8 @@ fn main() {
     }
 }
 ```
+
+세상에, 어떻게 우리가 `F`의 트레잇 제한에서 수명을 이야기할 수 있을까요? 
 
 How on earth are we supposed to express the lifetimes on `F`'s trait bound? We
 need to provide some lifetime there, but the lifetime we care about can't be
