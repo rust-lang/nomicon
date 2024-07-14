@@ -1,9 +1,8 @@
-# Lifetime Elision
+# 수명 생략
 
-In order to make common patterns more ergonomic, Rust allows lifetimes to be
-*elided* in function signatures.
+흔한 코드 패턴을 더 편하게 만들기 위해서, 러스트는 함수 시그니처에서 수명이 *생략되는 것을* 허용합니다.
 
-A *lifetime position* is anywhere you can write a lifetime in a type:
+*수명의 위치*는 타입 안에서 수명을 쓸 수 있는 곳 어디나입니다:
 
 <!-- ignore: simplified code -->
 ```rust,ignore
@@ -12,21 +11,14 @@ A *lifetime position* is anywhere you can write a lifetime in a type:
 T<'a>
 ```
 
-Lifetime positions can appear as either "input" or "output":
+수명의 위치는 "입력" 또는 "출력"으로 나타날 수 있습니다:
 
-* For `fn` definitions, `fn` types, and the traits `Fn`, `FnMut`, and `FnOnce`,
-  input refers to the types of the formal arguments, while output refers to
-  result types. So `fn foo(s: &str) -> (&str, &str)` has elided one lifetime in
-  input position and two lifetimes in output position. Note that the input
-  positions of a `fn` method definition do not include the lifetimes that occur
-  in the method's `impl` header (nor lifetimes that occur in the trait header,
-  for a default method).
+* `fn` 정의, `fn` 타입, 그리고 `Fn`, `FnMut`, `FnOnce` 트레잇들에서, 입력은 매개변수들의 타입을 가리키고, 출력은 결과 타입을 가리킵니다. 따라서 `fn foo(s: &str) -> (&str, &str)`는 입력 위치에서 하나의 수명을,
+  출력 위치에서 두 개의 수명을 생략한 것이죠. `fn` 메서드 정의에서 입력 위치는 메서드의 `impl` 부분에 있는 수명들(혹은, 기본 메서드에 한해서, 트레잇 헤더에 있는 수명들도요)을 포함하지 않는다는 것을 유의하세요.
 
-* For `impl` headers, all types are input. So `impl Trait<&T> for Struct<&T>`
-  has elided two lifetimes in input position, while `impl Struct<&T>` has elided
-  one.
+* `impl` 부분에서는 모든 타입이 입력입니다. 따라서 `impl Trait<&T> for Struct<&T>`은 입력 위치에서 두 개의 수명을 생략했고, `impl Struct<&T>`은 하나의 수명을 생략한 것입니다.
 
-Elision rules are as follows:
+생략 규칙은 다음과 같습니다:
 
 * Each elided lifetime in input position becomes a distinct lifetime
   parameter.
