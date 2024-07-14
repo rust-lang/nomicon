@@ -1,21 +1,14 @@
-# Unbounded Lifetimes
+# 무제한 수명
 
-Unsafe code can often end up producing references or lifetimes out of thin air.
-Such lifetimes come into the world as *unbounded*. The most common source of
-this is taking a reference to a dereferenced raw pointer, which produces a
-reference with an unbounded lifetime. Such a lifetime becomes as big as context
-demands. This is in fact more powerful than simply becoming `'static`, because
-for instance `&'static &'a T` will fail to typecheck, but the unbound lifetime
-will perfectly mold into `&'a &'a T` as needed. However for most intents and
-purposes, such an unbounded lifetime can be regarded as `'static`.
+불안전한 코드는 종종 허공에서 레퍼런스나 수명을 만들어내곤 합니다. 이런 수명들은 *무제한*의 상태로 세계에 들어오게 됩니다. 이것이 일어나는 가장 흔한 경로는 생 포인터를 역참조한 다음 그것의 레퍼런스를 취하는 것인데, 
+이것은 무제한의 수명을 가진 레퍼런스를 생산하게 됩니다. 이런 수명은 상황이 요구하는 만큼 범위가 커집니다. 이것은 사실 그냥 `'static`이 되는 것보다 더 강력한데, 
+예를 들어 `&'static &'a T`는 `&'a &'a T`와 타입이 맞지 않을 것이지만, 무제한의 수명은 필요하다면 완벽하게 `&'a &'a T`에 맞아들어갈 것이기 때문입니다. 그러나 대부분의 의도와 목적에서는, 
+이런 무제한의 수명은 `'static`으로 간주해도 됩니다. 
 
-Almost no reference is `'static`, so this is probably wrong. `transmute` and
-`transmute_copy` are the two other primary offenders. One should endeavor to
-bound an unbounded lifetime as quickly as possible, especially across function
-boundaries.
+`'static`인 레퍼런스는 거의 없으니, 이것은 아마 잘못된 것일 것입니다. `transmute`와 `transmute_copy`는 이런 일이 일어날 수 있는 또다른 두 가지의 원인들입니다. 
+우리는 최선을 다해서, 가능한 한 빨리 무제한의 수명을 제한시켜야 합니다, 특히 함수 경계를 지날 때 말이죠.
 
-Given a function, any output lifetimes that don't derive from inputs are
-unbounded. For instance:
+함수가 주어졌을 때 입력들에서 파생되지 않는 출력 수명은 무제한이 됩니다. 예를 들면:
 
 <!-- no_run: This example exhibits undefined behavior. -->
 ```rust,no_run
@@ -27,18 +20,12 @@ fn main() {
     let soon_dropped = String::from("hello");
     let dangling = get_str(&soon_dropped);
     drop(soon_dropped);
-    println!("Invalid str: {}", dangling); // Invalid str: gӚ_`
+    println!("잘못된 str: {}", dangling); // 잘못된 str: gӚ_`
 }
 ```
 
-The easiest way to avoid unbounded lifetimes is to use lifetime elision at the
-function boundary. If an output lifetime is elided, then it *must* be bounded by
-an input lifetime. Of course it might be bounded by the *wrong* lifetime, but
-this will usually just cause a compiler error, rather than allow memory safety
-to be trivially violated.
+무제한의 수명을 피할 수 있는 가장 쉬운 방법은 함수 경계에서 수명을 생략하는 것입니다. 출력 수명이 생략되면 *반드시* 입력 수명에 제한되게 되니까요. 당연히 *잘못된* 수명에 제한될 수도 있겠지만, 
+이런 것들은 보통 메모리 안전이 흔하게 침범당하게 두기보다는, 컴파일 오류를 야기할 뿐입니다.
 
-Within a function, bounding lifetimes is more error-prone. The safest and easiest
-way to bound a lifetime is to return it from a function with a bound lifetime.
-However if this is unacceptable, the reference can be placed in a location with
-a specific lifetime. Unfortunately it's impossible to name all lifetimes involved
-in a function.
+함수 안에서 수명을 제한하는 것은 더 오류가 일어나기 쉽습니다. 수명을 제한하는 가장 안전하고 가장 쉬운 방법은 제한된 수명이 있는 함수에서 반환하는 것입니다. 그러나 이것을 받아들일 수 없다면, 
+레퍼런스를 특정한 수명이 있는 위치에 놓을 수 있습니다. 불행히도 함수 안에서 연관된 모든 수명들을 다 나열할 수는 없습니다.
