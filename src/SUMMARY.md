@@ -16,7 +16,7 @@
   * [수명](lifetimes.md)
   * [수명의 한계](lifetime-mismatch.md)
   * [수명 생략](lifetime-elision.md)
-  * [Unbounded Lifetimes](unbounded-lifetimes.md)
+  * [무제한 수명](unbounded-lifetimes.md)
   * [Higher-Rank Trait Bounds](hrtb.md)
   * [Subtyping and Variance](subtyping.md)
   * [Drop Check](dropck.md)
