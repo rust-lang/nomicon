@@ -70,14 +70,9 @@ where F: for<'a> Fn(&'a (u8, u16)) -> &'a u8,
 
 (여기서 `Fn(a, b, c) -> d` 자체는 불안정한 *실제* `Fn` 트레잇을 위한 문법 설탕입니다)
 
+`for<'a>`는 "모든 `'a`의 선택들에 대해서"로 읽을 수 있고, 기본적으로 F가 만족시켜야 하는 트레잇 제한들의 *무한한 목록을* 만들어 냅니다. 살벌하군요. `Fn` 트레잇들 밖에서 상계 트레잇 제한들(HRTBs)을 만날 수 있는 곳은 별로 없고, 그런 경우들에도 우리는 대부분의 경우에 멋진 마법 문법 설탕이 있습니다.
 
-
-`for<'a>` can be read as "for all choices of `'a`", and basically produces an
-*infinite list* of trait bounds that F must satisfy. Intense. There aren't many
-places outside of the `Fn` traits where we encounter HRTBs, and even for
-those we have a nice magic sugar for the common cases.
-
-In summary, we can rewrite the original code more explicitly as:
+요약하자면, 우리는 원래 코드를 좀더 명확하게, 이렇게 쓸 수 있습니다:
 
 ```rust
 struct Closure<F> {
