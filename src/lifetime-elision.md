@@ -20,41 +20,38 @@ T<'a>
 
 생략 규칙은 다음과 같습니다:
 
-* Each elided lifetime in input position becomes a distinct lifetime
-  parameter.
+* 입력 위치에서 생략된 수명들은 각각 별개의 수명 매개변수가 됩니다.
 
-* If there is exactly one input lifetime position (elided or not), that lifetime
-  is assigned to *all* elided output lifetimes.
+* 입력 위치에서 수명이 하나밖에 없다면 (생략되든 되지 않든), 그 수명이 출력 수명들 *모두에* 적용됩니다.
 
-* If there are multiple input lifetime positions, but one of them is `&self` or
-  `&mut self`, the lifetime of `self` is assigned to *all* elided output lifetimes.
+* 만약 입력 위치에서 수명이 여러 개가 있는데, 그 중의 하나가 `&self`이거나 `&mut self`라면, `self`의 수명이 출력 위치에서 수명이 생략된 *모든* 수명들에게 할당됩니다.
 
-* Otherwise, it is an error to elide an output lifetime.
+* 이 모든 경우가 해당하지 않는다면, 출력 수명을 생략하는 것은 오류입니다.
 
-Examples:
+예제입니다:
 
 <!-- ignore: simplified code -->
 ```rust,ignore
-fn print(s: &str);                                      // elided
-fn print<'a>(s: &'a str);                               // expanded
+fn print(s: &str);                                      // 생략됨
+fn print<'a>(s: &'a str);                               // 확장됨
 
-fn debug(lvl: usize, s: &str);                          // elided
-fn debug<'a>(lvl: usize, s: &'a str);                   // expanded
+fn debug(lvl: usize, s: &str);                          // 생략됨
+fn debug<'a>(lvl: usize, s: &'a str);                   // 확장됨
 
-fn substr(s: &str, until: usize) -> &str;               // elided
-fn substr<'a>(s: &'a str, until: usize) -> &'a str;     // expanded
+fn substr(s: &str, until: usize) -> &str;               // 생략됨
+fn substr<'a>(s: &'a str, until: usize) -> &'a str;     // 확장됨
 
-fn get_str() -> &str;                                   // ILLEGAL
+fn get_str() -> &str;                                   // 오류
 
-fn frob(s: &str, t: &str) -> &str;                      // ILLEGAL
+fn frob(s: &str, t: &str) -> &str;                      // 오류
 
-fn get_mut(&mut self) -> &mut T;                        // elided
-fn get_mut<'a>(&'a mut self) -> &'a mut T;              // expanded
+fn get_mut(&mut self) -> &mut T;                        // 생략됨
+fn get_mut<'a>(&'a mut self) -> &'a mut T;              // 확장됨
 
-fn args<T: ToCStr>(&mut self, args: &[T]) -> &mut Command                  // elided
-fn args<'a, 'b, T: ToCStr>(&'a mut self, args: &'b [T]) -> &'a mut Command // expanded
+fn args<T: ToCStr>(&mut self, args: &[T]) -> &mut Command                  // 생략됨
+fn args<'a, 'b, T: ToCStr>(&'a mut self, args: &'b [T]) -> &'a mut Command // 확장됨
 
-fn new(buf: &mut [u8]) -> BufWriter;                    // elided
-fn new(buf: &mut [u8]) -> BufWriter<'_>;                // elided (with `rust_2018_idioms`)
-fn new<'a>(buf: &'a mut [u8]) -> BufWriter<'a>          // expanded
+fn new(buf: &mut [u8]) -> BufWriter;                    // 생략됨
+fn new(buf: &mut [u8]) -> BufWriter<'_>;                // 생략됨 (`rust_2018_idioms`을 사용해서)
+fn new<'a>(buf: &'a mut [u8]) -> BufWriter<'a>          // 확장됨
 ```
