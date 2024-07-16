@@ -1,11 +1,8 @@
-# Subtyping and Variance
+# Subtyping과 변성(變性,Variance)
 
-Rust uses lifetimes to track the relationships between borrows and ownership.
-However, a naive implementation of lifetimes would be either too restrictive,
-or permit undefined behavior.
+러스트는 빌림과 소유권 사이의 관계를 추적하기 위해 수명을 사용합니다. 하지만 수명의 순진한 구현은 너무 제한적이거나, 아니면 미정의 동작을 허용하게 됩니다.
 
-In order to allow flexible usage of lifetimes
-while also preventing their misuse, Rust uses **subtyping** and **variance**.
+수명을 유연하게 사용하면서도 수명의 오용을 방지하기 위해서, 러스트는 **Subtyping**과 **변성(變性,Variance)**을 사용합니다.
 
 Let's start with an example.
 
