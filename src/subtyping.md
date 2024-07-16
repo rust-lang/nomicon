@@ -52,17 +52,13 @@ error[E0308]: mismatched types
 
 > `'long`이 정의하는 코드 구역이 `'short`가 정의하는 구역을 **완전히 포함할 때**, 그리고 오직 그 경우에만 `'long <: 'short`이다.
 
+`'long`은 `'short`가 정의한 구역보다 더 넓은 코드 구역을 정의할 수 있지만, 그래도 우리의 정의에 어긋나지 않습니다.
 
+우리가 이 단원의 나머지를 통해서 보겠지만, 부분타입 다형성은 이것보다는 훨씬 복잡하고 세밀하지만, 이 간단한 규칙은 직관상 99%로 아주 좋습니다.
+그리고 만약 불안전한 코드를 작성하지 않는다면, 컴파일러가 당신을 위해 온갖 특수한 경우를 다 처리해 줄 겁니다. 하지만 이것은 러스토노미콘이죠. 우리는 불안전한 코드를 작성할 것이니,
+우리는 이것이 실제로 어떻게 동작하는지, 그리고 우리가 이것을 어떻게 가지고 놀 수 있을지를 이해해야 합니다.
 
-`'long` may define a region larger than `'short`, but that still fits our definition.
-
-> As we will see throughout the rest of this chapter,
-subtyping is a lot more complicated and subtle than this,
-but this simple rule is a very good 99% intuition.
-And unless you write unsafe code, the compiler will automatically handle all the corner cases for you.
-
-> But this is the Rustonomicon. We're writing unsafe code,
-so we need to understand how this stuff really works, and how we can mess it up.
+위의 예제로 돌아오면, 우리는 `'static <: 'world`라고 말할 수 있습니다. 
 
 Going back to our example above, we can say that `'static <: 'world`.
 For now, let's also accept the idea that subtypes of lifetimes can be passed through references
