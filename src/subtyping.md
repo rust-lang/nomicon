@@ -22,8 +22,7 @@ fn main() {
 }
 ```
 
-In a conservative implementation of lifetimes, since `hello` and `world` have different lifetimes,
-we might see the following error:
+보수적인 수명의 구현에서는 `hello`와 `world`는 다른 수명을 가지고 있으므로, 우리는 다음과 같은 오류를 볼지도 모릅니다:
 
 ```text
 error[E0308]: mismatched types
@@ -35,22 +34,21 @@ error[E0308]: mismatched types
    |                      expected `&'static str`, found struct `&'world str`
 ```
 
-This would be rather unfortunate. In this case,
-what we want is to accept any type that lives *at least as long* as `'world`.
-Let's try using subtyping with our lifetimes.
+이것은 뭔가 부적절할 것입니다. 이 경우에 우리가 원하는 것은 *최소한* `'world`만큼만 사는 타입은 모두 받는 것입니다. 우리의 수명들에 부분타입 다형성을 이용해 봅시다.
 
-## Subtyping
+## 부분타입 다형성
 
-Subtyping is the idea that one type can be used in place of another.
+부분타입 다형성은 한 타입이 다른 타입 대신에 쓰일 수 있다는 개념입니다.
 
-Let's define that `Sub` is a subtype of `Super` (we'll be using the notation `Sub <: Super` throughout this chapter).
+`Sub`이라는 타입이 `Super`라는 타입의 부분타입이라고 해 봅시다 (우리는 이 단원에서 이것을 `Sub <: Super`라고 표현하는 표기법을 사용하겠습니다).
 
-What this is suggesting to us is that the set of *requirements* that `Super` defines
-are completely satisfied by `Sub`. `Sub` may then have more requirements.
+이것이 우리에게 나타내는 것은 `Super`가 정의하는 *요구사항들*의 집합을 `Sub`이 완벽하게 충족한다는 것입니다. 그 다음 `Sub`은 더 많은 요구사항을 가질 수 있겠죠.
 
-Now, in order to use subtyping with lifetimes, we need to define the requirement of a lifetime:
+이제, 부분타입 다형성을 수명에 쓰기 위해, 우리는 수명의 요구사항을 정의해야 합니다:
 
-> `'a` defines a region of code.
+> `'a`는 코드 구역을 정의합니다.
+
+
 
 Now that we have a defined set of requirements for lifetimes, we can define how they relate to each other:
 
