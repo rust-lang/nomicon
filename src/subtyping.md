@@ -58,13 +58,8 @@ error[E0308]: mismatched types
 그리고 만약 불안전한 코드를 작성하지 않는다면, 컴파일러가 당신을 위해 온갖 특수한 경우를 다 처리해 줄 겁니다. 하지만 이것은 러스토노미콘이죠. 우리는 불안전한 코드를 작성할 것이니,
 우리는 이것이 실제로 어떻게 동작하는지, 그리고 우리가 이것을 어떻게 가지고 놀 수 있을지를 이해해야 합니다.
 
-위의 예제로 돌아오면, 우리는 `'static <: 'world`라고 말할 수 있습니다. 
-
-Going back to our example above, we can say that `'static <: 'world`.
-For now, let's also accept the idea that subtypes of lifetimes can be passed through references
-(more on this in [Variance](#variance)),
-_e.g._ `&'static str` is a subtype of `&'world str`, then we can "downgrade" `&'static str` into a `&'world str`.
-With that, the example above will compile:
+위의 예제로 돌아오면, 우리는 `'static <: 'world`라고 말할 수 있습니다. 지금으로써는, 수명의 부분타입 관계가 레퍼런스에도 그대로 전달된다는 것을 일단은 받아들입시다 (더 자세한 건 [변성](#)에서 다룹니다).
+예를 들어, `&'static str`은 `&'world str`의 부분타입이므로, 우리는 `&'static str`을 `&'world str`로 "격하시킬" 수 있습니다. 이렇게 하면, 위의 예제는 컴파일될 겁니다:
 
 ```rust
 fn debug<'a>(a: &'a str, b: &'a str) {
@@ -75,13 +70,13 @@ fn main() {
     let hello: &'static str = "hello";
     {
         let world = String::from("world");
-        let world = &world; // 'world has a shorter lifetime than 'static
-        debug(hello, world); // hello silently downgrades from `&'static str` into `&'world str`
+        let world = &world; // 'world 는 'static 보다 짧은 수명입니다.
+        debug(hello, world); // hello 는 조용히 `&'static str`을 `&'world str`로 격하시킵니다.
     }
 }
 ```
 
-## Variance
+## 변성(變性, Variance)
 
 Above, we glossed over the fact that `'static <: 'b` implied that `&'static T <: &'b T`. This uses a property known as _variance_.
 It's not always as simple as this example, though. To understand that, let's try to extend this example a bit:
