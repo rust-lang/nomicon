@@ -46,13 +46,13 @@ error[E0308]: mismatched types
 
 이제, 부분타입 다형성을 수명에 쓰기 위해, 우리는 수명의 요구사항을 정의해야 합니다:
 
-> `'a`는 코드 구역을 정의합니다.
+> `'a`는 코드 구역을 정의한다.
+
+이제 수명을 위한 요구사항을 만들었으니, 우리는 수명들이 서로 어떻게 관련이 있는지를 정의할 수 있습니다:
+
+> `'long`이 정의하는 코드 구역이 `'short`가 정의하는 구역을 **완전히 포함할 때**, 그리고 오직 그 경우에만 `'long <: 'short`이다.
 
 
-
-Now that we have a defined set of requirements for lifetimes, we can define how they relate to each other:
-
-> `'long <: 'short` if and only if `'long` defines a region of code that **completely contains** `'short`.
 
 `'long` may define a region larger than `'short`, but that still fits our definition.
 
