@@ -1,13 +1,13 @@
-# Subtyping과 변성(變性,Variance)
+# Subtyping과 변성(變性, Variance)
 
 러스트는 빌림과 소유권 사이의 관계를 추적하기 위해 수명을 사용합니다. 하지만 수명의 순진한 구현은 너무 제한적이거나, 아니면 미정의 동작을 허용하게 됩니다.
 
-수명을 유연하게 사용하면서도 수명의 오용을 방지하기 위해서, 러스트는 **Subtyping** 과 **변성(變性,Variance)** 을 사용합니다.
+수명을 유연하게 사용하면서도 수명의 오용을 방지하기 위해서, 러스트는 **Subtyping** 과 **변성(變性, Variance)** 을 사용합니다.
 
-Let's start with an example.
+예제와 함께 시작해 보죠.
 
 ```rust
-// Note: debug expects two parameters with the *same* lifetime
+// 주의: debug는 수명이 *같은* 두 개의 매개변수를 기대합니다.
 fn debug<'a>(a: &'a str, b: &'a str) {
     println!("a = {a:?} b = {b:?}");
 }
@@ -16,7 +16,7 @@ fn main() {
     let hello: &'static str = "hello";
     {
         let world = String::from("world");
-        let world = &world; // 'world has a shorter lifetime than 'static
+        let world = &world; // 'world 는 'static 보다 짧은 수명입니다
         debug(hello, world);
     }
 }
