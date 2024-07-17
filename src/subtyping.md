@@ -78,8 +78,8 @@ fn main() {
 
 ## 변성(變性, Variance)
 
-Above, we glossed over the fact that `'static <: 'b` implied that `&'static T <: &'b T`. This uses a property known as _variance_.
-It's not always as simple as this example, though. To understand that, let's try to extend this example a bit:
+위에서 우리는 `'static <: 'b`가 `&'static T <: &'b T`를 함의한다는 것을 대충 넘어갔었습니다. 이것은 *변성*이라고 알려진 속성을 사용한 것인데요. 이 예제처럼 간단하지만은 않습니다. 이것을 이해하기 위해, 
+이 예제를 조금 확장해 보죠:
 
 ```rust,compile_fail,E0597
 fn assign<T>(input: &mut T, val: T) {
@@ -92,26 +92,24 @@ fn main() {
         let world = String::from("world");
         assign(&mut hello, &world);
     }
-    println!("{hello}"); // use after free 😿
+    println!("{hello}"); // 해제 후 사용 😿
 }
 ```
 
-In `assign`, we are setting the `hello` reference to point to `world`.
-But then `world` goes out of scope, before the later use of `hello` in the println!
+`assign`에서 우리는 `hello` 레퍼런스를 `world`를 향해 가리키도록 합니다. 하지만 그 다음 `world`는, 나중에 `hello`가 `println!`에서 사용되기 전에, 구역 밖으로 벗어나고 맙니다.
 
-This is a classic use-after-free bug!
+이것은 전형적인 "해제 후 사용" 버그입니다!
 
-Our first instinct might be to blame the `assign` impl, but there's really nothing wrong here.
-It shouldn't be surprising that we might want to assign a `T` into a `T`.
+우리의 본능은 먼저 `assign`의 구현을 나무랄 수도 있겠지만, 여기에는 잘못된 것이 없습니다. 우리가 `T` 타입의 값을 `T` 타입에 할당하는 것이 그렇게 무리는 아닐 겁니다.
 
-The problem is that we cannot assume that `&mut &'static str` and `&mut &'b str` are compatible.
-This means that `&mut &'static str` **cannot** be a *subtype* of `&mut &'b str`,
-even if `'static` is a subtype of `'b`.
+문제는 우리가 `&mut &'static str`과 `&mut &'b str`이 서로 호환되는지를 짐작할 수 없다는 점입니다. 이것이 의미하는 것은 `&mut &'static str`이 `&mut &'b str`의 부분타입이 될 수 **없다는** 말입니다, 
+비록 `'static`이 `'b`의 부분타입이라고 해도요.
 
-Variance is the concept that Rust borrows to define relationships about subtypes through their generic parameters.
+변성은 제네릭 매개변수를 통한 부분타입들간의 관계를 정의하기 위해 러스트가 빌린 개념입니다.
 
-> NOTE: For convenience we will define a generic type `F<T>` so
-> that we can easily talk about `T`. Hopefully this is clear in context.
+> 주의: 편의를 위해 우리는 제네릭 타입을 `F<T>`로 정의하여 `T`에 대해 쉽게 말할 것입니다. 이것이 문맥에서 잘 드러나길 바랍니다.
+
+
 
 The type `F`'s *variance* is how the subtyping of its inputs affects the
 subtyping of its outputs. There are three kinds of variance in Rust. Given two
