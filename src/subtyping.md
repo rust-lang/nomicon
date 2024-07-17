@@ -143,16 +143,13 @@ fn main() {
 
 더 많은 타입에 대해서는 참조서의 ["Variance" 섹션을][variance-table] 보세요.
 
-[variance-table]: ../reference/subtyping.html#variance
+[variance-table]: https://doc.rust-lang.org/reference/subtyping.html#variance
 
-> NOTE: the *only* source of contravariance in the language is the arguments to
-> a function, which is why it really doesn't come up much in practice. Invoking
-> contravariance involves higher-order programming with function pointers that
-> take references with specific lifetimes (as opposed to the usual "any lifetime",
-> which gets into higher rank lifetimes, which work independently of subtyping).
+> 주의: 러스트 언어에서 반변 타입의 *유일한* 예는 함수의 매개변수이고, 따라서 실제 상황에서는 크게 와닿지 않습니다.
+> 반변성을 끌어내려면 특정 수명을 가지고 있는 레퍼런스를 매개변수로 받는 함수 포인터를 가지고 고차원적인 프로그래밍을 해야 합니다
+> (만약 "아무 수명"을 모두 받는 레퍼런스였다면, 상계 수명을 이용하게 되는데, 이것은 부분타입 다형성과 독립적으로 작동하기 때문입니다).
 
-Now that we have some more formal understanding of variance,
-let's go through some more examples in more detail.
+이제 우리가 변성에 대한 좀 더 정식적인 이해를 했으니, 더 많은 예제를 더 자세히 살펴봅시다.
 
 ```rust,compile_fail,E0597
 fn assign<T>(input: &mut T, val: T) {
@@ -169,7 +166,7 @@ fn main() {
 }
 ```
 
-And what do we get when we run this?
+이것을 실행하면 어떤 결과가 나오나요?
 
 ```text
 error[E0597]: `world` does not live long enough
@@ -184,9 +181,9 @@ error[E0597]: `world` does not live long enough
    |     - `world` dropped here while still borrowed
 ```
 
-Good, it doesn't compile! Let's break down what's happening here in detail.
+다행이군요, 컴파일되지 않습니다! 여기서 무슨 일이 일어나고 있는 건지 자세하게 쪼개봅시다.
 
-First let's look at the `assign` function:
+먼저 `assign` 함수를 봅시다:
 
 ```rust
 fn assign<T>(input: &mut T, val: T) {
@@ -194,16 +191,14 @@ fn assign<T>(input: &mut T, val: T) {
 }
 ```
 
-All it does is take a mutable reference and a value and overwrite the referent with it.
-What's important about this function is that it creates a type equality constraint. It
-clearly says in its signature the referent and the value must be the *exact same* type.
+이것이 하는 일은 가변 레퍼런스와 값을 받아서 가변 레퍼런스의 원본을 그 값으로 바꿔치기하는 것밖에 없습니다. 이 함수에 대해 중요한 것은 이 함수가 타입 동치 제약을 만든다는 점입니다. 
+이 함수는 시그니처에서 레퍼런스의 원본과 값은 *아주 똑같은* 타입이어야 한다고 명시하고 있습니다.
 
-Meanwhile, in the caller we pass in `&mut &'static str` and `&'world str`.
+한편 우리는 이 함수에 `&mut &'static str`과 `&'world str`을 전달합니다.
 
-Because `&mut T` is invariant over `T`, the compiler concludes it can't apply any subtyping
-to the first argument, and so `T` must be exactly `&'static str`.
+`&mut T`가 `T`에 대해서 무변하기 때문에, 컴파일러는 첫째 매개변수에 아무런 부분타입 관계도 적용할 수 없다고 결론짓고, 따라서 `T`는 정확히 `&'static str`이어야만 하게 됩니다.
 
-This is counter to the `&T` case:
+이것은 `&T`의 경우와 반대입니다:
 
 ```rust
 fn debug<T: std::fmt::Debug>(a: T, b: T) {
@@ -211,13 +206,14 @@ fn debug<T: std::fmt::Debug>(a: T, b: T) {
 }
 ```
 
-where similarly `a` and `b` must have the same type `T`.
-But since `&'a T` *is* covariant over `'a`, we are allowed to perform subtyping.
-So the compiler decides that `&'static str` can become `&'b str` if and only if
-`&'static str` is a subtype of `&'b str`, which will hold if `'static <: 'b`.
-This is true, so the compiler is happy to continue compiling this code.
+여기도 비슷하게 `a`와 `b`는 같은 타입 `T`를 가져야만 하는군요. 하지만 `&'a T`가 `'a`에 대해서 공변*하기* 때문에, 우리는 부분타입 변환을 할 수 있습니다. 
+따라서 컴파일러는 `&'static str`이 `&'b str`의 부분타입인 경우에, 그리고 오직 그 경우에만, `&'static str`은 `&'b str`이 될 수 있다고 결정합니다. 
+이것은 `'static <: 'b`이면 성립할 텐데, 이 조건은 참이므로, 컴파일러는 행복하게 이 코드의 컴파일을 계속하게 됩니다.
 
-As it turns out, the argument for why it's ok for Box (and Vec, HashMap, etc.) to be covariant is pretty similar to the argument for why it's ok for lifetimes to be covariant: as soon as you try to stuff them in something like a mutable reference, they inherit invariance and you're prevented from doing anything bad.
+보시다 보면 알겠지만, 왜 `Box`(와 `Vec`, `HashMap`, 등등)가 공변해도 괜찮은지는 수명이 왜 공변해도 괜찮은지와 비슷합니다: 
+당신이 이것들에 가변 레퍼런스 같은 것을 끼워넣으려고 한다면, 그들은 무변성을 상속받고 당신은 안 좋은 짓을 하는 것에서 방지됩니다.
+
+
 
 However Box makes it easier to focus on the by-value aspect of references that we partially glossed over.
 
