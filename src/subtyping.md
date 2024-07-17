@@ -109,19 +109,15 @@ fn main() {
 
 > 주의: 편의를 위해 우리는 제네릭 타입을 `F<T>`로 정의하여 `T`에 대해 쉽게 말할 것입니다. 이것이 문맥에서 잘 드러나길 바랍니다.
 
+타입 `F`의 *변성* 그 입력들의 부분타입 다형성이 출력들의 부분타입 다형성에 어떻게 영향을 주느냐 하는 것입니다. 러스트에서는 세 가지 종류의 변성이 있습니다. 두 타입 `Sub`과 `Super`가 있고, `Sub`이 `Super`의 부분타입일 때:
+
+* `F<Sub>`이 `F<Super>`의 부분타입일 경우 `F`는 **공변(共變)합니다** (부분타입 특성이 전달됩니다)
+* `F<Super>`가 `F<Sub>`의 부분타입일 경우 `F`는 **반변(反變)합니다** (부분타입 특성이 "뒤집힙니다")
+* 그 외에는 `F`는 **무변(無變)합니다** (부분타입 관계가 존재하지 않습니다)
+
+우리가 위의 예제에서 기억한다면, `'a <: 'b`일 경우 `&'a T`를 `&'b T`의 부분타입으로 다뤄도 되었으니, `&'a T`는 `'a`에 대해서 *공변하는* 것이군요.
 
 
-The type `F`'s *variance* is how the subtyping of its inputs affects the
-subtyping of its outputs. There are three kinds of variance in Rust. Given two
-types `Sub` and `Super`, where `Sub` is a subtype of `Super`:
-
-* `F` is **covariant** if `F<Sub>` is a subtype of `F<Super>` (the subtype property is passed through)
-* `F` is **contravariant** if `F<Super>` is a subtype of `F<Sub>` (the subtype property is "inverted")
-* `F` is **invariant** otherwise (no subtyping relationship exists)
-
-If we remember from the above examples,
-it was ok for us to treat `&'a T` as a subtype of `&'b T` if `'a <: 'b`,
-therefore we can say that `&'a T` is *covariant* over `'a`.
 
 Also, we saw that it was not ok for us to treat `&mut &'a U` as a subtype of `&mut &'b U`,
 therefore we can say that `&mut T` is *invariant* over `T`
