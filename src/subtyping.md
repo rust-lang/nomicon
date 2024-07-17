@@ -213,26 +213,23 @@ fn debug<T: std::fmt::Debug>(a: T, b: T) {
 보시다 보면 알겠지만, 왜 `Box`(와 `Vec`, `HashMap`, 등등)가 공변해도 괜찮은지는 수명이 왜 공변해도 괜찮은지와 비슷합니다: 
 당신이 이것들에 가변 레퍼런스 같은 것을 끼워넣으려고 한다면, 그들은 무변성을 상속받고 당신은 안 좋은 짓을 하는 것에서 방지될 테니까요.
 
+> 한편 `Box`는 우리가 그냥 지나쳤던, 레퍼런스의 값의 측면에 집중하기 쉽게 해 줍니다.
+>
+> 값의 레퍼런스들이 얼마든지 복제되어서 자유롭게 읽고 쓸 수 있게 하는 많은 언어들과 달리, 러스트는 매우 엄격한 규칙이 있습니다: 당신이 값을 변경하거나 이동할 수 있다면, 당신이 접근 권한을 가진 유일한 사람이라는 뜻입니다.
+>
+> 다음 코드를 생각해 봅시다:
+> ```rust,ignore
+> let hello: Box<&'static str> = Box::new("hello");
+> 
+> let mut world: Box<&'b str>;
+> world = hello;
+> ```
+> 우리가 `hello`가 `'static` 동안 살아 있었다는 것을 잊은 것은 아무런 문제가 되지 않습니다, 왜냐면 우리가 `hello`를 `'b`동안만 살아 있다고 알고 있는 변수에 옮겼을 때,
+> **우리는 그것이 더 오래 살았다고 우주에서 유일하게 알고 있던 것을 없앴기 때문입니다!**
+
+이제 설명할 것이 하나만 남았군요: 함수 포인터입니다.
 
 
-However Box makes it easier to focus on the by-value aspect of references that we partially glossed over.
-
-Unlike a lot of languages which allow values to be freely aliased at all times, Rust has a very strict rule: if you're allowed to mutate or move a value, you are guaranteed to be the only one with access to it.
-
-Consider the following code:
-
-```rust,ignore
-let hello: Box<&'static str> = Box::new("hello");
-
-let mut world: Box<&'b str>;
-world = hello;
-```
-
-There is no problem at all with the fact that we have forgotten that `hello` was alive for `'static`,
-because as soon as we moved `hello` to a variable that only knew it was alive for `'b`,
-**we destroyed the only thing in the universe that remembered it lived for longer**!
-
-Only one thing left to explain: function pointers.
 
 To see why `fn(T) -> U` should be covariant over `U`, consider the following signature:
 
