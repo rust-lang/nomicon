@@ -117,34 +117,31 @@ fn main() {
 
 우리가 위의 예제에서 기억한다면, `'a <: 'b`일 경우 `&'a T`를 `&'b T`의 부분타입으로 다뤄도 되었으니, `&'a T`는 `'a`에 대해서 *공변하는* 것이군요.
 
+또한, 우리는 `&mut &'a U`를 `&mut &'b U`의 부분타입으로 다루면 안된다는 것을 보았으니, `&mut T`는 `T`에 대해서 *무변하다고* 말할 수 있겠습니다.
 
-
-Also, we saw that it was not ok for us to treat `&mut &'a U` as a subtype of `&mut &'b U`,
-therefore we can say that `&mut T` is *invariant* over `T`
-
-Here is a table of some other generic types and their variances:
+여기 다른 제네릭 타입들과 그들의 변성에 대한 표입니다:
 
 |                 |     'a    |         T         |     U     |
 |-----------------|:---------:|:-----------------:|:---------:|
-| `&'a T `        | covariant | covariant         |           |
-| `&'a mut T`     | covariant | invariant         |           |
-| `Box<T>`        |           | covariant         |           |
-| `Vec<T>`        |           | covariant         |           |
-| `UnsafeCell<T>` |           | invariant         |           |
-| `Cell<T>`       |           | invariant         |           |
-| `fn(T) -> U`    |           | **contra**variant | covariant |
-| `*const T`      |           | covariant         |           |
-| `*mut T`        |           | invariant         |           |
+| `&'a T `        | 공변       | 공변               |           |
+| `&'a mut T`     | 공변       | 무변               |           |
+| `Box<T>`        |           | 공변               |           |
+| `Vec<T>`        |           | 공변               |           |
+| `UnsafeCell<T>` |           | 무변               |           |
+| `Cell<T>`       |           | 무변               |           |
+| `fn(T) -> U`    |           | **반**변           | 공변       |
+| `*const T`      |           | 공변               |           |
+| `*mut T`        |           | 무변               |           |
 
-Some of these can be explained simply in relation to the others:
+이 중의 몇 가지는 다른 것들과의 관계로 설명할 수 있습니다:
 
-* `Vec<T>` and all other owning pointers and collections follow the same logic as `Box<T>`
-* `Cell<T>` and all other interior mutability types follow the same logic as `UnsafeCell<T>`
-* `UnsafeCell<T>` having interior mutability gives it the same variance properties as `&mut T`
-* `*const T` follows the logic of `&T`
-* `*mut T` follows the logic of `&mut T` (or `UnsafeCell<T>`)
+* `Vec<T>`와 다른 모든 소유하는 포인터들과 컬렉션들은 `Box<T>`와 같은 논리를 따릅니다
+* `Cell<T>`와 다른 모든 내부 가변성이 있는 타입들은 `UnsafeCell<T>`와 같은 논리를 따릅니다
+* `UnsafeCell<T>`는 내부 가변성이 있으므로 `&mut T`와 같은 변성을 가지게 됩니다
+* `*const T`는 `&T`와 같은 논리를 따릅니다
+* `*mut T`는 `&mut T`(또는 `UnsafeCell<T>`)와 같은 논리를 따릅니다
 
-For more types, see the ["Variance" section][variance-table] on the reference.
+더 많은 타입에 대해서는 참조서의 ["Variance" 섹션을][variance-table] 보세요.
 
 [variance-table]: ../reference/subtyping.html#variance
 
