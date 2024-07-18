@@ -270,68 +270,64 @@ thread_local! {
     pub static StaticVecs: RefCell<Vec<&'static str>> = RefCell::new(Vec::new());
 }
 
-/// saves the input given into a thread local `Vec<&'static str>`
+/// 주어진 input을 스레드 지역변수 `Vec<&'static str>`에 집어넣습니다
 fn store(input: &'static str) {
     StaticVecs.with_borrow_mut(|v| v.push(input));
 }
 
-/// Calls the function with it's input (must have the same lifetime!)
+/// 함수와 입력값을 받아서 입력값을 함수에 호출합니다 (같은 수명이어야 합니다!)
 fn demo<'a>(input: &'a str, f: fn(&'a str)) {
     f(input);
 }
 
 fn main() {
-    demo("hello", store); // "hello" is 'static. Can call `store` fine
+    demo("hello", store); // "hello"는 'static입니다. `store`를 문제없이 호출할 수 있죠.
 
     {
         let smuggle = String::from("smuggle");
 
-        // `&smuggle` is not static. If we were to call `store` with `&smuggle`,
-        // we would have pushed an invalid lifetime into the `StaticVecs`.
-        // Therefore, `fn(&'static str)` cannot be a subtype of `fn(&'a str)`
+        // `&smuggle`은 'static이 아닙니다. 만약 우리가 `store`에 `&smuggle`을 전달하면,
+        // `StaticVecs`에 잘못된 수명을 집어넣어 버린 게 될 겁니다.
+        // 따라서, `fn(&'static str)`은 `fn(&'a str)`의 부분타입이 될 수 없습니다.
         demo(&smuggle, store);
     }
 
-    // use after free 😿
+    // 해제 후 사용 😿
     StaticVecs.with_borrow(|v| println!("{v:?}"));
 }
 ```
 
-And that's why function types, unlike anything else in the language, are
-**contra**variant over their arguments.
+그리고 이것이 다른 타입들과 달리, 함수 타입들이 그 매개변수들에 대해서 **반**변하는 이유입니다.
 
-Now, this is all well and good for the types the standard library provides, but
-how is variance determined for types that *you* define? A struct, informally
-speaking, inherits the variance of its fields. If a struct `MyType`
-has a generic argument `A` that is used in a field `a`, then MyType's variance
-over `A` is exactly `a`'s variance over `A`.
+자, 이제 표준 라이브러리가 제공하는 타입들은 잘 살펴보았는데, *당신이* 정의한 타입들의 변성은 어떨까요? 간단하게 말하자면, 구조체는 그 필드들의 변성을 상속받습니다. 
+만약 `MyType` 구조체가 필드 `a`에 쓰이는 제네릭 매개변수 `A`를 가지고 있다면, `A`에 대한 `MyType`의 변성은 `A`에 대한 `a`의 변성과 똑같습니다.
 
-However if `A` is used in multiple fields:
+하지만 만약 `A`가 여러 필드에 쓰인다면:
 
-* If all uses of `A` are covariant, then MyType is covariant over `A`
-* If all uses of `A` are contravariant, then MyType is contravariant over `A`
-* Otherwise, MyType is invariant over `A`
+* `A`를 사용하는 모든 타입이 공변한다면, `MyType`은 `A`에 대해서 공변합니다
+* `A`를 사용하는 모든 타입이 반변한다면, `MyType`은 `A`에 대해서 반변합니다
+* 그 외에는, `MyType`은 `A`에 대해서 무변합니다
 
 ```rust
 use std::cell::Cell;
 
 struct MyType<'a, 'b, A: 'a, B: 'b, C, D, E, F, G, H, In, Out, Mixed> {
-    a: &'a A,     // covariant over 'a and A
-    b: &'b mut B, // covariant over 'b and invariant over B
+    a: &'a A,     // 'a와 A에 대해서 공변합니다
+    b: &'b mut B, // 'b에 대해서 공변하고 B에 대해서 무변합니다
 
-    c: *const C,  // covariant over C
-    d: *mut D,    // invariant over D
+    c: *const C,  // C에 대해서 공변합니다
+    d: *mut D,    // D에 대해서 무변합니다
 
-    e: E,         // covariant over E
-    f: Vec<F>,    // covariant over F
-    g: Cell<G>,   // invariant over G
+    e: E,         // E에 대해서 공변합니다
+    f: Vec<F>,    // F에 대해서 공변합니다
+    g: Cell<G>,   // G에 대해서 무변합니다
 
-    h1: H,        // would also be covariant over H except...
-    h2: Cell<H>,  // invariant over H, because invariance wins all conflicts
+    h1: H,        // 원래대로라면 H에 대해서 공변하겠지만...
+    h2: Cell<H>,  // 변성이 충돌하면 무변성이 이기기 때문에, H에 대해서 무변하게 됩니다
 
-    i: fn(In) -> Out,       // contravariant over In, covariant over Out
+    i: fn(In) -> Out,       // In에 대해서 반변하고, Out에 대해서 공변합니다
 
-    k1: fn(Mixed) -> usize, // would be contravariant over Mixed except..
-    k2: Mixed,              // invariant over Mixed, because invariance wins all conflicts
+    k1: fn(Mixed) -> usize, // 원래대로라면 Mixed에 대해서 반변하겠지만..
+    k2: Mixed,              // 변성이 충돌할 경우 무변성이 되기 때문에, Mixed에 대해서 무변하게 됩니다
 }
 ```
