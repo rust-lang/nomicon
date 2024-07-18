@@ -19,7 +19,7 @@
   * [무제한 수명](unbounded-lifetimes.md)
   * [상계 트레잇 제한](hrtb.md)
   * [부분타입 다형성과 변성](subtyping.md)
-  * [Drop Check](dropck.md)
+  * [해제 검사](dropck.md)
   * [PhantomData](phantom-data.md)
   * [Splitting Borrows](borrow-splitting.md)
 * [Type Conversions](conversions.md)
