@@ -229,48 +229,40 @@ fn debug<T: std::fmt::Debug>(a: T, b: T) {
 
 이제 설명할 것이 하나만 남았군요: 함수 포인터입니다.
 
-
-
-To see why `fn(T) -> U` should be covariant over `U`, consider the following signature:
+`fn(T) -> U`가 왜 `U`에 대해서 공변해야 하는지 보기 위해, 다음의 시그니처를 생각해 봅시다:
 
 <!-- ignore: simplified code -->
 ```rust,ignore
 fn get_str() -> &'a str;
 ```
 
-This function claims to produce a `str` bound by some lifetime `'a`. As such, it is perfectly valid to
-provide a function with the following signature instead:
+이 함수는 어떤 수명 `'a`에 묶인 `str`을 생산한다고 주장합니다. 그런 의미에서, 대신 이런 시그니처의 함수를 제공해도 완벽히 유효합니다:
 
 <!-- ignore: simplified code -->
 ```rust,ignore
 fn get_static() -> &'static str;
 ```
 
-So when the function is called, all it's expecting is a `&str` which lives at least the lifetime of `'a`,
-it doesn't matter if the value actually lives longer.
+이 함수를 호출할 때, 반환되길 기대하는 값은 최소한 `'a`만큼 사는 `&str`이니, 실제로는 값이 더 살아도 상관 없겠죠.
 
-However, the same logic does not apply to *arguments*. Consider trying to satisfy:
+그러나, *매개변수들에는* 같은 논리가 통하지 않습니다. 이 조건을:
 
 <!-- ignore: simplified code -->
 ```rust,ignore
 fn store_ref(&'a str);
 ```
 
-with:
+이것으로 만족시켜 보려고 생각해 보세요:
 
 <!-- ignore: simplified code -->
 ```rust,ignore
 fn store_static(&'static str);
 ```
 
-The first function can accept any string reference as long as it lives at least for `'a`,
-but the second cannot accept a string reference that lives for any duration less than `'static`,
-which would cause a conflict.
-Covariance doesn't work here. But if we flip it around, it actually *does*
-work! If we need a function that can handle `&'static str`, a function that can handle *any* reference lifetime
-will surely work fine.
+첫번째 함수는 최소한 `'a`만큼만 산다면 아무 문자열 레퍼런스를 받을 수 있지만, 두번째는 `'static`보다 짧게 사는 문자열 레퍼런스를 받을 수 없으니, 이것은 갈등을 초래하겠군요. 여기서는 공변성이 통하지 않습니다. 
+하지만 이것을 반대로 생각하면, 말이 *됩니다!* 만약 우리가 `&'static str`을 받는 함수가 필요하다면, *아무* 레퍼런스 수명이나 받는 함수는 잘 동작할 겁니다.
 
-Let's see this in practice
+실전에서 한번 살펴보죠.
 
 ```rust,compile_fail
 # use std::cell::RefCell;
