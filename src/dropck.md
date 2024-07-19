@@ -1,11 +1,8 @@
 # 해제 검사
 
-우리는 수명이 간단한 규칙으로 우리가 달랑거리는 레퍼런스를 절대 읽지 않도록 보장하는 것을 봤습니다. 하지만 이 동안 우리는 
+우리는 수명이 간단한 규칙으로 우리가 달랑거리는 레퍼런스를 절대 읽지 않도록 보장하는 것을 봤습니다. 하지만 이 동안 우리는 한 수명이 다른 수명보다 *오래 산다고* 할 때, 두 수명이 같은 경우도 포함한 경우만 말했습니다. 즉, 우리가 `'a: 'b`라고 할 때, `'a`가 *딱* `'b`만큼만 살아도 괜찮았다는 말입니다. 
 
-However up to this point we have only ever
-interacted with the _outlives_ relationship in an inclusive manner. That is,
-when we talked about `'a: 'b`, it was ok for `'a` to live _exactly_ as long as
-`'b`. At first glance, this seems to be a meaningless distinction. Nothing ever
+At first glance, this seems to be a meaningless distinction. Nothing ever
 gets dropped at the same time as another, right? This is why we used the
 following desugaring of `let` statements:
 
