@@ -1,10 +1,6 @@
 # 해제 검사
 
-우리는 수명이 간단한 규칙으로 우리가 달랑거리는 레퍼런스를 절대 읽지 않도록 보장하는 것을 봤습니다. 하지만 이 동안 우리는 한 수명이 다른 수명보다 *오래 산다고* 할 때, 두 수명이 같은 경우도 포함한 경우만 말했습니다. 즉, 우리가 `'a: 'b`라고 할 때, `'a`가 *딱* `'b`만큼만 살아도 괜찮았다는 말입니다. 
-
-At first glance, this seems to be a meaningless distinction. Nothing ever
-gets dropped at the same time as another, right? This is why we used the
-following desugaring of `let` statements:
+우리는 수명이 간단한 규칙으로 우리가 달랑거리는 레퍼런스를 절대 읽지 않도록 보장하는 것을 봤습니다. 하지만 이 동안 우리는 한 수명이 다른 수명보다 *오래 산다고* 할 때, 두 수명이 같은 경우도 포함한 경우만 말했습니다. 즉, 우리가 `'a: 'b`라고 할 때, `'a`가 *딱* `'b`만큼만 살아도 괜찮았다는 말입니다. 처음 보면, 이것은 의미없는 구분 같습니다. 같은 시점에 동시에 해제되는 값은 없잖아요, 그렇죠? 그래서 우리는 이런 `let` 문장들을:
 
 <!-- ignore: simplified code -->
 ```rust,ignore
@@ -12,7 +8,7 @@ let x;
 let y;
 ```
 
-desugaring to:
+이렇게 해독할 수 있었죠:
 
 <!-- ignore: desugared code -->
 ```rust,ignore
@@ -24,12 +20,9 @@ desugaring to:
 }
 ```
 
-There are some more complex situations which are not possible to desugar using
-scopes, but the order is still defined ‒ variables are dropped in the reverse
-order of their definition, fields of structs and tuples in order of their
-definition. There are some more details about order of drop in [RFC 1857][rfc1857].
+이렇게 코드 구역을 이용해서 해독할 수 없는, 좀더 복잡한 상황들도 있지만, 순서는 여전히 정의되어 있습니다 - 변수들은 그 정의 순서의 반대로 해제되고, 구조체와 튜플의 필드들은 그 정의 순서대로 해제됩니다. [RFC 1857][rfc1857]에 해제 순서에 대한 좀더 자세한 내용이 있습니다.
 
-Let's do this:
+이렇게 해 봅시다:
 
 <!-- ignore: simplified code -->
 ```rust,ignore
