@@ -29,13 +29,9 @@ let y;
 let tuple = (vec![], vec![]);
 ```
 
-왼쪽 벡터가 먼저 해제됩니다. 하지만 이것이 대여 검사기의 눈에 오른쪽 벡터가 왼쪽 벡터보다 엄밀하게 더 오래 산다는 것을 뜻할까요? 이 질문의 답은 *아니라는 겁니다*. The borrow checker could track fields of tuples separately, but it would
-still be unable to decide what outlives what in case of vector elements, which
-are dropped manually via pure-library code the borrow checker doesn't
-understand.
+왼쪽 벡터가 먼저 해제됩니다. 하지만 이것이 대여 검사기의 눈에 오른쪽 벡터가 왼쪽 벡터보다 엄밀하게 더 오래 산다는 것을 뜻할까요? 이 질문의 답은 *아니라는 겁니다*. 대여 검사기는 튜플의 필드들을 분리해서 추적할 수 있지만, 벡터 원소들에 대해서는 무엇이 무엇보다 오래 사는지 결정할 수 없을 겁니다, 왜냐하면 그 원소들은 대여 검사기가 이해하지 못하는, 순수한 라이브러리 코드로 해제되기 때문입니다.
 
-So why do we care? We care because if the type system isn't careful, it could
-accidentally make dangling pointers. Consider the following simple program:
+그래서 우리는 이것을 왜 신경쓸까요? 우리가 신경쓰는 이유는 만약 타입 시스템이 주의하지 않으면, 우발적으로 달랑거리는 포인터를 만들 수도 있기 때문입니다. 다음의 간단한 프로그램을 생각해 보세요:
 
 ```rust
 struct Inspector<'a>(&'a u8);
@@ -54,11 +50,9 @@ fn main() {
 }
 ```
 
-This program is totally sound and compiles today. The fact that `days` does not
-strictly outlive `inspector` doesn't matter. As long as the `inspector` is
-alive, so is `days`.
+이 프로그램은 완벽히 건전하고 오늘날 컴파일됩니다. `days`가 `inspector`보다 엄밀하게 더 오래 살지는 않는다는 사실이 중요하지 않습니다. `inspector`가 살아있는 동안, `days`도 그럴 테니까요.
 
-However if we add a destructor, the program will no longer compile!
+그러나 우리가 소멸자를 추가하면, 이 프로그램은 더 이상 컴파일되지 않습니다!
 
 ```rust,compile_fail
 struct Inspector<'a>(&'a u8);
@@ -80,8 +74,8 @@ fn main() {
         days: Box::new(1),
     };
     world.inspector = Some(Inspector(&world.days));
-    // Let's say `days` happens to get dropped first.
-    // Then when Inspector is dropped, it will try to read free'd memory!
+    // `days`가 먼저 해제되게 되었다고 가정해 봅시다.
+    // 그럼 `Inspector`가 해제될 때, 이미 해제된 메모리를 읽으려고 할 겁니다!
 }
 ```
 
@@ -99,12 +93,9 @@ error[E0597]: `world.days` does not live long enough
    | borrow might be used here, when `world` is dropped and runs the destructor for type `World<'_>`
 ```
 
-You can try changing the order of fields or use a tuple instead of the struct,
-it'll still not compile.
+필드의 순서를 바꾸거나 구조체 대신 튜플을 쓴다 해도, 컴파일되지는 않을 겁니다.
 
-Implementing `Drop` lets the `Inspector` execute some arbitrary code during its
-death. This means it can potentially observe that types that are supposed to
-live as long as it does actually were destroyed first.
+`Drop`을 구현하는 것은 `Inspector`가 죽는 동안 어떤 임의의 코드를 실행하게 해 줍니다. 이것이 의미하는 것은 `Inspector`가 사는 동안 살기로 되어있는 타입들이 실제로는 먼저 해제되었는지 관찰할 수도 있다는 것입니다.
 
 Interestingly, only generic types need to worry about this. If they aren't
 generic, then the only lifetimes they can harbor are `'static`, which will truly
