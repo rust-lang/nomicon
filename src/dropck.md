@@ -1,7 +1,8 @@
-# Drop Check
+# 해제 검사
 
-We have seen how lifetimes provide us some fairly simple rules for ensuring
-that we never read dangling references. However up to this point we have only ever
+우리는 수명이 간단한 규칙으로 우리가 달랑거리는 레퍼런스를 절대 읽지 않도록 보장하는 것을 봤습니다. 하지만 이 동안 우리는 
+
+However up to this point we have only ever
 interacted with the _outlives_ relationship in an inclusive manner. That is,
 when we talked about `'a: 'b`, it was ok for `'a` to live _exactly_ as long as
 `'b`. At first glance, this seems to be a meaningless distinction. Nothing ever
