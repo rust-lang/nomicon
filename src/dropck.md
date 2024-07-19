@@ -29,9 +29,7 @@ let y;
 let tuple = (vec![], vec![]);
 ```
 
-The left vector is dropped first. But does it mean the right one strictly
-outlives it in the eyes of the borrow checker? The answer to this question is
-_no_. The borrow checker could track fields of tuples separately, but it would
+왼쪽 벡터가 먼저 해제됩니다. 하지만 이것이 대여 검사기의 눈에 오른쪽 벡터가 왼쪽 벡터보다 엄밀하게 더 오래 산다는 것을 뜻할까요? 이 질문의 답은 *아니라는 겁니다*. The borrow checker could track fields of tuples separately, but it would
 still be unable to decide what outlives what in case of vector elements, which
 are dropped manually via pure-library code the borrow checker doesn't
 understand.
