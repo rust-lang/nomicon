@@ -97,8 +97,7 @@ error[E0597]: `world.days` does not live long enough
 
 `Drop`을 구현하는 것은 `Inspector`가 죽는 동안 어떤 임의의 코드를 실행하게 해 줍니다. 이것이 의미하는 것은 `Inspector`가 사는 동안 살기로 되어있는 타입들이 실제로는 먼저 해제되었는지 관찰할 수도 있다는 것입니다.
 
-흥미롭게도, 제네릭 타입들만 이런 것에 대해서 걱정해야 합니다. 제네릭이 아니라면, 그들이 사용할 수 있는 수명은 `'static`밖에 없는데, 이것은 정말로 *영원히* 살 것이기 때문입니다. 이것이 바로 이런 문제가 *건전한 제네릭 해제*라고 불리는 이유입니다. 건전한 제네릭 해제는 *해제 검사기*에 의해 강제됩니다. 이 글을 쓰는 시점에서, 해제 검사기(dropck라고도 부릅니다)가 어떻게 타입을 검증하는지에 대한 자세한 내용은 is totally up in the air. However The Big Rule is the subtlety that we
-have focused on this whole section:
+흥미롭게도, 제네릭 타입들만 이런 것에 대해서 걱정해야 합니다. 제네릭이 아니라면, 그들이 사용할 수 있는 수명은 `'static`밖에 없는데, 이것은 정말로 *영원히* 살 것이기 때문입니다. 이것이 바로 이런 문제가 *건전한 제네릭 해제*라고 불리는 이유입니다. 건전한 제네릭 해제는 *해제 검사기*에 의해 강제됩니다. 이 글을 쓰는 시점에서, 해제 검사기(dropck라고도 부릅니다)가 어떻게 타입을 검증하는지에 대한 자세한 내용은 전혀 정해져 있지 않습니다. 하지만 큰 틀에서의 규칙은 우리가 이 섹션 내내 집중해온 엄밀함입니다:
 
 **For a generic type to soundly implement drop, its generics arguments must
 strictly outlive it.**
