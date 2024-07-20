@@ -97,9 +97,7 @@ error[E0597]: `world.days` does not live long enough
 
 `Drop`을 구현하는 것은 `Inspector`가 죽는 동안 어떤 임의의 코드를 실행하게 해 줍니다. 이것이 의미하는 것은 `Inspector`가 사는 동안 살기로 되어있는 타입들이 실제로는 먼저 해제되었는지 관찰할 수도 있다는 것입니다.
 
-Interestingly, only generic types need to worry about this. If they aren't
-generic, then the only lifetimes they can harbor are `'static`, which will truly
-live _forever_. This is why this problem is referred to as _sound generic drop_.
+흥미롭게도, 제네릭 타입들만 이런 것에 대해서 걱정해야 합니다. 제네릭이 아니라면, 그들이 사용할 수 있는 수명은 `'static`밖에 없는데, 이것은 정말로 *영원히* 살 것이기 때문입니다. This is why this problem is referred to as _sound generic drop_.
 Sound generic drop is enforced by the _drop checker_. As of this writing, some
 of the finer details of how the drop checker (also called dropck) validates
 types is totally up in the air. However The Big Rule is the subtlety that we
