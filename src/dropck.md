@@ -99,13 +99,9 @@ error[E0597]: `world.days` does not live long enough
 
 흥미롭게도, 제네릭 타입들만 이런 것에 대해서 걱정해야 합니다. 제네릭이 아니라면, 그들이 사용할 수 있는 수명은 `'static`밖에 없는데, 이것은 정말로 *영원히* 살 것이기 때문입니다. 이것이 바로 이런 문제가 *건전한 제네릭 해제*라고 불리는 이유입니다. 건전한 제네릭 해제는 *해제 검사기*에 의해 강제됩니다. 이 글을 쓰는 시점에서, 해제 검사기(dropck라고도 부릅니다)가 어떻게 타입을 검증하는지에 대한 자세한 내용은 전혀 정해져 있지 않습니다. 하지만 큰 틀에서의 규칙은 우리가 이 섹션 내내 집중해온 엄밀함입니다:
 
-**For a generic type to soundly implement drop, its generics arguments must
-strictly outlive it.**
+**제네릭 타입이 건전하게 `Drop`을 구현하려면, 그 제네릭 매개변수들이 엄밀하게 더 오래 살아야 합니다.**
 
-Obeying this rule is (usually) necessary to satisfy the borrow
-checker; obeying it is sufficient but not necessary to be
-sound. That is, if your type obeys this rule then it's definitely
-sound to drop.
+이 규칙을 지키는 것은 (보통은) 대여 검사기를 만족시키기 위해서 필수적입니다; 이 규칙을 지키는 것은 건전하기에는 충분하지만 필수적이지는 않습니다. 즉, 당신의 타입이 이 규칙을 지킨다면 해제되기에 확실히 건전하다는 말입니다.
 
 The reason that it is not always necessary to satisfy the above rule
 is that some Drop implementations will not access borrowed data even
