@@ -103,21 +103,17 @@ error[E0597]: `world.days` does not live long enough
 
 이 규칙을 지키는 것은 (보통은) 대여 검사기를 만족시키기 위해서 필수적입니다; 이 규칙을 지키는 것은 건전하기에는 충분하지만 필수적이지는 않습니다. 즉, 당신의 타입이 이 규칙을 지킨다면 해제되기에 확실히 건전하다는 말입니다.
 
-The reason that it is not always necessary to satisfy the above rule
-is that some Drop implementations will not access borrowed data even
-though their type gives them the capability for such access, or because we know
-the specific drop order and the borrowed data is still fine even if the borrow
-checker doesn't know that.
+이 규칙을 만족시키는 것이 항상 필수는 아닌 이유는 타입이 빌린 데이터를 접근할 수 있음에도, 어떤 `Drop` 구현은 빌린 데이터를 접근하지 않거나, 
+아니면 우리가 세부적인 해제 순서를 알고, 그럼에도 빌린 데이터는 괜찮을 것을 알 수도 있기 때문입니다, 비록 대여 검사기가 이를 모르더라도요.
 
-For example, this variant of the above `Inspector` example will never
-access borrowed data:
+예를 들어, 위의 `Inspector`를 이렇게 변형하면 빌린 데이터를 절대 접근하지 않을 겁니다:
 
 ```rust,compile_fail
 struct Inspector<'a>(&'a u8, &'static str);
 
 impl<'a> Drop for Inspector<'a> {
     fn drop(&mut self) {
-        println!("Inspector(_, {}) knows when *not* to inspect.", self.1);
+        println!("Inspector(_, {})는 보지 *않아야* 할 때를 압니다.", self.1);
     }
 }
 
@@ -132,20 +128,20 @@ fn main() {
         days: Box::new(1),
     };
     world.inspector = Some(Inspector(&world.days, "gadget"));
-    // Let's say `days` happens to get dropped first.
-    // Even when Inspector is dropped, its destructor will not access the
-    // borrowed `days`.
+    // `days`가 먼저 해제되게 된다고 해 봅시다.
+    // `Inspector`가 해제되어도, 그 소멸자는 빌린 `days`를
+    // 접근하지 않을 겁니다.
 }
 ```
 
-Likewise, this variant will also never access borrowed data:
+마찬가지로, 이렇게 변형한 것도 빌린 데이터를 절대 접근하지 않을 겁니다:
 
 ```rust,compile_fail
 struct Inspector<T>(T, &'static str);
 
 impl<T> Drop for Inspector<T> {
     fn drop(&mut self) {
-        println!("Inspector(_, {}) knows when *not* to inspect.", self.1);
+        println!("Inspector(_, {})는 보지 *않아야* 할 때를 압니다.", self.1);
     }
 }
 
@@ -160,15 +156,13 @@ fn main() {
         days: Box::new(1),
     };
     world.inspector = Some(Inspector(&world.days, "gadget"));
-    // Let's say `days` happens to get dropped first.
-    // Even when Inspector is dropped, its destructor will not access the
-    // borrowed `days`.
+    // `days`가 먼저 해제되게 된다고 해 봅시다.
+    // `Inspector`가 해제되어도, 그 소멸자는 빌린 `days`를 
+    // 접근하지 않을 겁니다.
 }
 ```
 
-However, _both_ of the above variants are rejected by the borrow
-checker during the analysis of `fn main`, saying that `days` does not
-live long enough.
+하지만, 위의 수정된 코드들은 `fn main`을 분석하는 동안 *둘 모두* 대여 검사기에게 거부됩니다, "`days`가 충분히 오래 살지 않는다"고 말이죠.
 
 The reason is that the borrow checking analysis of `main` does not
 know about the internals of each `Inspector`'s `Drop` implementation. As
