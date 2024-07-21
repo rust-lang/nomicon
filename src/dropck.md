@@ -162,23 +162,19 @@ fn main() {
 }
 ```
 
-하지만, 위의 수정된 코드들은 `fn main`을 분석하는 동안 *둘 모두* 대여 검사기에게 거부됩니다, "`days`가 충분히 오래 살지 않는다"고 말이죠.
+하지만, 위의 수정된 코드들은 `fn main`을 분석할 때 *둘 모두* 대여 검사기에게 거부됩니다, "`days`가 충분히 오래 살지 않는다"고 말이죠.
 
-The reason is that the borrow checking analysis of `main` does not
-know about the internals of each `Inspector`'s `Drop` implementation. As
-far as the borrow checker knows while it is analyzing `main`, the body
-of an inspector's destructor might access that borrowed data.
+그 이유는 `main`의 대여 검사는 `Inspector`의 `Drop` 구현의 내부는 모르기 때문입니다. 대여 검사기가 `main`을 분석하는 동안 아는 것이라고는, `Inspector`의 소멸자의 본문이 빌린 데이터를 접근할 수도 있다는 점입니다.
 
-Therefore, the drop checker forces all borrowed data in a value to
-strictly outlive that value.
+따라서, 해제 검사기는 어떤 값 안에 있는 모든 빌린 데이터(레퍼런스가 아닌 본체)가 그 값보다 오래 살도록 강제합니다.
 
-## An Escape Hatch
+## 탈출구
 
-The precise rules that govern drop checking may be less restrictive in
-the future.
+해제 검사를 좌우하는 정확한 규칙들은 미래에는 좀 덜 엄격할 수도 있겠습니다.
 
-The current analysis is deliberately conservative and trivial; it forces all
-borrowed data in a value to outlive that value, which is certainly sound.
+현재의 분석은 의도적으로 보수적이고 흔합니다; 어떤 값에 있는 모든 레퍼런스의 본체들이 그 값보다 오래 살도록 강제하는데, 이것은 확실히 건전하기 때문입니다.
+
+
 
 Future versions of the language may make the analysis more precise, to
 reduce the number of cases where sound code is rejected as unsafe.
