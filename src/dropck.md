@@ -222,33 +222,28 @@ unsafe impl<'a, #[may_dangle] 'b, #[may_dangle] T, U: Display> Drop for Inspecto
 }
 ```
 
+보통은 위의 경우처럼, 필드 접근이 불가능하다는 것이 자명할 때가 많습니다. 그러나 제네릭 타입 매개변수를 가지고 작업하다 보면, 그런 접근이 간접적으로 일어날 수 있습니다. 간접적인 접근의 예는 다음과 같습니다:
 
+- 콜백 호출하기
+- 트레잇 메서드를 통해서
 
-It is sometimes obvious that no such access can occur, like the case above.
-However, when dealing with a generic type parameter, such access can
-occur indirectly. Examples of such indirect access are:
+(`impl` 구체화 같은 러스트의 미래 변화에 따라, 이런 간접적 접근을 가능하게 하는 방법이 더 많아질 수 있습니다.)
 
-- invoking a callback,
-- via a trait method call.
-
-(Future changes to the language, such as impl specialization, may add
-other avenues for such indirect access.)
-
-Here is an example of invoking a callback:
+여기 콜백을 호출하는 예제가 있습니다:
 
 ```rust
 struct Inspector<T>(T, &'static str, Box<for <'r> fn(&'r T) -> String>);
 
 impl<T> Drop for Inspector<T> {
     fn drop(&mut self) {
-        // The `self.2` call could access a borrow e.g. if `T` is `&'a _`.
-        println!("Inspector({}, {}) unwittingly inspects expired data.",
+        // 예를 들어 만약 `T`가 `&'a _`라면, `self.2` 호출이 빌린 데이터를 접근할 수 있습니다.
+        println!("Inspector({}, {})는 자신도 모르게 파기된 데이터를 봅니다.",
                  (self.2)(&self.0), self.1);
     }
 }
 ```
 
-Here is an example of a trait method call:
+이것은 트레잇 메서드를 호출하는 예제입니다:
 
 ```rust
 use std::fmt;
@@ -257,36 +252,26 @@ struct Inspector<T: fmt::Display>(T, &'static str);
 
 impl<T: fmt::Display> Drop for Inspector<T> {
     fn drop(&mut self) {
-        // There is a hidden call to `<T as Display>::fmt` below, which
-        // could access a borrow e.g. if `T` is `&'a _`
-        println!("Inspector({}, {}) unwittingly inspects expired data.",
+        // 예를 들어 만약 `T`가 `&'a _`이면, 밑에 숨겨진 `<T as Display>::fmt` 호출은
+        // 빌린 데이터를 접근할 수 있습니다.
+        println!("Inspector({}, {})는 자신도 모르게 파기된 데이터를 봅니다.",
                  self.0, self.1);
     }
 }
 ```
 
-And of course, all of these accesses could be further hidden within
-some other method invoked by the destructor, rather than being written
-directly within it.
+그리고 당연히, 이런 접근들은 소멸자에 의해 호출되는 다른 어떤 메서드 안에 숩겨져 있을 수도 있습니다, 꼭 직접 쓰여지지 않고도요.
 
-In all of the above cases where the `&'a u8` is accessed in the
-destructor, adding the `#[may_dangle]`
-attribute makes the type vulnerable to misuse that the borrow
-checker will not catch, inviting havoc. It is better to avoid adding
-the attribute.
+`&'a u8`이 소멸자에서 접근되는 위의 모든 경우에서, `#[may_dangle]` 속성을 추가하면 그 타입은 대여 검사기가 잡지 않을 오용을 막기 힘들어지고, 대혼란을 야기할 수 있습니다. 이 속성은 사용하지 않는 게 좋겠네요.
 
-## A related side note about drop order
+> ### 해제 순서에 관하여 
+>
+> 구조체 안의 필드의 해제 순서는 정의되어 있지만, 이것에 의존하는 것은 불안정하고 애매합니다.
+> 해제 순서가 중요할 때에는, [`ManuallyDrop`] 타입을 대신 쓰는 것이 좋습니다.
 
-While the drop order of fields inside a struct is defined, relying on it is
-fragile and subtle. When the order matters, it is better to use the
-[`ManuallyDrop`] wrapper.
+## 해제 검사기에 대해서는 이게 전부인가요?
 
-## Is that all about drop checker?
-
-It turns out that when writing unsafe code, we generally don't need to
-worry at all about doing the right thing for the drop checker. However there
-is one special case that you need to worry about, which we will look at in
-the next section.
+사실 우리가 불안전한 코드를 작성할 때, 보통은 해제 검사기를 전혀 신경쓰지 않아도 됩니다. 하지만 우리가 신경써야 하는 한 가지 특수한 경우가 있는데, 이것에 관해서는 다음 섹션에서 살펴보겠습니다.
 
 [rfc1327]: https://github.com/rust-lang/rfcs/blob/master/text/1327-dropck-param-eyepatch.md
 [rfc1857]: https://github.com/rust-lang/rfcs/blob/master/text/1857-stabilize-drop-order.md
