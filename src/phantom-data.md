@@ -1,9 +1,6 @@
 # PhantomData
 
-When working with unsafe code, we can often end up in a situation where
-types or lifetimes are logically associated with a struct, but not actually
-part of a field. This most commonly occurs with lifetimes. For instance, the
-`Iter` for `&'a [T]` is (approximately) defined as follows:
+불안전한 코드와 작업을 하다 보면, 우리는 종종 타입이나 수명이 구조체와 논리적으로 연관되어 있지만, 실제로 그 필드의 일부분은 아닌 상황을 마주할 수 있습니다. 이런 상황은 보통 수명인 경우가 많은데요, 예를 들어 `&'a [T]`를 위한 `Iter`는 (거의) 다음과 같이 정의되어 있습니다:
 
 ```rust,compile_fail
 struct Iter<'a, T: 'a> {
@@ -12,11 +9,8 @@ struct Iter<'a, T: 'a> {
 }
 ```
 
-However because `'a` is unused within the struct's body, it's *unbounded*.
-[Because of the troubles this has historically caused][unused-param],
-unbounded lifetimes and types are *forbidden* in struct definitions.
-Therefore we must somehow refer to these types in the body.
-Correctly doing this is necessary to have correct variance and drop checking.
+하지만 `'a`가 구조체의 본문에 쓰이지 않았기 때문에, 이 수명은 *무제한이* 됩니다. [이것이 역사적으로 초래해왔던 문제들 때문에][unused-param], 무제한 수명과 이를 사용하는 타입은 구조체 선언에서 *금지되었습니다*. 따라서 우리는 어떻게든 이 타입들을 구조체 안에서 참조해야 합니다. 
+이것을 올바르게 하는 것은 올바른 변성과 해제 검사에 있어서 필수적입니다.
 
 [unused-param]: https://rust-lang.github.io/rfcs/0738-variance.html#the-corner-case-unused-parameters-and-parameters-that-are-only-used-unsafely
 
