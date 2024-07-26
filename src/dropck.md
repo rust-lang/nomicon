@@ -303,4 +303,4 @@ the next section.
 
 [rfc1327]: https://github.com/rust-lang/rfcs/blob/master/text/1327-dropck-param-eyepatch.md
 [rfc1857]: https://github.com/rust-lang/rfcs/blob/master/text/1857-stabilize-drop-order.md
-[`manuallydrop`]: ../std/mem/struct.ManuallyDrop.html
+[`manuallydrop`]: https://doc.rust-lang.org/std/mem/struct.ManuallyDrop.html
