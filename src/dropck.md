@@ -174,20 +174,11 @@ fn main() {
 
 현재의 분석은 의도적으로 보수적이고 흔합니다; 어떤 값에 있는 모든 레퍼런스의 본체들이 그 값보다 오래 살도록 강제하는데, 이것은 확실히 건전하기 때문입니다.
 
+언어의 미래 버전들은 분석을 더 예리하게 해서, 건전한 코드가 안전하지 않다고 거부되는 경우들을 줄일 수 있을 것입니다. 그러면 위의 두 `Inspector`들과 같이 소멸하는 동안 그 원소를 접근하지 않는 경우를 해결하는 데 도움이 될 것입니다.
 
+그 동안, 제네릭 타입의 소멸자가 수명이 다한 데이터를 접근하지 않는다고 (불안전하게) *보장하는* 불안정 속성이 있습니다, 비록 그 타입으로는 수명이 다한 데이터를 접근할 수 있더라도요.
 
-Future versions of the language may make the analysis more precise, to
-reduce the number of cases where sound code is rejected as unsafe.
-This would help address cases such as the two `Inspector`s above that
-know not to inspect during destruction.
-
-In the meantime, there is an unstable attribute that one can use to
-assert (unsafely) that a generic type's destructor is _guaranteed_ to
-not access any expired data, even if its type gives it the capability
-to do so.
-
-That attribute is called `may_dangle` and was introduced in [RFC 1327][rfc1327].
-To deploy it on the `Inspector` from above, we would write:
+이 속성은 `may_dangle`이라 부르고, [RFC 1327][rfc1327]에서 소개되었습니다. 이것을 위의 `Inspector`에 적용하려면, 이렇게 씁니다:
 
 ```rust
 #![feature(dropck_eyepatch)]
@@ -196,7 +187,7 @@ struct Inspector<'a>(&'a u8, &'static str);
 
 unsafe impl<#[may_dangle] 'a> Drop for Inspector<'a> {
     fn drop(&mut self) {
-        println!("Inspector(_, {}) knows when *not* to inspect.", self.1);
+        println!("Inspector(_, {})는 보지 *않아야* 할 때를 압니다.", self.1);
     }
 }
 
@@ -214,15 +205,9 @@ fn main() {
 }
 ```
 
-Use of this attribute requires the `Drop` impl to be marked `unsafe` because the
-compiler is not checking the implicit assertion that no potentially expired data
-(e.g. `self.0` above) is accessed.
+이 속성을 사용하려면 `Drop` 구현을 `unsafe`로 수식해야 하는데, 이는 수명이 다했을 수 있는 데이터(예를 들어 위의 `self.0`)를 접근하지 않는다는 보장을 컴파일러가 검사하지 않기 때문입니다.
 
-The attribute can be applied to any number of lifetime and type parameters. In
-the following example, we assert that we access no data behind a reference of
-lifetime `'b` and that the only uses of `T` will be moves or drops, but omit
-the attribute from `'a` and `U`, because we do access data with that lifetime
-and that type:
+이 속성은 어느 숫자의 수명이나 타입 매개변수에도 적용할 수 있습니다. 다음의 예제에서 우리는 `'b`의 수명을 갖는 레퍼런스를 접근하지 않고, `T`는 오직 이동 혹은 해제만 할 것이라고 컴파일러에게 알립니다. 하지만 `'a`와 `U`에 대해서는 이 속성을 쓰지 않음으로써 우리가 이 수명과 이 타입의 데이터를 접근할 것이라고 알립니다:
 
 ```rust
 #![feature(dropck_eyepatch)]
@@ -236,6 +221,8 @@ unsafe impl<'a, #[may_dangle] 'b, #[may_dangle] T, U: Display> Drop for Inspecto
     }
 }
 ```
+
+
 
 It is sometimes obvious that no such access can occur, like the case above.
 However, when dealing with a generic type parameter, such access can
