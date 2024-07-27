@@ -14,14 +14,9 @@ struct Iter<'a, T: 'a> {
 
 [unused-param]: https://rust-lang.github.io/rfcs/0738-variance.html#the-corner-case-unused-parameters-and-parameters-that-are-only-used-unsafely
 
-We do this using `PhantomData`, which is a special marker type. `PhantomData`
-consumes no space, but simulates a field of the given type for the purpose of
-static analysis. This was deemed to be less error-prone than explicitly telling
-the type-system the kind of variance that you want, while also providing other
-useful things such as auto traits and the information needed by drop check.
+우리는 이것을 특별한 표시 타입인 `PhantomData`를 통해서 합니다. `PhantomData`는 공간을 차지하지 않지만, 컴파일러의 분석을 위해 주어진 타입의 필드를 흉내냅니다. 이 방식은 우리가 원하는 변성을 직접 타입 시스템에 말하는 것보다 더 오류에 견고하다고 평가되었습니다. 또한 이 방식은 자동 트레잇과 해제 검사에 필요한 정보 등의 유용한 것들을 컴파일러에게 제공합니다.
 
-Iter logically contains a bunch of `&'a T`s, so this is exactly what we tell
-the `PhantomData` to simulate:
+`Iter`는 논리적으로 여러 개의 `&'a T`를 포함하므로, 바로 이렇게 우리는 `PhantomData`에게 흉내내라고 할 것입니다:
 
 ```rust
 use std::marker;
@@ -33,8 +28,7 @@ struct Iter<'a, T: 'a> {
 }
 ```
 
-and that's it. The lifetime will be bounded, and your iterator will be covariant
-over `'a` and `T`. Everything Just Works.
+이렇게만 하면 됩니다. 수명은 제한될 것이고, 반복자는 `'a`와 `T`에 대해서 공변할 것입니다. 모든 게 그냥 마법처럼 동작할 겁니다.
 
 ## Generic parameters and drop-checking
 
