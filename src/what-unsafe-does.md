@@ -5,7 +5,7 @@ The only things that are different in Unsafe Rust are that you can:
 * Dereference raw pointers
 * Call `unsafe` functions (including C functions, compiler intrinsics, and the raw allocator)
 * Implement `unsafe` traits
-* Mutate statics
+* Access or modify mutable statics
 * Access fields of `union`s
 
 That's it. The reason these operations are relegated to Unsafe is that misusing
