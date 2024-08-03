@@ -42,7 +42,7 @@ says they should still consume a byte of space.
   difference from a struct is that the fields aren’t named.
 
 * `repr(C)` is equivalent to one of `repr(u*)` (see the next section) for
-fieldless enums. The chosen size is the default enum size for the target platform's C
+fieldless enums. The chosen size and sign is the default enum size and sign for the target platform's C
 application binary interface (ABI). Note that enum representation in C is implementation
 defined, so this is really a "best guess". In particular, this may be incorrect
 when the C code of interest is compiled with certain flags.
@@ -79,7 +79,7 @@ More details are in the [RFC 1758][rfc-transparent] and the [RFC 2645][rfc-trans
 
 ## repr(u*), repr(i*)
 
-These specify the size to make a fieldless enum. If the discriminant overflows
+These specify the size and sign to make a fieldless enum. If the discriminant overflows
 the integer it has to fit in, it will produce a compile-time error. You can
 manually ask Rust to allow this by setting the overflowing element to explicitly
 be 0. However Rust will not allow you to create an enum where two variants have
@@ -89,7 +89,7 @@ The term "fieldless enum" only means that the enum doesn't have data in any
 of its variants. A fieldless enum without a `repr(u*)` or `repr(C)` is
 still a Rust native type, and does not have a stable ABI representation.
 Adding a `repr` causes it to be treated exactly like the specified
-integer size for ABI purposes.
+integer type for ABI purposes.
 
 If the enum has fields, the effect is similar to the effect of `repr(C)`
 in that there is a defined layout of the type. This makes it possible to
