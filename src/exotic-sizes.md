@@ -137,9 +137,9 @@ because the `Err` case doesn't actually exist (strictly speaking, this is only
 an optimization that is not guaranteed, so for example transmuting one into the
 other is still Undefined Behavior).
 
-The following *could* also compile:
+The following also compiles:
 
-```rust,compile_fail
+```rust
 enum Void {}
 
 let res: Result<u32, Void> = Ok(0);
@@ -147,8 +147,6 @@ let res: Result<u32, Void> = Ok(0);
 // Err doesn't exist anymore, so Ok is actually irrefutable.
 let Ok(num) = res;
 ```
-
-But this trick doesn't work yet.
 
 One final subtle detail about empty types is that raw pointers to them are
 actually valid to construct, but dereferencing them is Undefined Behavior
