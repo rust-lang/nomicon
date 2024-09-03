@@ -30,11 +30,11 @@ struct Iter<'a, T: 'a> {
 
 이렇게만 하면 됩니다. 수명은 제한될 것이고, 반복자는 `'a`와 `T`에 대해서 공변할 것입니다. 모든 게 그냥 마법처럼 동작할 겁니다.
 
-## Generic parameters and drop-checking
+## 제네릭 매개변수와 해제 검사
 
-In the past, there used to be another thing to take into consideration.
+이전에는 신경써야 할 다른 것이 있었습니다.
 
-This very documentation used to say:
+바로 이 문서는 이렇게 말했었지요:
 
 > Another important example is Vec, which is (approximately) defined as follows:
 >
@@ -73,7 +73,7 @@ This very documentation used to say:
 > }
 > ```
 
-But ever since [RFC 1238](https://rust-lang.github.io/rfcs/1238-nonparametric-dropck.html),
+since [RFC 1238](https://rust-lang.github.io/rfcs/1238-nonparametric-dropck.html),
 **this is no longer true nor necessary**.
 
 If you were to write:
