@@ -32,55 +32,11 @@ struct Iter<'a, T: 'a> {
 
 ## 제네릭 매개변수와 해제 검사
 
-이전에는 신경써야 할 다른 것이 있었습니다.
-
-바로 이 문서는 이렇게 말했었지요:
-
-> Another important example is Vec, which is (approximately) defined as follows:
->
-> ```rust
-> struct Vec<T> {
->     data: *const T, // *const for variance!
->     len: usize,
->     cap: usize,
-> }
-> ```
->
-> Unlike the previous example, it *appears* that everything is exactly as we
-> want. Every generic argument to Vec shows up in at least one field.
-> Good to go!
->
-> Nope.
->
-> The drop checker will generously determine that `Vec<T>` does not own any values
-> of type T. This will in turn make it conclude that it doesn't need to worry
-> about Vec dropping any T's in its destructor for determining drop check
-> soundness. This will in turn allow people to create unsoundness using
-> Vec's destructor.
->
-> In order to tell the drop checker that we *do* own values of type T, and
-> therefore may drop some T's when *we* drop, we must add an extra `PhantomData`
-> saying exactly that:
->
-> ```rust
-> use std::marker;
->
-> struct Vec<T> {
->     data: *const T, // *const for variance!
->     len: usize,
->     cap: usize,
->     _owns_T: marker::PhantomData<T>,
-> }
-> ```
-
-since [RFC 1238](https://rust-lang.github.io/rfcs/1238-nonparametric-dropck.html),
-**this is no longer true nor necessary**.
-
-If you were to write:
+[RFC 1238](https://rust-lang.github.io/rfcs/1238-nonparametric-dropck.html)의 도움으로, 우리가 이런 코드를 쓴다면:
 
 ```rust
 struct Vec<T> {
-    data: *const T, // `*const` for variance!
+    data: *const T, // 변성을 위한 `*const`
     len: usize,
     cap: usize,
 }
@@ -88,15 +44,10 @@ struct Vec<T> {
 # #[cfg(any())]
 impl<T> Drop for Vec<T> { /* … */ }
 ```
+이 `impl<T> Drop for Vec<T>`의 존재가 러스트로 하여금 `Vec<T>`가 `T` 타입의 값들을 *소유한다고* (더 정확히는: `Drop` 구현에서 `T` 타입의 값들을 사용할 수 있다고) 간주하게 만들고, 따라서 러스트는 `Vec<T>`가 해제될 때 
+`T` 타입의 값들이 *달랑거리는* 것을 허용하지 않을 것입니다.
 
-then the existence of that `impl<T> Drop for Vec<T>` makes it so Rust will consider
-that that `Vec<T>` _owns_ values of type `T` (more precisely: may use values of type `T`
-in its `Drop` implementation), and Rust will thus not allow them to _dangle_ should a
-`Vec<T>` be dropped.
-
-When a type already has a `Drop impl`, **adding an extra `_owns_T: PhantomData<T>` field
-is thus _superfluous_ and accomplishes nothing**, dropck-wise (it still affects variance
-and auto-traits).
+따라서 어떤 타입이 `Drop impl`을 가지고 있다면, **추가적으로 `_owns_T: PhantomData<T>` 필드를 선언하는 것은 *불필요하고* 아무것도 달성하지 않습니다**, 해제 검사기가 볼 때에는요 (변성과 자동 트레잇들에서는 영향을 줍니다).
 
   - (advanced edge case: if the type containing the `PhantomData` has no `Drop` impl at all,
     but still has drop glue (by having _another_ field with drop glue), then the
