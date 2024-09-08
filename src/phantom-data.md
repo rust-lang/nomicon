@@ -149,19 +149,18 @@ struct Vec<T> {
 
 ___
 
-Raw pointers that own an allocation is such a pervasive pattern that the
-standard library made a utility for itself called `Unique<T>` which:
+할당된 메모리를 소유하는 생 포인터는 너무나 흔한 패턴이여서, 표준 라이브러리는 이것을 위한 도구인 `Unique<T>`를 만들었는데, 이것은:
 
-* wraps a `*const T` for variance
-* includes a `PhantomData<T>`
-* auto-derives `Send`/`Sync` as if T was contained
-* marks the pointer as `NonZero` for the null-pointer optimization
+* 변성을 위해 `*const T`를 안에 포함합니다
+* `PhantomData<T>`를 포함합니다
+* 마치 `T`가 포함된 것처럼 `Send`/`Sync`를 자동으로 구현합니다
+* 널 포인터 최적화를 위해 포인터를 `NonZero`로 표시합니다
 
-## Table of `PhantomData` patterns
+## `PhantomData` 패턴의 표
 
-Here’s a table of all the wonderful ways `PhantomData` could be used:
+여기 `PhantomData`가 사용될 수 있는 모든 경우의 놀라운 표가 있습니다:
 
-| Phantom type                | variance of `'a` | variance of `T`   | `Send`/`Sync`<br/>(or lack thereof)       | dangling `'a` or `T` in drop glue<br/>(_e.g._, `#[may_dangle] Drop`) |
+| 흉내내는 타입                   | `'a`의 변성       | `T`의 변성          | `Send`/`Sync`<br/>(or lack thereof)       | dangling `'a` or `T` in drop glue<br/>(_e.g._, `#[may_dangle] Drop`) |
 |-----------------------------|:----------------:|:-----------------:|:-----------------------------------------:|:------------------------------------------------:|
 | `PhantomData<T>`            | -                | **cov**ariant     | inherited                                 | disallowed ("owns `T`")                          |
 | `PhantomData<&'a T>`        | **cov**ariant    | **cov**ariant     | `Send + Sync`<br/>requires<br/>`T : Sync` | allowed                                          |
