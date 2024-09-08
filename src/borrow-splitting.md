@@ -1,10 +1,7 @@
-# Splitting Borrows
+# 대여 쪼개기
 
-The mutual exclusion property of mutable references can be very limiting when
-working with a composite structure. The borrow checker (a.k.a. borrowck)
-understands some basic stuff, but will fall over pretty easily. It does
-understand structs sufficiently to know that it's possible to borrow disjoint
-fields of a struct simultaneously. So this works today:
+가변 레퍼런스의 상호 배제 규칙은 복잡한 구조와 작업할 때 굉장히 제한적일 수 있습니다. 대여 검사기(즉 borrowck)는 기본적인 내용은 이해하지만, 금세 쉽게 넘어질 겁니다. 이것은 한 구조체의 다른 필드들을 빌리는 것이 가능하다는 
+것은 알 정도로 구조체를 이해합니다. 따라서 이 코드는 오늘날 잘 작동합니다:
 
 ```rust
 struct Foo {
@@ -23,8 +20,7 @@ let c2 = &x.c;
 println!("{} {} {} {}", a, b, c, c2);
 ```
 
-However borrowck doesn't understand arrays or slices in any way, so this doesn't
-work:
+하지만 borrowck는 배열이나 슬라이스는 전혀 이해하지 못해서, 이 코드는 동작하지 않습니다:
 
 ```rust,compile_fail
 let mut x = [1, 2, 3];
@@ -48,17 +44,11 @@ error[E0499]: cannot borrow `x[..]` as mutable more than once at a time
 error: aborting due to previous error
 ```
 
-While it was plausible that borrowck could understand this simple case, it's
-pretty clearly hopeless for borrowck to understand disjointness in general
-container types like a tree, especially if distinct keys actually *do* map
-to the same value.
+borrowck가 이런 간단한 경우를 이해할 수 있다는 것은 좋지만, borrowck가 트리 같은 일반적인 컨테이너 타입들에서 "다른 부분"이라는 개념을 이해할 가능성은 거의 없습니다, 특히 다른 키들이 같은 값에 *대응할* 때는요.
 
-In order to "teach" borrowck that what we're doing is ok, we need to drop down
-to unsafe code. For instance, mutable slices expose a `split_at_mut` function
-that consumes the slice and returns two mutable slices. One for everything to
-the left of the index, and one for everything to the right. Intuitively we know
-this is safe because the slices don't overlap, and therefore alias. However
-the implementation requires some unsafety:
+borrowck에게 우리가 하는 작업이 괜찮다는 것을 "가르쳐 주기" 위해, 우리는 불안전한 코드로 내려와야 합니다. 예를 들어 가변 슬라이스는 슬라이스를 소비하고 두 개의 가변 슬라이스를 반환하는 `split_at_mut` 함수를 정의합니다. 
+하나는 인덱스의 왼쪽에 있는 모든 것의 슬라이스이고, 다른 하나는 인덱스의 오른쪽에 있는 모든 것의 슬라이스입니다. 직관적으로 우리는 이것이 안전하다는 것을 아는데, 이는 슬라이스가 서로 겹치지 않기 때문입니다. 하지만 이것을 구현하는 것은 
+어느 정도의 불안전성을 요구합니다:
 
 ```rust
 # use std::slice::from_raw_parts_mut;
