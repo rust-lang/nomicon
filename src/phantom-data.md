@@ -160,18 +160,18 @@ ___
 
 여기 `PhantomData`가 사용될 수 있는 모든 경우의 놀라운 표가 있습니다:
 
-| 흉내내는 타입                   | `'a`의 변성       | `T`의 변성          | `Send`/`Sync`<br/>(or lack thereof)       | dangling `'a` or `T` in drop glue<br/>(_e.g._, `#[may_dangle] Drop`) |
+| 흉내내는 타입                   | `'a`의 변성       | `T`의 변성          | `Send`/`Sync`<br/>(or lack thereof)       | 해제 구현에서 `'a` 나 `T`의 달랑거림<br/>(_예_: `#[may_dangle] Drop`) |
 |-----------------------------|:----------------:|:-----------------:|:-----------------------------------------:|:------------------------------------------------:|
-| `PhantomData<T>`            | -                | **cov**ariant     | inherited                                 | disallowed ("owns `T`")                          |
-| `PhantomData<&'a T>`        | **cov**ariant    | **cov**ariant     | `Send + Sync`<br/>requires<br/>`T : Sync` | allowed                                          |
-| `PhantomData<&'a mut T>`    | **cov**ariant    | **inv**ariant     | inherited                                 | allowed                                          |
-| `PhantomData<*const T>`     | -                | **cov**ariant     | `!Send + !Sync`                           | allowed                                          |
-| `PhantomData<*mut T>`       | -                | **inv**ariant     | `!Send + !Sync`                           | allowed                                          |
-| `PhantomData<fn(T)>`        | -                | **contra**variant | `Send + Sync`                             | allowed                                          |
-| `PhantomData<fn() -> T>`    | -                | **cov**ariant     | `Send + Sync`                             | allowed                                          |
-| `PhantomData<fn(T) -> T>`   | -                | **inv**ariant     | `Send + Sync`                             | allowed                                          |
-| `PhantomData<Cell<&'a ()>>` | **inv**ariant    | -                 | `Send + !Sync`                            | allowed                                          |
+| `PhantomData<T>`            | -                | **공**변           | 전달                                       | 불가 ("`T`를 소유")                                 |
+| `PhantomData<&'a T>`        | **공**변          | **공**변           | `T : Sync`<br/>이면<br/>`Send + Sync`       | 가능                                              |
+| `PhantomData<&'a mut T>`    | **공**변          | **무**변           | 전달                                        | 가능                                              |
+| `PhantomData<*const T>`     | -                | **공**변           | `!Send + !Sync`                           | 가능                                              |
+| `PhantomData<*mut T>`       | -                | **무**변           | `!Send + !Sync`                           | 가능                                              |
+| `PhantomData<fn(T)>`        | -                | **반**변           | `Send + Sync`                             | 가능                                              |
+| `PhantomData<fn() -> T>`    | -                | **공**변           | `Send + Sync`                             | 가능                                              |
+| `PhantomData<fn(T) -> T>`   | -                | **무**변           | `Send + Sync`                             | 가능                                              |
+| `PhantomData<Cell<&'a ()>>` | **무**변          | -                 | `Send + !Sync`                            | 가능                                              |
 
-  - Note: opting out of the `Unpin` auto-trait requires the dedicated [`PhantomPinned`] type instead.
+  - 주의: 자동으로 구현되는 `Unpin` 트레잇을 구현하지 않으려면 따로 선언된 [`PhantomPinned`] 타입을 사용해야 합니다.
 
-[`PhantomPinned`]: ../core/marker/struct.PhantomPinned.html
+[`PhantomPinned`]: https://doc.rust-lang.org/std/marker/struct.PhantomPinned.html
