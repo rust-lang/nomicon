@@ -41,7 +41,7 @@ struct Vec<T> {
     cap: usize,
 }
 
-# #[cfg(any())]
+#[cfg(any())]
 impl<T> Drop for Vec<T> { /* … */ }
 ```
 이 `impl<T> Drop for Vec<T>`의 존재가 러스트로 하여금 `Vec<T>`가 `T` 타입의 값들을 *소유한다고* (더 정확히는: `Drop` 구현에서 `T` 타입의 값들을 사용할 수 있다고) 간주하게 만들고, 따라서 러스트는 `Vec<T>`가 해제될 때 
