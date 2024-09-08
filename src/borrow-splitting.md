@@ -54,29 +54,25 @@ borrowck에게 우리가 하는 작업이 괜찮다는 것을 "가르쳐 주기"
 use std::slice::from_raw_parts_mut;
 struct FakeSlice<T>(T);
 impl<T> FakeSlice<T> {
-fn len(&self) -> usize { unimplemented!() }
-fn as_mut_ptr(&mut self) -> *mut T { unimplemented!() }
-pub fn split_at_mut(&mut self, mid: usize) -> (&mut [T], &mut [T]) {
-    let len = self.len();
-    let ptr = self.as_mut_ptr();
+    fn len(&self) -> usize { unimplemented!() }
+    fn as_mut_ptr(&mut self) -> *mut T { unimplemented!() }
+    pub fn split_at_mut(&mut self, mid: usize) -> (&mut [T], &mut [T]) {
+        let len = self.len();
+        let ptr = self.as_mut_ptr();
 
-    unsafe {
-        assert!(mid <= len);
+        unsafe {
+            assert!(mid <= len);
 
-        (from_raw_parts_mut(ptr, mid),
-         from_raw_parts_mut(ptr.add(mid), len - mid))
+            (from_raw_parts_mut(ptr, mid),
+             from_raw_parts_mut(ptr.add(mid), len - mid))
+        }
     }
-}
 }
 ```
 
+이것은 사실 조금 애매합니다. 같은 값에 두 개의 `&mut`을 만드는 일이 없도록, 우리는 생 포인터를 통하여 명시적으로 새로운 슬라이스를 만듭니다.
 
-
-This is actually a bit subtle. So as to avoid ever making two `&mut`'s to the
-same value, we explicitly construct brand-new slices through raw pointers.
-
-However more subtle is how iterators that yield mutable references work.
-The iterator trait is defined as follows:
+그러나 더욱 애매한 것은 가변 레퍼런스를 반환하는 반복자들이 어떻게 작동하느냐 하는 것입니다. `Iterator` 트레잇은 다음과 같이 정의되어 있습니다:
 
 ```rust
 trait Iterator {
@@ -86,25 +82,17 @@ trait Iterator {
 }
 ```
 
-Given this definition, Self::Item has *no* connection to `self`. This means that
-we can call `next` several times in a row, and hold onto all the results
-*concurrently*. This is perfectly fine for by-value iterators, which have
-exactly these semantics. It's also actually fine for shared references, as they
-admit arbitrarily many references to the same thing (although the iterator needs
-to be a separate object from the thing being shared).
+이 정의에 의하면, `Self::Item`은 `self`와 어떤 관련도 *없습니다*. 이것이 의미하는 것은 우리가 `next`를 여러 번 연속으로 호출한 후, 결과들을 *동시에* 기다리는 것이 가능하다는 겁니다. 
+이것은 값을 넘겨주는 반복자들에게는 아무 영향도 없습니다, 정확히 이런 의미를 가지거든요. 불변 레퍼런스를 반환하는 반복자들에게도 문제 없습니다, 같은 값에 임의의 많은 레퍼런스들이 있는 것을 허용하기 때문이죠 
+(비록 반복자가 공유되는 값과 다른 객체여야 하지만요).
 
-But mutable references make this a mess. At first glance, they might seem
-completely incompatible with this API, as it would produce multiple mutable
-references to the same object!
+하지만 가변 레퍼런스들이 이것을 망칩니다. 처음에 보기에는, 이 API와 전혀 호환될 것 같지 않은데, 이는 같은 객체에 여러 개의 가변 레퍼런스를 만들 것이기 때문입니다!
 
-However it actually *does* work, exactly because iterators are one-shot objects.
-Everything an IterMut yields will be yielded at most once, so we don't
-actually ever yield multiple mutable references to the same piece of data.
+그러나 실제로는 잘 *동작하는데*, 바로 반복자들이 일회용 객체들이기 때문입니다. `IterMut`이 반환하는 모든 것은 최대 1번 반환될 것이므로, 우리는 같은 데이터 조각에 여러 개의 가변 레퍼런스를 반환하는 일은 없을 겁니다.
 
-Perhaps surprisingly, mutable iterators don't require unsafe code to be
-implemented for many types!
+놀라울지는 모르겠지만, 가변 반복자들은 많은 타입들의 경우에 구현하는 데에 불안전한 코드가 필요하지 않습니다!
 
-For instance here's a singly linked list:
+예를 들어 단일 링크드 리스트입니다:
 
 ```rust
 # fn main() {}
@@ -139,7 +127,7 @@ impl<'a, T> Iterator for IterMut<'a, T> {
 }
 ```
 
-Here's a mutable slice:
+가변 슬라이스입니다:
 
 ```rust
 # fn main() {}
@@ -173,7 +161,7 @@ impl<'a, T> DoubleEndedIterator for IterMut<'a, T> {
 }
 ```
 
-And here's a binary tree:
+그리고 이진 트리입니다:
 
 ```rust
 # fn main() {}
