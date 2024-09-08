@@ -48,12 +48,10 @@ impl<T> Drop for Vec<T> { /* … */ }
 `T` 타입의 값들이 *달랑거리는* 것을 허용하지 않을 것입니다.
 
 따라서 어떤 타입이 `Drop impl`을 가지고 있다면, **추가적으로 `_owns_T: PhantomData<T>` 필드를 선언하는 것은 *불필요하고* 아무것도 달성하지 않습니다**, 해제 검사기가 볼 때에는요 (변성과 자동 트레잇들에서는 영향을 줍니다).
-
-  - (advanced edge case: 만약 `PhantomData`를 포함하는 타입이 `Drop` 구현이 전혀 없지만,
-    `Drop` 구현이 있는 _다른_ 필드를 포함한다면, then the
-    dropck/`#[may_dangle]` considerations mentioned herein do apply as well: a `PhantomData<T>`
-    field will then require `T` to be droppable whenever the containing type goes out of scope).
-
+ 
+- 특수한 경우: 만약 `PhantomData`를 포함하는 타입이 그 자체로는 `Drop` 구현이 전혀 없지만, `Drop` 구현이 있는 _다른_ 필드를 포함한다면, 여기에 명시된
+해제 검사기/`#[may_dangle]` 사항들이 적용될 것입니다: 담겨 있는 타입이 범위 밖으로 벗어날 때, `PhantomData<T>`
+필드는 `T` 타입이 해제되어도 괜찮도록 할 것입니다.
 ___
 
 But this situation can sometimes lead to overly restrictive code. That's why the
