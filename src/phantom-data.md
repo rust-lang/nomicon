@@ -79,7 +79,7 @@ fn main() {
 
 [is-denied]: https://rust.godbolt.org/z/ans15Kqz3
 
-확실히 이런 경우에서는, 우리는 `Vec</* T = */ &'s str>`, 즉 `str`의 `'s`만큼 사는 레퍼런스들의 벡터를 가지고 있습니다. 하지만 `let s: String`에서는, 이것이 `Vec`보다 먼저 해제되고, 
+확실히 이런 경우에서는, 우리는 `Vec<&'s str>`, 즉 `str`의 `'s`만큼 사는 레퍼런스들의 벡터를 가지고 있습니다. 하지만 `let s: String`에서는, 이것이 `Vec`보다 먼저 해제되고, 
 `impl<'s> Drop for Vec<&'s str> {`의 정의가 사용됩니다.
 
 이것이 의미하는 것은 만약 이런 `Drop` 구현이 사용된다면, _파기된_, 혹은 _달랑거리는_ 수명 `'s`로 작업을 할 것이라는 점입니다. 하지만 이것은 함수 시그니처에 있는 모든 러스트 레퍼런스는 기본적으로 달랑거리지 않고 역참조해도 문제가 없다는 
@@ -105,35 +105,26 @@ unsafe impl<#[may_dangle] T> Drop for Vec<T> { /* … */ }
 
 이것이 러스트의 해제 검사기가 해제되는 값의 타입 매개변수가 달랑거리지 않도록 하는, 보수적인 추측에서 탈출하도록 하는 `unsafe`한 방법입니다.
 
+표준 라이브러리와 같이 이렇게 했다면, 우리는 `T`가 자체의 `Drop` 구현이 있는 경우를 조심해야 합니다. 이 경우에는, `&'s str`를 `struct PrintOnDrop<'s>(&'s str);`로 바꾸는 것을 상상해 봅시다. 
+이 구조체는 자체의 `Drop` 구현에서 내부의 `&'s str`를 역참조하여 화면에 출력할 것입니다.
 
+확실히 버퍼를 해제하기 전에 `Drop for Vec<T> {`는, 내부의 각 `T`들이 `Drop` 구현이 있을 때, 각 `T`들을 해제시켜야 합니다. `PrintOnDrop<'s>`의 경우에 `Drop for Vec<PrintOnDrop<'s>>`는 
+버퍼를 해제하기 전에 `PrintOnDrop<'s>`의 원소들을 해제시켜야 합니다.
 
-And when this is done, such as in the standard library, we need to be careful in the
-case where `T` has drop glue of its own. In this instance, imagine replacing the
-`&'s str`s with a `struct PrintOnDrop<'s> /* = */ (&'s str);` which would have a
-`Drop` impl wherein the inner `&'s str` would be dereferenced and printed to the screen.
+따라서 우리가 `'s`가 `#[may_dangle]`하다고 말할 때, 이것은 심하게 모호하게 말했던 것입니다. 우리는 대신 이렇게 말해야 할 것입니다: "`'s`는 `Drop` 구현에 구속받지 않는 한에서 달랑거릴 수도 있습니다". 
+혹은 더 일반적으로 이렇게요: "`T`는 `Drop` 구현에 구속받지 않는 한에서 달랑거릴 수도 있습니다". 이런 "예외의 예외"는 **우리가 `T`를 소유할 때마다** 발생하는 흔한 현상입니다. 이래서 러스트의 `#[may_dangle]`은 
+이런 예외 상황에 대해 알고, 따라서 구조체의 필드들에 _제네릭 매개변수가 소유되는 때에_ 비활성화될 것입니다.
 
-Indeed, `Drop for Vec<T> {`, before deallocating the backing buffer, does have to transitively
-drop each `T` item when it has drop glue; in the case of `PrintOnDrop<'s>`, it means that
-`Drop for Vec<PrintOnDrop<'s>>` has to transitively drop the `PrintOnDrop<'s>`s elements before
-deallocating the backing buffer.
-
-So when we said that `'s` `#[may_dangle]`, it was an excessively loose statement. We'd rather want
-to say: "`'s` may dangle provided it not be involved in some transitive drop glue". Or, more generally,
-"`T` may dangle provided it not be involved in some transitive drop glue". This "exception to the
-exception" is a pervasive situation whenever **we own a `T`**. That's why Rust's `#[may_dangle]` is
-smart enough to know of this opt-out, and will thus be disabled _when the generic parameter is held
-in an owned fashion_ by the fields of the struct.
-
-Hence why the standard library ends up with:
+따라서 표준 라이브러리는 이렇게 결론을 내립니다:
 
 ```rust
-# #[cfg(any())]
-// we pinky-swear not to use `T` when dropping a `Vec`…
+#[cfg(any())]
+// 우리는 `Vec`을 해제할 때 `T`를 사용하지 않도록 약속합니다…
 unsafe impl<#[may_dangle] T> Drop for Vec<T> {
     fn drop(&mut self) {
         unsafe {
             if mem::needs_drop::<T>() {
-                /* … except here, that is, … */
+                /* … 이 경우는 제외하고요, 어떤 경우냐면 … */
                 ptr::drop_in_place::<[T]>(/* … */);
             }
             // …
@@ -144,11 +135,11 @@ unsafe impl<#[may_dangle] T> Drop for Vec<T> {
 }
 
 struct Vec<T> {
-    // … except for the fact that a `Vec` owns `T` items and
-    // may thus be dropping `T` items on drop!
+    // … `Vec`이 `T`의 원소들을 소유하고,
+    // 따라서 해제될 때 `T`의 원소들을 해제시킬 때 말이죠!
     _owns_T: core::marker::PhantomData<T>,
 
-    ptr: *const T, // `*const` for variance (but this does not express ownership of a `T` *per se*)
+    ptr: *const T, // 변성을 위한 `*const`입니다 (하지만 이것이 *그 자체로* `T`의 소유권을 나타내는 것은 아닙니다)
     len: usize,
     cap: usize,
 }
