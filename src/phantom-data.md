@@ -54,20 +54,17 @@ impl<T> Drop for Vec<T> { /* … */ }
 필드는 `T` 타입이 해제되어도 괜찮도록 할 것입니다.
 ___
 
-But this situation can sometimes lead to overly restrictive code. That's why the
-standard library uses an unstable and `unsafe` attribute to opt back into the old
-"unchecked" drop-checking behavior, that this very documentation warned about: the
-`#[may_dangle]` attribute.
+하지만 이런 상황은 때때로 과도하게 제한된 코드로 이어질 수 있습니다. 바로 그래서 표준 라이브러리는 불안정하고 `unsafe`한 속성을 써서 바로 이 문서에서 경고했던, 구식의 "수동" 해제 검사 방식으로 돌아가는 겁니다: 
+`#[may_dangle]` 속성으로요.
 
-### An exception: the special case of the standard library and its unstable `#[may_dangle]`
+### 예외: 표준 라이브러리의 특수한 경우와 불안정한 `#[may_dangle]`
 
-This section can be skipped if you are only writing your own library code; but if you are
-curious about what the standard library does with the actual `Vec` definition, you'll notice
-that it still needs to use a `_owns_T: PhantomData<T>` field for soundness.
+이 섹션은 당신이 자신의 라이브러리 코드만을 작성한다면 넘어가도 됩니다. 하지만 표준 라이브러리가 실제 `Vec` 정의를 가지고 무엇을 하는지 궁금하다면, 건전성을 위해 여전히 `_owns_T: PhantomData<T>`가 필요하다는 것을 
+알아차릴 겁니다.
 
-<details><summary>Click here to see why</summary>
+<details><summary>그 이유를 보려면 클릭하세요</summary>
 
-Consider the following example:
+다음의 예제를 생각해 봅시다:
 
 ```rust
 fn main() {
@@ -75,12 +72,12 @@ fn main() {
     let s: String = "Short-lived".into();
     v.push(&s);
     drop(s);
-} // <- `v` is dropped here
+} // <- `v` 는 여기서 해제됩니다
 ```
 
-with a classical `impl<T> Drop for Vec<T> {` definition, the above [is denied].
+정석적으로 `impl<T> Drop for Vec<T> {`를 정의하면, 위의 코드는 [부정됩니다][is-denied].
 
-[is denied]: https://rust.godbolt.org/z/ans15Kqz3
+[is-denied]: https://rust.godbolt.org/z/ans15Kqz3
 
 Indeed, in this case we have a `Vec</* T = */ &'s str>` vector of `'s`-lived references
 to `str`ings, but in the case of `let s: String`, it is dropped before the `Vec` is, and
