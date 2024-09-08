@@ -21,7 +21,7 @@
   * [부분타입 다형성과 변성](subtyping.md)
   * [해제 검사](dropck.md)
   * [PhantomData](phantom-data.md)
-  * [Splitting Borrows](borrow-splitting.md)
+  * [대여 쪼개기](borrow-splitting.md)
 * [Type Conversions](conversions.md)
   * [Coercions](coercions.md)
   * [The Dot Operator](dot-operator.md)
