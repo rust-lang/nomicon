@@ -79,38 +79,33 @@ fn main() {
 
 [is-denied]: https://rust.godbolt.org/z/ans15Kqz3
 
-Indeed, in this case we have a `Vec</* T = */ &'s str>` vector of `'s`-lived references
-to `str`ings, but in the case of `let s: String`, it is dropped before the `Vec` is, and
-thus `'s` **is expired** by the time the `Vec` is dropped, and the
-`impl<'s> Drop for Vec<&'s str> {` is used.
+확실히 이런 경우에서는, 우리는 `Vec</* T = */ &'s str>`, 즉 `str`의 `'s`만큼 사는 레퍼런스들의 벡터를 가지고 있습니다. 하지만 `let s: String`에서는, 이것이 `Vec`보다 먼저 해제되고, 
+`impl<'s> Drop for Vec<&'s str> {`의 정의가 사용됩니다.
 
-This means that if such `Drop` were to be used, it would be dealing with an _expired_, or
-_dangling_ lifetime `'s`. But this is contrary to Rust principles, where by default all
-Rust references involved in a function signature are non-dangling and valid to dereference.
+이것이 의미하는 것은 만약 이런 `Drop` 구현이 사용된다면, _파기된_, 혹은 _달랑거리는_ 수명 `'s`로 작업을 할 것이라는 점입니다. 하지만 이것은 함수 시그니처에 있는 모든 러스트 레퍼런스는 기본적으로 달랑거리지 않고 역참조해도 문제가 없다는 
+러스트 규칙에 반대됩니다.
 
-Hence why Rust has to conservatively deny this snippet.
+따라서 러스트는 보수적으로 이 코드를 부정할 수밖에 없습니다.
 
-And yet, in the case of the real `Vec`, the `Drop` impl does not care about `&'s str`,
-_since it has no drop glue of its own_: it only wants to deallocate the backing buffer.
+그런데 실제 `Vec`의 경우에서, `Drop` 구현은 `&'s str`에 대해 신경쓰지 않는데, _이는 `&'s str`이 따로 `Drop` 구현이 없기 때문입니다_: `Vec`의 `Drop` 구현은 그저 버퍼를 해제하고 싶을 뿐이죠.
 
-In other words, it would be nice if the above snippet was somehow accepted, by special
-casing `Vec`, or by relying on some special property of `Vec`: `Vec` could try to
-_promise not to use the `&'s str`s it holds when being dropped_.
+즉, `Vec`의 경우를 특별하게 구분해서, 또는 `Vec`의 특수한 성질을 이용해서 위의 코드가 컴파일되면 좋겠네요: `Vec`이 _가지고 있는 `&'s str`들을 해제될 때 사용하지 않도록 약속할 수도 있겠어요_.
 
-This is the kind of `unsafe` promise that can be expressed with `#[may_dangle]`:
+이 약속은 `#[may_dangle]`로 표현될 수 있는 `unsafe`한 약속입니다:
 
 ```rust ,ignore
 unsafe impl<#[may_dangle] 's> Drop for Vec<&'s str> { /* … */ }
 ```
 
-or, more generally:
+아니면 좀더 일반적으로 표현하자면:
 
 ```rust ,ignore
 unsafe impl<#[may_dangle] T> Drop for Vec<T> { /* … */ }
 ```
 
-is the `unsafe` way to opt out of this conservative assumption that Rust's drop
-checker makes about type parameters of a dropped instance not being allowed to dangle.
+이것이 러스트의 해제 검사기가 해제되는 값의 타입 매개변수가 달랑거리지 않도록 하는, 보수적인 추측에서 탈출하도록 하는 `unsafe`한 방법입니다.
+
+
 
 And when this is done, such as in the standard library, we need to be careful in the
 case where `T` has drop glue of its own. In this instance, imagine replacing the
