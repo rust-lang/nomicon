@@ -22,7 +22,7 @@
   * [해제 검사](dropck.md)
   * [PhantomData](phantom-data.md)
   * [대여 쪼개기](borrow-splitting.md)
-* [Type Conversions](conversions.md)
+* [타입 변환](conversions.md)
   * [Coercions](coercions.md)
   * [The Dot Operator](dot-operator.md)
   * [Casts](casts.md)
