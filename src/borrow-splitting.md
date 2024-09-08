@@ -51,11 +51,11 @@ borrowck에게 우리가 하는 작업이 괜찮다는 것을 "가르쳐 주기"
 어느 정도의 불안전성을 요구합니다:
 
 ```rust
-# use std::slice::from_raw_parts_mut;
-# struct FakeSlice<T>(T);
-# impl<T> FakeSlice<T> {
-# fn len(&self) -> usize { unimplemented!() }
-# fn as_mut_ptr(&mut self) -> *mut T { unimplemented!() }
+use std::slice::from_raw_parts_mut;
+struct FakeSlice<T>(T);
+impl<T> FakeSlice<T> {
+fn len(&self) -> usize { unimplemented!() }
+fn as_mut_ptr(&mut self) -> *mut T { unimplemented!() }
 pub fn split_at_mut(&mut self, mid: usize) -> (&mut [T], &mut [T]) {
     let len = self.len();
     let ptr = self.as_mut_ptr();
@@ -67,8 +67,10 @@ pub fn split_at_mut(&mut self, mid: usize) -> (&mut [T], &mut [T]) {
          from_raw_parts_mut(ptr.add(mid), len - mid))
     }
 }
-# }
+}
 ```
+
+
 
 This is actually a bit subtle. So as to avoid ever making two `&mut`'s to the
 same value, we explicitly construct brand-new slices through raw pointers.
