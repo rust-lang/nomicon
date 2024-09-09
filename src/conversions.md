@@ -1,18 +1,9 @@
 # 타입 변환
 
+결국 모든 것은 어딘가에 있는 비트 덩어리일 뿐이고, 타입 시스템은 우리가 그 비트들을 잘 쓰게 하기 위해 존재할 뿐입니다. 비트들에 타입을 입히는 것에는 두 가지 흔한 문제점이 있습니다: 비트들 그대로 다른 타입으로 재해석해야 하는 것과, 다른 타입에서 동일한 의미를 가지도록 비트들을 바꿔야 하는 경우입니다. 
+러스트가 중요한 속성들을 타입 시스템에 녹여내는 것을 권장하기 때문에, 이런 문제들은 매우 널리 퍼지는 문제들입니다. 따라서 러스트는 이런 종류의 문제들을 해결하는 몇 가지 방법들을 제공합니다.
 
-
-At the end of the day, everything is just a pile of bits somewhere, and type
-systems are just there to help us use those bits right. There are two common
-problems with typing bits: needing to reinterpret those exact bits as a
-different type, and needing to change the bits to have equivalent meaning for
-a different type. Because Rust encourages encoding important properties in the
-type system, these problems are incredibly pervasive. As such, Rust
-consequently gives you several ways to solve them.
-
-First we'll look at the ways that Safe Rust gives you to reinterpret values.
-The most trivial way to do this is to just destructure a value into its
-constituent parts and then build a new type out of them. e.g.
+먼저 우리는 안전한 러스트가 값을 재해석하게 해주는 방법들을 살펴보겠습니다. 가장 흔한 방법은 값을 작은 부분으로 해체시킨 후 그것들로 새 타입을 만드는 것입니다. 예를 들면:
 
 ```rust
 struct Foo {
@@ -31,5 +22,4 @@ fn reinterpret(foo: Foo) -> Bar {
 }
 ```
 
-But this is, at best, annoying. For common conversions, Rust provides
-more ergonomic alternatives.
+하지만 이것은, 좋게 말해도, 짜증납니다. 흔한 변환들에 있어서 러스트는 좀더 효율적이고 편리한 방식들을 제공합니다.
