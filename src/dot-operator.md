@@ -1,49 +1,25 @@
-# The Dot Operator
+# 점 연산자
 
-The dot operator will perform a lot of magic to convert types.
-It will perform auto-referencing, auto-dereferencing, and coercion until types
-match.
-The detailed mechanics of method lookup are defined [here][method_lookup],
-but here is a brief overview that outlines the main steps.
+점 연산자는 타입을 변환하기 위해 많은 마법을 사용할 겁니다. 타입이 맞을 때까지 자동 레퍼런싱, 자동 역참조, 강제 변환을 수행하겠죠. 메서드 조회의 자세한 작동 방식은 [여기에][method_lookup] 정의되어 있지만, 기본적인 절차를 여기서 간단하게 설명하겠습니다.
 
-Suppose we have a function `foo` that has a receiver (a `self`, `&self` or
-`&mut self` parameter).
-If we call `value.foo()`, the compiler needs to determine what type `Self` is before
-it can call the correct implementation of the function.
-For this example, we will say that `value` has type `T`.
+어떤 수신자(`self`, `&self` 또는 `&mut self` 매개변수)가 있는 함수 `foo`가 있다고 해 봅시다. 만약 우리가 `value.foo()`를 호출하면, 컴파일러는 이 함수의 올바른 구현을 호출하기 전에 `Self`가 어떤 타입인지 밝혀내야 합니다. 이 예제에서는 `value`가 `T` 타입이라고 하겠습니다.
 
-We will use [fully-qualified syntax][fqs] to be more clear about exactly which
-type we are calling a function on.
+우리는 [완전 정식화 문법][fqs]을 써서 우리가 어떤 타입의 함수를 호출하는지를 명확히 하겠습니다.
 
-- First, the compiler checks if it can call `T::foo(value)` directly.
-This is called a "by value" method call.
-- If it can't call this function (for example, if the function has the wrong type
-or a trait isn't implemented for `Self`), then the compiler tries to add in an
-automatic reference.
-This means that the compiler tries `<&T>::foo(value)` and `<&mut T>::foo(value)`.
-This is called an "autoref" method call.
-- If none of these candidates worked, it dereferences `T` and tries again.
-This uses the `Deref` trait - if `T: Deref<Target = U>` then it tries again with
-type `U` instead of `T`.
-If it can't dereference `T`, it can also try _unsizing_ `T`.
-This just means that if `T` has a size parameter known at compile time, it "forgets"
-it for the purpose of resolving methods.
-For instance, this unsizing step can convert `[i32; 2]` into `[i32]` by "forgetting"
-the size of the array.
+- 먼저 컴파일러는 `T::foo(value)`를 직접 호출할 수 있는지 검사합니다. 이것은 "값에 의한" 메서드 호출이라 부릅니다.
+- 이 함수를 호출할 수 없다면 (예를 들어 함수가 잘못된 타입을 가진다거나 `Self`에 대해 트레잇이 구현되지 않았을 경우), 컴파일러는 자동으로 레퍼런스를 추가합니다. 이 말은 컴파일러가 `<&T>::foo(value)`와 `<&mut T>::foo(value)`를 시도해 본다는 뜻입니다. 이것은 자동 레퍼런스 메서드 호출이라 부릅니다.
+- 여기까지의 후보들이 실패했다면 컴파일러는 `T`를 역참조하여 다시 시도합니다. 이것은 `Deref` 트레잇을 사용합니다 - 만약 `T: Deref<Target = U>`라면 `T` 대신 `U`가 사용됩니다. 만약 `T`를 역참조할 수 없다면 `T`의 _크기 지정 해제를_ 시도할 수도 있습니다. 이것은 만약 `T`가 컴파일 시간에 알려진 크기 매개변수가 있다면, 메서드를 찾기 위해 이것을 "잊어버린다는" 말입니다. 예를 들어, 이런 크기 지정 해제 작업은 배열의 크기를 "잊어버림으로써" `[i32; 2]`를 `[i32]`로 변환할 수 있습니다.
 
-Here is an example of the method lookup algorithm:
+
+여기 메서드 조회 알고리즘의 예제가 있습니다:
 
 ```rust,ignore
 let array: Rc<Box<[T; 3]>> = ...;
 let first_entry = array[0];
 ```
 
-How does the compiler actually compute `array[0]` when the array is behind so
-many indirections?
-First, `array[0]` is really just syntax sugar for the [`Index`][index] trait -
-the compiler will convert `array[0]` into `array.index(0)`.
-Now, the compiler checks to see if `array` implements `Index`, so that it can call
-the function.
+배열로 가는 길에 돌아가는 길이 이렇게 많은데 컴파일러는 어떻게 실제 `array[0]`을 계산할 수 있을까요? 먼저, `array[0]`은 그냥 [`Index`][index] 트레잇을 위한 문법적 설탕입니다 - 컴파일러는 `array[0]`을 `array.index(0)`으로 변환할 겁니다. 
+이제, 컴파일러는 함수를 호출하기 위해 `array`가 `Index`를 구현하는지 봅니다.
 
 Then, the compiler checks if `Rc<Box<[T; 3]>>` implements `Index`, but it
 does not, and neither do `&Rc<Box<[T; 3]>>` or `&mut Rc<Box<[T; 3]>>`.
