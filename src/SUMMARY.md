@@ -24,7 +24,7 @@
   * [대여 쪼개기](borrow-splitting.md)
 * [타입 변환](conversions.md)
   * [강제 변환](coercions.md)
-  * [The Dot Operator](dot-operator.md)
+  * [점 연산자](dot-operator.md)
   * [Casts](casts.md)
   * [Transmutes](transmutes.md)
 * [Uninitialized Memory](uninitialized.md)
