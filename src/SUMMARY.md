@@ -23,7 +23,7 @@
   * [PhantomData](phantom-data.md)
   * [대여 쪼개기](borrow-splitting.md)
 * [타입 변환](conversions.md)
-  * [Coercions](coercions.md)
+  * [강제 변환](coercions.md)
   * [The Dot Operator](dot-operator.md)
   * [Casts](casts.md)
   * [Transmutes](transmutes.md)
