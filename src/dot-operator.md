@@ -66,15 +66,10 @@ impl<T> Clone for Container<T> where T: Clone {
 }
 ```
 
+파생된 `Clone` 구현은 [`T: Clone`일 때만 정의되어 있으며][clone], 따라서 일반적인 `T`에 대해 `Container<T>: Clone` 구현은 없는 것입니다. 그럼 컴파일러는 `&Container<T>`가 `Clone`을 구현하는지 봅니다. 
+`&Container<T>`가 `Clone`을 구현하므로, 컴파일러는 `clone`이 자동 참조로 호출된다고 결론 내리고, 따라서 `bar_cloned`는 `&Container<T>`의 타입을 갖게 됩니다.
 
-
-The derived `Clone` implementation is [only defined where `T: Clone`][clone],
-so there is no implementation for `Container<T>: Clone` for a generic `T`.
-The compiler then looks to see if `&Container<T>` implements `Clone`, which it does.
-So it deduces that `clone` is called by autoref, and so `bar_cloned` has type
-`&Container<T>`.
-
-We can fix this by implementing `Clone` manually without requiring `T: Clone`:
+우리는 `T: Clone`을 요구하지 않는 `Clone`을 수동으로 구현함으로써 이 문제를 해결할 수 있습니다:
 
 ```rust,ignore
 impl<T> Clone for Container<T> {
@@ -84,7 +79,7 @@ impl<T> Clone for Container<T> {
 }
 ```
 
-Now, the type checker deduces that `bar_cloned: Container<T>`.
+이제 타입 검사기는 `bar_cloned: Container<T>`라고 결론짓습니다.
 
 [fqs]: https://doc.rust-lang.org/book/ch19-03-advanced-traits.html#fully-qualified-syntax-for-disambiguation-calling-methods-with-the-same-name
 [method_lookup]: https://rustc-dev-guide.rust-lang.org/method-lookup.html
