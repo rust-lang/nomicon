@@ -25,7 +25,7 @@
 * [타입 변환](conversions.md)
   * [강제 변환](coercions.md)
   * [점 연산자](dot-operator.md)
-  * [Casts](casts.md)
+  * [변형](casts.md)
   * [Transmutes](transmutes.md)
 * [Uninitialized Memory](uninitialized.md)
   * [Checked](checked-uninit.md)
