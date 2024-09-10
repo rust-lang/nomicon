@@ -21,17 +21,12 @@ let first_entry = array[0];
 배열로 가는 길에 돌아가는 길이 이렇게 많은데 컴파일러는 어떻게 실제 `array[0]`을 계산할 수 있을까요? 먼저, `array[0]`은 그냥 [`Index`][index] 트레잇을 위한 문법적 설탕입니다 - 컴파일러는 `array[0]`을 `array.index(0)`으로 변환할 겁니다. 
 이제, 컴파일러는 함수를 호출하기 위해 `array`가 `Index`를 구현하는지 봅니다.
 
-Then, the compiler checks if `Rc<Box<[T; 3]>>` implements `Index`, but it
-does not, and neither do `&Rc<Box<[T; 3]>>` or `&mut Rc<Box<[T; 3]>>`.
-Since none of these worked, the compiler dereferences the `Rc<Box<[T; 3]>>` into
-`Box<[T; 3]>` and tries again.
-`Box<[T; 3]>`, `&Box<[T; 3]>`, and `&mut Box<[T; 3]>` do not implement `Index`,
-so it dereferences again.
-`[T; 3]` and its autorefs also do not implement `Index`.
-It can't dereference `[T; 3]`, so the compiler unsizes it, giving `[T]`.
-Finally, `[T]` implements `Index`, so it can now call the actual `index` function.
+그럼 컴파일러는 `Rc<Box<[T; 3]>>`가 `Index`를 구현하는지 보는데, 구현하지 않고, `&Rc<Box<[T; 3]>>`나 `&mut Rc<Box<[T; 3]>>`도 `Index`를 구현하지 않습니다. 
+여태까지 아무것도 맞지 않았으니, 컴파일러는 `Rc<Box<[T; 3]>>`를 `Box<[T; 3]>`로 역참조하여 다시 시도합니다. `Box<[T; 3]>`, `&Box<[T; 3]>`, 그리고 `&mut Box<[T; 3]>`는 `Index`를 구현하지 않으므로, 
+컴파일러는 다시 역참조합니다. `[T; 3]`과 그의 자동 참조들도 `Index`를 구현하지 않습니다. 컴파일러는 `[T; 3]`를 역참조할 수 없으므로, 크기 지정을 해제하여, `[T]`를 얻어냅니다. 마지막으로, `[T]`는 `Index`를 구현하므로, 
+컴파일러는 실제로 `index` 함수를 호출할 수 있게 됩니다.
 
-Consider the following more complicated example of the dot operator at work:
+점 연산자가 작동하는 좀더 복잡한 다음의 예제를 생각해 봅시다:
 
 ```rust
 fn do_stuff<T: Clone>(value: &T) {
