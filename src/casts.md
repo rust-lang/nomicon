@@ -3,11 +3,11 @@
 변형은 강제 변환을 포함하는 더 큰 개념입니다: 모든 강제 변환은 변형으로 명시적으로 호출할 수 있습니다. 하지만 어떤 변환들은 변형을 필요로 합니다. 강제 변환은 흔하고 보통은 위험하지 않지만, 이런 "진짜 변형"은 희귀하고, 위험할 수 있습니다. 
 그런 면에서, 변형은 명시적으로 `as` 키워드를 사용해서 호출해야 합니다: `expr as Type`.
 
+[모든 변형과][cast_list] [그 의미들은][semantics_list] 참조서에서 전체 목록을 볼 수 있습니다.
+
+## 변형의 안전성
 
 
-You can find an exhaustive list of [all the true casts][cast_list] and [casting semantics][semantics_list] on the reference.
-
-## Safety of casting
 
 True casts generally revolve around raw pointers and the primitive numeric types.
 Even though they're dangerous, these casts are infallible at runtime.
