@@ -1,11 +1,11 @@
-# Casts
+# 변형
 
-Casts are a superset of coercions: every coercion can be explicitly invoked via a cast.
-However some conversions require a cast.
-While coercions are pervasive and largely harmless, these "true casts" are rare and potentially dangerous.
-As such, casts must be explicitly invoked using the `as` keyword: `expr as Type`.
+변형은 강제 변환을 포함하는 더 큰 개념입니다: 모든 강제 변환은 변형으로 명시적으로 호출할 수 있습니다. 하지만 어떤 변환들은 변형을 필요로 합니다. 강제 변환은 흔하고 보통은 위험하지 않지만, 이런 "진짜 변형"은 희귀하고, 위험할 수 있습니다. 
+그런 면에서, 변형은 명시적으로 `as` 키워드를 사용해서 호출해야 합니다: `expr as Type`.
 
-You can find an exhaustive list of [all the true casts][cast list] and [casting semantics][semantics list] on the reference.
+
+
+You can find an exhaustive list of [all the true casts][cast_list] and [casting semantics][semantics_list] on the reference.
 
 ## Safety of casting
 
@@ -30,5 +30,5 @@ Note that lengths are not adjusted when casting raw slices; `*const [u16] as *co
 
 Casting is not transitive, that is, even if `e as U1 as U2` is a valid expression, `e as U2` is not necessarily so.
 
-[cast list]: ../reference/expressions/operator-expr.html#type-cast-expressions
-[semantics list]: ../reference/expressions/operator-expr.html#semantics
+[cast_list]: https://doc.rust-lang.org/reference/expressions/operator-expr.html#type-cast-expressions
+[semantics_list]: https://doc.rust-lang.org/reference/expressions/operator-expr.html#semantics
