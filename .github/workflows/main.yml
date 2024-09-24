@@ -15,7 +15,7 @@ jobs:
     - run: rustup default nightly
             
     - name: Install mdbook
-      run: cargo install mdbook
+      run: RUST_BACKTRACE=1 cargo install mdbook
       
     - name: Run tests
       run: mdbook test
