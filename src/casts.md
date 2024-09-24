@@ -7,28 +7,22 @@
 
 ## 변형의 안전성
 
+진정한 변형은 일반적으로 생 포인터들과 기초적인 수 타입들 주위를 맴돕니다. 위험하긴 하지만, 이 변형들은 실행 시에는 실패할 수 없습니다. 
+만약 어떤 변형 작업이 어떤 특수한 경우를 발생시킨다면 이런 경우가 일어났다는 표시는 주어지지 않을 것입니다. 그 변형 작업은 그냥 성공하게 됩니다. 
+그런 점에서 변형은 타입 단계에서 올바라야 하는데, 그렇지 않으면 컴파일 때에 방지될 것입니다. 예를 들어, `7u8 as bool`은 컴파일되지 않을 것입니다.
 
+이러한 것들을 보았을 때, 변형은 `unsafe`하지는 않습니다, 왜냐하면 일반적으로 *그 자체로는* 메모리 안정성을 위배할 수 없기 때문이죠. 예를 들어, 어떤 정수를 생 포인터로 변환하는 것은 매우 쉽게 다른 끔찍한 일들로 이어질 수 있습니다. 
+하지만 그 포인터를 만드는 것 자체는 안전한데, 생 포인터를 실제로 사용하는 작업이 이미 `unsafe`로 표시되었기 때문입니다.
 
-True casts generally revolve around raw pointers and the primitive numeric types.
-Even though they're dangerous, these casts are infallible at runtime.
-If a cast triggers some subtle corner case no indication will be given that this occurred.
-The cast will simply succeed.
-That said, casts must be valid at the type level, or else they will be prevented statically.
-For instance, `7u8 as bool` will not compile.
+## 변형에 대한 몇 가지 주의사항
 
-That said, casts aren't `unsafe` because they generally can't violate memory safety *on their own*.
-For instance, converting an integer to a raw pointer can very easily lead to terrible things.
-However the act of creating the pointer itself is safe, because actually using a raw pointer is already marked as `unsafe`.
+### 생 슬라이스를 변형할 때의 길이
 
-## Some notes about casting
+생 슬라이스를 변형할 때 길이가 조정되지 않는다는 점을 주의하세요: `*const [u16] as *const [u8]`은 원래 메모리의 절반만 포함하는 슬라이스를 만들어냅니다.
 
-### Lengths when casting raw slices
+### 전이성
 
-Note that lengths are not adjusted when casting raw slices; `*const [u16] as *const [u8]` creates a slice that only includes half of the original memory.
-
-### Transitivity
-
-Casting is not transitive, that is, even if `e as U1 as U2` is a valid expression, `e as U2` is not necessarily so.
+변형은 전이적이지 않습니다, 다시 말해, `e as U1 as U2`가 올바른 식이라고 해도, `e as U2`는 꼭 올바르지는 않을 수 있다는 겁니다.
 
 [cast_list]: https://doc.rust-lang.org/reference/expressions/operator-expr.html#type-cast-expressions
 [semantics_list]: https://doc.rust-lang.org/reference/expressions/operator-expr.html#semantics
