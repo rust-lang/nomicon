@@ -19,7 +19,8 @@
 
 * 서로 다른 복합 타입들 간에 변질할 때, 타입들이 똑같이 정렬되어 있다는 것을 확실히 해야 합니다! 만약 다르게 정렬되어 있다면, 잘못된 필드가 잘못된 값으로 채워지고, 그러면 당신을 불행하게 만들고 또한 **미정의 동작이** 발생할 수 있습니다 (위를 보세요).
 
-  그럼 똑같이 정렬되어 있는지 어떻게 알까요? 
+  그럼 똑같이 정렬되어 있는지 어떻게 알까요? `repr(C)` 타입과 `repr(transparent)` 타입들에 대해서는, 어떻게 정렬되는지가 정확하게 정의되어 있습니다. 하지만 당신의 흔해 빠진 `repr(Rust)` 타입은 그렇지가 않습니다.
+  같은 제네릭 타입의 다른 인스턴스들조차도 완전히 다르게 정렬될 수 있습니다. `Vec<i32>`와 `Vec<u32>`는 필드들을 같은 순서로 배치했을 *수도* 있고, 아닐 수도 있습니다. 
 
   So how do you know if the layouts are the same? For `repr(C)` types and
   `repr(transparent)` types, layout is precisely defined. But for your
