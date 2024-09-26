@@ -20,25 +20,13 @@
 * 서로 다른 복합 타입들 간에 변질할 때, 타입들이 똑같이 정렬되어 있다는 것을 확실히 해야 합니다! 만약 다르게 정렬되어 있다면, 잘못된 필드가 잘못된 값으로 채워지고, 그러면 당신을 불행하게 만들고 또한 **미정의 동작이** 발생할 수 있습니다 (위를 보세요).
 
   그럼 똑같이 정렬되어 있는지 어떻게 알까요? `repr(C)` 타입과 `repr(transparent)` 타입들에 대해서는, 어떻게 정렬되는지가 정확하게 정의되어 있습니다. 하지만 당신의 흔해 빠진 `repr(Rust)` 타입은 그렇지가 않습니다.
-  같은 제네릭 타입의 다른 인스턴스들조차도 완전히 다르게 정렬될 수 있습니다. `Vec<i32>`와 `Vec<u32>`는 필드들을 같은 순서로 배치했을 *수도* 있고, 아닐 수도 있습니다. 
+  같은 제네릭 타입의 다른 인스턴스들조차도 완전히 다르게 정렬될 수 있습니다. `Vec<i32>`와 `Vec<u32>`는 필드들을 같은 순서로 배치했을 *수도* 있고, 아닐 수도 있습니다.
+  데이터가 어떻게 배치되는지, 어느 것이 실제로 보장되었는지 혹은 아닌지에 대한 세부 사항은 [불안전 코드 가이드라인에서][ucg-layout] 작업 중입니다.
 
-  So how do you know if the layouts are the same? For `repr(C)` types and
-  `repr(transparent)` types, layout is precisely defined. But for your
-  run-of-the-mill `repr(Rust)`, it is not. Even different instances of the same
-  generic type can have wildly different layout. `Vec<i32>` and `Vec<u32>`
-  *might* have their fields in the same order, or they might not. The details of
-  what exactly is and is not guaranteed for data layout are still being worked
-  out over [at the UCG WG][ucg-layout].
+[`mem::transmute_copy<T, U>`][transmute_copy]는 이것보다 *더하게* 엄청나게 불안전한 짓을 어떻게 해 냅니다. 이것은 `&T`에서 `size_of<U>`만큼의 바이트를 복사해서 그것을 `U`라고 해석합니다. 
+`mem::transmute`가 가지고 있던 크기 검사는 없습니다 (앞부분만 복사하는 것이 올바를 수도 있기 때문입니다), `U`가 `T`보다 크면 **미정의 동작이** 일어나지만 말이죠.
 
-[`mem::transmute_copy<T, U>`][transmute_copy] somehow manages to be *even more*
-wildly unsafe than this. It copies `size_of<U>` bytes out of an `&T` and
-interprets them as a `U`.  The size check that `mem::transmute` has is gone (as
-it may be valid to copy out a prefix), though it is Undefined Behavior for `U`
-to be larger than `T`.
-
-Also of course you can get all of the functionality of these functions using raw
-pointer casts or `union`s, but without any of the lints or other basic sanity
-checks. Raw pointer casts and `union`s do not magically avoid the above rules.
+그리고 당연히 여러분은 이 함수들의 기능을 생 포인터 변형이나 `union`을 이용해서 전부 사용할 수 있지만, 타입 검사나 다른 기본적인 검사는 제공되지 않습니다. 생 포인터 변형과 `union`은 위의 규칙들을 마법적으로 피하지는 않습니다.
 
 [unbounded lifetime]: ./unbounded-lifetimes.md
 [transmute]: https://doc.rust-lang.org/std/mem/fn.transmute.html
