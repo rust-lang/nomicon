@@ -27,7 +27,7 @@
   * [점 연산자](dot-operator.md)
   * [변형](casts.md)
   * [변질](transmutes.md)
-* [Uninitialized Memory](uninitialized.md)
+* [초기화되지 않은 메모리](uninitialized.md)
   * [Checked](checked-uninit.md)
   * [Drop Flags](drop-flags.md)
   * [Unchecked](unchecked-uninit.md)
