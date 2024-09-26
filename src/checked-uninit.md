@@ -1,8 +1,6 @@
-# Checked Uninitialized Memory
+# 검사받는 초기화되지 않은 메모리
 
-Like C, all stack variables in Rust are uninitialized until a value is
-explicitly assigned to them. Unlike C, Rust statically prevents you from ever
-reading them until you do:
+C와 같이, 러스트에서 모든 스택 변수는 값이 배정되기 전까지 초기화되지 않은 상태입니다. C와 다르게, 러스트는 값을 배정하기 전에 그 변수들을 읽는 것을 컴파일 때 방지합니다:
 
 ```rust,compile_fail
 fn main() {
@@ -16,6 +14,8 @@ fn main() {
 3 |     println!("{}", x);
   |                    ^ use of possibly uninitialized `x`
 ```
+
+
 
 This is based off of a basic branch analysis: every branch must assign a value
 to `x` before it is first used. For short, we also say that "`x` is init" or
