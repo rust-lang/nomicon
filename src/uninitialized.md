@@ -1,10 +1,6 @@
-# Working With Uninitialized Memory
+# 초기화되지 않은 메모리를 가지고 작업하기
 
-All runtime-allocated memory in a Rust program begins its life as
-*uninitialized*. In this state the value of the memory is an indeterminate pile
-of bits that may or may not even reflect a valid state for the type that is
-supposed to inhabit that location of memory. Attempting to interpret this memory
-as a value of *any* type will cause Undefined Behavior. Do Not Do This.
+러스트 프로그램에서 실행 시간에 할당되는 메모리는 모두 *초기화되지 않은 상태로* 그 삶을 시작합니다. 이 상태에서 메모리의 값은 그 메모리 위치에 들어가도록 되어 있는 타입의 올바른 값인지도 불분명한, 중간 상태의 비트 덩어리입니다. 
+이 메모리를 *어떤* 타입의 값으로든 해석하려고 하는 것은 **미정의 동작을** 초래합니다. **하지 마세요**.
 
-Rust provides mechanisms to work with uninitialized memory in checked (safe) and
-unchecked (unsafe) ways.
+러스트는 초기화되지 않는 메모리를 가지고 작업하는 검사되는 (안전한) 방법과 검사되지 않는 (불안전한) 방법의 장치들을 제공합니다.
