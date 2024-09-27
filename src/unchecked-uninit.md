@@ -5,83 +5,62 @@
 
 불안전한 러스트는 이런 문제를 해결하기 위해 강력한 도구를 선사합니다: [`MaybeUninit`]이죠. 이 타입은 아직 완전히 초기화되지 않은 메모리를 다루기 위해 사용될 수 있습니다.
 
-`MaybeUninit`으로 우리는, 다음과 같이 배열을 원소별로 초기화할 수 있습니다:
+`MaybeUninit` 으로 우리는, 다음과 같이 배열을 원소별로 초기화할 수 있습니다:
 
 ```rust
 use std::mem::{self, MaybeUninit};
 
-// Size of the array is hard-coded but easy to change (meaning, changing just
-// the constant is sufficient). This means we can't use [a, b, c] syntax to
-// initialize the array, though, as we would have to keep that in sync
-// with `SIZE`!
+// 배열의 크기는 손으로 적혀 있지만 바꾸기 쉽습니다 (이 상수의 값만 바꾸면 되니까요).
+// 하지만 이것은 우리가 배열을 초기화할 때 [a, b, c] 와 같은 문법을 사용할 수 없다는 것을 말합니다,
+// `SIZE`가 바뀔 때마다 그 구문이 계속 바뀔 테니까요!
 const SIZE: usize = 10;
 
 let x = {
-    // Create an uninitialized array of `MaybeUninit`. The `assume_init` is
-    // safe because the type we are claiming to have initialized here is a
-    // bunch of `MaybeUninit`s, which do not require initialization.
+    // `MaybeUninit`의 미초기화된 배열을 만듭니다. `assume_init`은 안전한데,
+    // 우리가 여기서 초기화했다고 주장하는 것들은 `MaybeUninit`들인데,
+    // 이들은 초기화를 필요로 하지 않기 때문입니다.
     let mut x: [MaybeUninit<Box<u32>>; SIZE] = unsafe {
         MaybeUninit::uninit().assume_init()
     };
 
-    // Dropping a `MaybeUninit` does nothing. Thus using raw pointer
-    // assignment instead of `ptr::write` does not cause the old
-    // uninitialized value to be dropped.
-    // Exception safety is not a concern because Box can't panic
+    // `MaybeUninit`은 범위 밖으로 벗어나도 아무 일도 일어나지 않습니다.
+    // 따라서 `ptr::write` 대신 생 포인터 할당을 이용해도 기존의 미초기화된 값이 해제되지 않습니다.
+    // `Box`는 `panic!`할 수 없으므로 예외 안전성은 걱정할 거리가 못 됩니다.
     for i in 0..SIZE {
         x[i] = MaybeUninit::new(Box::new(i as u32));
     }
 
-    // Everything is initialized. Transmute the array to the
-    // initialized type.
+    // 모든 것이 초기화됐습니다. 배열을 초기화된 타입으로 변질합니다.
     unsafe { mem::transmute::<_, [Box<u32>; SIZE]>(x) }
 };
 
 dbg!(x);
 ```
 
-This code proceeds in three steps:
+이 코드는 3가지의 단계로 나아갑니다:
 
-1. Create an array of `MaybeUninit<T>`. With current stable Rust, we have to use
-   unsafe code for this: we take some uninitialized piece of memory
-   (`MaybeUninit::uninit()`) and claim we have fully initialized it
-   ([`assume_init()`][assume_init]). This seems ridiculous, because we didn't!
-   The reason this is correct is that the array consists itself entirely of
-   `MaybeUninit`, which do not actually require initialization. For most other
-   types, doing `MaybeUninit::uninit().assume_init()` produces an invalid
-   instance of said type, so you got yourself some Undefined Behavior.
+1. `MaybeUninit<T>` 의 배열을 만듭니다. 현재의 러스트 안정 버전으로는 이것을 위해서는 불안전한 코드를 써야 합니다: 우리는 미초기화된 메모리 조각을 가져다가 (`MaybeUninit::uninit()`) 그것을 완전히 초기화했다고 주장합니다 ([`assume_init()`][assume_init]). 이것은 우스꽝스럽게 보입니다, 우리가 이것을 초기화하지는 않았거든요! 이것이 맞는 이유는 배열 전체가 초기화를 필요로 하지 않는 `MaybeUninit` 으로 이루어졌기 때문입니다. 다른 대부분의 타입들에 대해서는, `MaybeUninit::uninit().assume_init()` 은 그 타입의 잘못된 값을 만들어내고, 그러면 **미정의 동작이** 튀어나오겠죠.
 
-2. Initialize the array. The subtle aspect of this is that usually, when we use
-   `=` to assign to a value that the Rust type checker considers to already be
-   initialized (like `x[i]`), the old value stored on the left-hand side gets
-   dropped. This would be a disaster. However, in this case, the type of the
-   left-hand side is `MaybeUninit<Box<u32>>`, and dropping that does not do
-   anything! See below for some more discussion of this `drop` issue.
+2. 배열을 초기화합니다. 이것의 잘 보이지 않는 점은 보통, 우리가 `=`를 사용해서 러스트 타입 검사기가 이미 초기화되었다고 판단한 타입에 값을 할당할 때 (`x[i]` 같은), 좌변에 있던 이전의 값은 해제된다는 겁니다. 이건 재앙이 될 겁니다. 하지만, 이 경우에는 좌변의 타입이 `MaybeUninit<Box<u32>>` 이고, 이것을 해제해 봐야 아무 것도 일어나지 않습니다! 이 `drop` 사항에 관해서는 밑에서 좀더 논의하겠습니다.
 
-3. Finally, we have to change the type of our array to remove the
-   `MaybeUninit`. With current stable Rust, this requires a `transmute`.
-   This transmute is legal because in memory, `MaybeUninit<T>` looks the same as `T`.
+3. 마지막으로, 우리는 배열의 타입에서 `MaybeUninit` 을 지워야 합니다. 현재의 안정적인 러스트 버전으로는, 이 작업은 `transmute`를 써야 합니다. 이 변질은 합당한데 이는 메모리 안에서 `MaybeUninit<T>`은 `T`와 똑같이 보이기 때문입니다.
 
-    However, note that in general, `Container<MaybeUninit<T>>>` does *not* look
-   the same as `Container<T>`! Imagine if `Container` was `Option`, and `T` was
-   `bool`, then `Option<bool>` exploits that `bool` only has two valid values,
-   but `Option<MaybeUninit<bool>>` cannot do that because the `bool` does not
-   have to be initialized.
 
-    So, it depends on `Container` whether transmuting away the `MaybeUninit` is
-   allowed. For arrays, it is (and eventually the standard library will
-   acknowledge that by providing appropriate methods).
+    하지만, 보통은 `Container<MaybeUninit<T>>>`는 `Container<T>`와 똑같이 보이지 *않습니다*! 만약 `Container`가 `Option`이고, `T`가 `bool`이라고 가정할 때,
+   `Option<bool>`은 `bool`이 오직 유효한 2개의 값을 가지고 있다는 것을 이용하지만, `Option<MaybeUninit<bool>>`은 `bool`이 초기화되지 않아도 되기 때문에 그런 작업을 할 수 없습니다.
 
-It's worth spending a bit more time on the loop in the middle, and in particular
-the assignment operator and its interaction with `drop`. If we wrote something like:
+    따라서, `MaybeUninit`을 변질해서 타입에서 지워도 되는지는 `Container`에 따라 다릅니다. 배열에 대해서는 그렇습니다 (그리고 결국 표준 라이브러리도 이것을 알아차리고 적당한 메서드를 제공할 겁니다).
+
+중간에 있는 반복문은 좀더 시간을 들일 가치가 있는데, 특히 할당문과 또한 `drop` 간의 관계가 그렇습니다. 우리가 만약 이런 코드를 쓴다면:
 
 <!-- ignore: simplified code -->
 ```rust,ignore
-*x[i].as_mut_ptr() = Box::new(i as u32); // WRONG!
+*x[i].as_mut_ptr() = Box::new(i as u32); // 틀림!
 ```
 
-we would actually overwrite a `Box<u32>`, leading to `drop` of uninitialized
-data, which would cause much sadness and pain.
+우리는 `Box<u32>`를 실제로 덮어쓰게 되고, 미초기화된 데이터가 `drop`되며, 이는 엄청난 슬픔과 고통으로 다가올 것입니다.
+
+
 
 The correct alternative, if for some reason we cannot use `MaybeUninit::new`, is
 to use the [`ptr`] module. In particular, it provides three functions that allow
