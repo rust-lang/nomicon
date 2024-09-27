@@ -30,7 +30,7 @@
 * [초기화되지 않은 메모리](uninitialized.md)
   * [검사받는](checked-uninit.md)
   * [해제 표기](drop-flags.md)
-  * [Unchecked](unchecked-uninit.md)
+  * [검사받지 않는](unchecked-uninit.md)
 * [Ownership Based Resource Management](obrm.md)
   * [Constructors](constructors.md)
   * [Destructors](destructors.md)
