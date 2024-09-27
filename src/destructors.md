@@ -1,4 +1,4 @@
-# Destructors
+# 소멸자
 
 What the language *does* provide is full-blown automatic destructors through the
 `Drop` trait, which provides the following method:
