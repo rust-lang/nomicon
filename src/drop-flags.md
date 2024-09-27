@@ -26,44 +26,42 @@ y = x;                   // `y`는 초기화됨; `y`를 해제하고, 덮어쓰�
                          // `x`가 범위 밖으로 벗어납니다; `x`는 비초기화 상태였죠; 아무것도 하지 않습니다.
 ```
 
-Similarly, branched code where all branches have the same behavior with respect
-to initialization has static drop semantics:
+비슷하게, 모든 경우가 초기화에 있어서 같은 행동을 하는 코드도 정적 해제 의미를 가집니다:
 
 ```rust
-# let condition = true;
-let mut x = Box::new(0);    // x was uninit; just overwrite.
+let condition = true;
+let mut x = Box::new(0);    // `x`는 비초기화; 그냥 덮어씁니다.
 if condition {
-    drop(x)                 // x gets moved out; make x uninit.
+    drop(x)                 // `x`에서 값이 이동했습니다; `x`를 비초기화로 만듭니다.
 } else {
     println!("{}", x);
-    drop(x)                 // x gets moved out; make x uninit.
+    drop(x)                 // `x`에서 값이 이동했습니다; `x`를 비초기화로 만듭니다.
 }
-x = Box::new(0);            // x was uninit; just overwrite.
-                            // x goes out of scope; x was init; Drop x!
+x = Box::new(0);            // `x`는 비초기화; 그냥 덮어씁니다.
+                            // `x`가 범위 밖으로 벗어납니다; `x`는 초기화 상태였죠; `x`를 해제합니다!
 ```
 
-However code like this *requires* runtime information to correctly Drop:
+하지만 다음과 같은 코드는 올바르게 해제하려면 실행 시간에 정보가 *필요합니다*:
 
 ```rust
-# let condition = true;
+let condition = true;
 let x;
 if condition {
-    x = Box::new(0);        // x was uninit; just overwrite.
+    x = Box::new(0);        // `x`는 비초기화; 그냥 덮어씁니다.
     println!("{}", x);
 }
-                            // x goes out of scope; x might be uninit;
-                            // check the flag!
+                            // `x`가 범위 밖으로 벗어납니다; `x`는 비초기화 상태였을 수 있습니다;
+                            // 표기를 확인합니다!
 ```
 
-Of course, in this case it's trivial to retrieve static drop semantics:
+당연히 이 경우에는 정적 해제 의미를 되찾는 것이 보통입니다:
 
 ```rust
-# let condition = true;
+let condition = true;
 if condition {
     let x = Box::new(0);
     println!("{}", x);
 }
 ```
 
-The drop flags are tracked on the stack.
-In old Rust versions, drop flags were stashed in a hidden field of types that implement `Drop`.
+해제 표기는 스택에 있습니다. 예전 러스트 버전에서 해제 표기는 `Drop`을 구현하는 타입의 숨겨진 필드 안에 있었습니다.
