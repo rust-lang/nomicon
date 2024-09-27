@@ -1,6 +1,6 @@
-# The Perils Of Ownership Based Resource Management (OBRM)
+# 소유권 기반 자원 관리의 위협 (OBRM)
 
-OBRM (AKA RAII: Resource Acquisition Is Initialization) is something you'll
+OBRM (혹은 RAII: Resource Acquisition Is Initialization) is something you'll
 interact with a lot in Rust. Especially if you use the standard library.
 
 Roughly speaking the pattern is as follows: to acquire a resource, you create an
