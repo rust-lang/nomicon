@@ -15,16 +15,9 @@ fn main() {
   |                    ^ use of possibly uninitialized `x`
 ```
 
+이것은 기본적인 경우 검사에 기반한 것입니다: `x`가 처음 쓰이기 전에 모든 경우에서 `x`에 값을 할당해야 합니다. 짧게 말하자면, 우리는 "`x`가 초기화됐다" 혹은 "`x`가 미초기화됐다"고도 말합니다.
 
-
-This is based off of a basic branch analysis: every branch must assign a value
-to `x` before it is first used. For short, we also say that "`x` is init" or
-"`x` is uninit".
-
-Interestingly, Rust doesn't require the variable
-to be mutable to perform a delayed initialization if every branch assigns
-exactly once. However the analysis does not take advantage of constant analysis
-or anything like that. So this compiles:
+흥미롭게도, 만약 늦은 초기화를 할 때 모든 경우에서 변수에 값을 정확히 한 번씩 할당한다면, 러스트는 변수가 가변이어야 한다는 제약을 걸지 않습니다. 하지만 이 분석은 상수 분석 같은 것을 이용하지 못합니다. 따라서 이 코드는 컴파일되지만:
 
 ```rust
 fn main() {
@@ -40,7 +33,7 @@ fn main() {
 }
 ```
 
-but this doesn't:
+이건 아닙니다:
 
 ```rust,compile_fail
 fn main() {
@@ -58,7 +51,7 @@ fn main() {
   |                    ^ use of possibly uninitialized `x`
 ```
 
-while this does:
+이 코드는 컴파일됩니다:
 
 ```rust
 fn main() {
@@ -67,14 +60,12 @@ fn main() {
         x = 1;
         println!("{}", x);
     }
-    // Don't care that there are branches where it's not initialized
-    // since we don't use the value in those branches
+    // 초기화되지 않는 경우가 있지만 신경쓰지 않습니다
+    // 그 경우에서는 그 변수를 사용하지 않기 때문이죠
 }
 ```
 
-Of course, while the analysis doesn't consider actual values, it does
-have a relatively sophisticated understanding of dependencies and control
-flow. For instance, this works:
+당연하게도, 이 분석이 진짜 값을 신경쓰는 건 아니지만, 프로그램 구조와 의존성에 대한 비교적 높은 수준의 이해를 하고 있습니다. 예를 들어, 다음의 코드는 작동합니다:
 
 ```rust
 let x: i32;
