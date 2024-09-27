@@ -1,17 +1,11 @@
 # 검사받지 않는 미초기화 메모리
 
-One interesting exception to this rule is working with arrays. Safe Rust doesn't
-permit you to partially initialize an array. When you initialize an array, you
-can either set every value to the same thing with `let x = [val; N]`, or you can
-specify each member individually with `let x = [val1, val2, val3]`.
-Unfortunately this is pretty rigid, especially if you need to initialize your
-array in a more incremental or dynamic way.
+이 규칙의 한 흥미로운 예외는 배열을 가지고 작업할 때입니다. 안전한 러스트는 배열을 부분적으로 초기화하도록 허용하지 않습니다. 배열을 초기화하려면, `let x = [val; N]`과 같이 전부 다 같은 값으로 설정하거나, 
+아니면 `let x = [val1, val2, val3]`과 같이 하나하나 나열해서 할당합니다. 불행하게도 이것은 꽤나 융통성이 없습니다, 특히 배열을 좀더 점진적으로, 또는 동적으로 초기화하고 싶을 때 말이죠.
 
-Unsafe Rust gives us a powerful tool to handle this problem:
-[`MaybeUninit`]. This type can be used to handle memory that has not been fully
-initialized yet.
+불안전한 러스트는 이런 문제를 해결하기 위해 강력한 도구를 선사합니다: [`MaybeUninit`]이죠. 이 타입은 아직 완전히 초기화되지 않은 메모리를 다루기 위해 사용될 수 있습니다.
 
-With `MaybeUninit`, we can initialize an array element by element as follows:
+`MaybeUninit`으로 우리는, 다음과 같이 배열을 원소별로 초기화할 수 있습니다:
 
 ```rust
 use std::mem::{self, MaybeUninit};
