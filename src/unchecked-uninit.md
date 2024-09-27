@@ -1,7 +1,7 @@
 # 검사받지 않는 미초기화 메모리
 
-이 규칙의 한 흥미로운 예외는 배열을 가지고 작업할 때입니다. 안전한 러스트는 배열을 부분적으로 초기화하도록 허용하지 않습니다. 배열을 초기화하려면, `let x = [val; N]`과 같이 전부 다 같은 값으로 설정하거나, 
-아니면 `let x = [val1, val2, val3]`과 같이 하나하나 나열해서 할당합니다. 불행하게도 이것은 꽤나 융통성이 없습니다, 특히 배열을 좀더 점진적으로, 또는 동적으로 초기화하고 싶을 때 말이죠.
+이 규칙의 한 흥미로운 예외는 배열을 가지고 작업할 때입니다. 안전한 러스트는 배열을 부분적으로 초기화하도록 허용하지 않습니다. 배열을 초기화하려면, `let x = [val; N]` 과 같이 전부 다 같은 값으로 설정하거나, 
+아니면 `let x = [val1, val2, val3]` 과 같이 하나하나 나열해서 할당합니다. 불행하게도 이것은 꽤나 융통성이 없습니다, 특히 배열을 좀더 점진적으로, 또는 동적으로 초기화하고 싶을 때 말이죠.
 
 불안전한 러스트는 이런 문제를 해결하기 위해 강력한 도구를 선사합니다: [`MaybeUninit`]이죠. 이 타입은 아직 완전히 초기화되지 않은 메모리를 다루기 위해 사용될 수 있습니다.
 
@@ -158,10 +158,10 @@ And that's about it for working with uninitialized memory! Basically nothing
 anywhere expects to be handed uninitialized memory, so if you're going to pass
 it around at all, be sure to be *really* careful.
 
-[`MaybeUninit`]: ../core/mem/union.MaybeUninit.html
-[assume_init]: ../core/mem/union.MaybeUninit.html#method.assume_init
-[`ptr`]: ../core/ptr/index.html
-[`addr_of_mut`]: ../core/ptr/macro.addr_of_mut.html
-[`write`]: ../core/ptr/fn.write.html
-[`copy`]: ../std/ptr/fn.copy.html
-[`copy_nonoverlapping`]: ../std/ptr/fn.copy_nonoverlapping.html
+[`MaybeUninit`]: https://doc.rust-lang.org/core/mem/union.MaybeUninit.html
+[assume_init]: https://doc.rust-lang.org/core/mem/union.MaybeUninit.html#method.assume_init
+[`ptr`]: https://doc.rust-lang.org/core/ptr/index.html
+[`addr_of_mut`]: https://doc.rust-lang.org/core/ptr/macro.addr_of_mut.html
+[`write`]: https://doc.rust-lang.org/core/ptr/fn.write.html
+[`copy`]: https://doc.rust-lang.org/std/ptr/fn.copy.html
+[`copy_nonoverlapping`]: https://doc.rust-lang.org/std/ptr/fn.copy_nonoverlapping.html
