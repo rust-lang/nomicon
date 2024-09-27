@@ -67,41 +67,21 @@ dbg!(x);
 * `ptr::copy(src, dest, count)`는 `count`만큼의 `T` 값들이 차지하는 비트들을 `src`에서 `dest`로 복사합니다. (이것은 C의 memmove와 같습니다 -- 다만 매개변수의 순서가 거꾸로입니다!)
 * `ptr::copy_nonoverlapping(src, dest, count)`는 `copy`가 하는 일을 하지만, 두 메모리 영역이 겹치지 않는다는 가정 하에 작업하기 때문에 좀더 빠릅니다. (이것은 C의 memcpy와 같습니다 -- 다만 매개변수의 순서가 거꾸로입니다!)
 
-이 함수들이 오용된다면 심각한 피해를 초래하거나 바로 **미정의 동작을** 유발할 거라는 것은 두말할 필요가 없겠죠. 
+이 함수들이 오용된다면 심각한 피해를 초래하거나 바로 **미정의 동작을** 유발할 거라는 것은 두말할 필요가 없겠죠. 이 함수들 *자체에* 있는 요구사항은 읽고 쓰는 메모리 위치가 메모리가 할당되고 잘 정렬되어 있어야 한다는 것입니다. 
+하지만, 임의의 비트들을 임의의 메모리 상의 위치에 씀으로써 프로그램이 망가지는 방법은 정말 셀 수가 없습니다!
 
-It should go without saying that these functions, if misused, will cause serious
-havoc or just straight up Undefined Behavior. The only requirement of these
-functions *themselves* is that the locations you want to read and write
-are allocated and properly aligned. However, the ways writing arbitrary bits to
-arbitrary locations of memory can break things are basically uncountable!
+`Drop`을 구현하지 않거나 `Drop` 타입들을 포함하지 않는 타입에 `ptr::write` 식의 장난을 치는 것은 걱정할 필요가 없다는 것은 알아 두세요, 러스트는 그것을 알고 그 값들을 해제하지 않을 것이기 때문입니다. 
+이것이 바로 위의 예제에서 우리가 근거로 삼았던 사실입니다.
 
-It's worth noting that you don't need to worry about `ptr::write`-style
-shenanigans with types which don't implement `Drop` or contain `Drop` types,
-because Rust knows not to try to drop them. This is what we relied on in the
-above example.
+하지만 미초기화된 메모리를 가지고 작업할 때, 위의 것 같이 값들이 완전히 초기화되기 전에 러스트가 값들을 해제하려고 시도하지는 않는지 항상 경계해야 합니다. 
+만약 소멸자가 있다면, 그 변수의 모든 프로그램 상의 경우는 그 범위가 끝나기 전에 값을 초기화해야 합니다. *[이것은 코드가 `panic!`하는 것도 포함합니다](unwinding.html)*.
+`MaybeUninit`은 여기서 우리를 조금 도와주는데, 암묵적으로 그 내용물을 해제하지 않기 때문입니다 - 
+하지만 `panic!`이 일어날 경우 이 모든 것이 의미하는 것은 아직 초기화되지 않은 부분들의 이중 해제 대신, 이미 초기화된 부분들의 메모리 누수로 끝난다는 점입니다.
 
-However when working with uninitialized memory you need to be ever-vigilant for
-Rust trying to drop values you make like this before they're fully initialized.
-Every control path through that variable's scope must initialize the value
-before it ends, if it has a destructor.
-*[This includes code panicking](unwinding.html)*. `MaybeUninit` helps a bit
-here, because it does not implicitly drop its content - but all this really
-means in case of a panic is that instead of a double-free of the not yet
-initialized parts, you end up with a memory leak of the already initialized
-parts.
+주의할 것은, `ptr` 메서드들을 사용하려면 우선 초기화하고 싶은 데이터의 *생 포인터를* 얻어내야 합니다. 초기화되지 않은 데이터에 *레퍼런스를* 만드는 것은 불법이고, 따라서 생 포인터를 얻을 때는 주의해야 합니다:
 
-Note that, to use the `ptr` methods, you need to first obtain a *raw pointer* to
-the data you want to initialize. It is illegal to construct a *reference* to
-uninitialized data, which implies that you have to be careful when obtaining
-said raw pointer:
-
-* For an array of `T`, you can use `base_ptr.add(idx)` where `base_ptr: *mut T`
-to compute the address of array index `idx`. This relies on
-how arrays are laid out in memory.
-* For a struct, however, in general we do not know how it is laid out, and we
-also cannot use `&mut base_ptr.field` as that would be creating a
-reference. So, you must carefully use the [`addr_of_mut`] macro. This creates
-a raw pointer to the field without creating an intermediate reference:
+* `T`의 배열에 있어서는, 배열의 인덱스 `idx`번째를 계산할 때는 `base_ptr: *mut T`일 때 `base_ptr.add(idx)`를 사용하면 됩니다. 이것은 메모리에 배열이 어떻게 배치되는지를 이용합니다.
+* 하지만 구조체의 경우, 일반적으로 우리는 어떻게 배치되어 있는지 알지 못합니다. 또한 우리는 `&mut base_ptr.field`를 사용할 수 없는데, 레퍼런스를 만드는 행위이기 때문입니다. 따라서, [`addr_of_mut`] 매크로를 조심스럽게 사용해야 합니다. 이것은 중간의 레퍼런스를 만들지 않고 바로 구조체의 필드를 가리키는 생 포인터를 만들어 냅니다:
 
 ```rust
 use std::{ptr, mem::MaybeUninit};
@@ -111,24 +91,19 @@ struct Demo {
 }
 
 let mut uninit = MaybeUninit::<Demo>::uninit();
-// `&uninit.as_mut().field` would create a reference to an uninitialized `bool`,
-// and thus be Undefined Behavior!
+// `&uninit.as_mut().field` 는 초기화되지 않은 `bool`에 레퍼런스를 만들어낼 겁니다,
+// 따라서 **미정의 동작이** 일어납니다!
 let f1_ptr = unsafe { ptr::addr_of_mut!((*uninit.as_mut_ptr()).field) };
 unsafe { f1_ptr.write(true); }
 
 let init = unsafe { uninit.assume_init() };
 ```
 
-One last remark: when reading old Rust code, you might stumble upon the
-deprecated `mem::uninitialized` function.  That function used to be the only way
-to deal with uninitialized memory on the stack, but it turned out to be
-impossible to properly integrate with the rest of the language.  Always use
-`MaybeUninit` instead in new code, and port old code over when you get the
-opportunity.
+마지막 당부는, 오래된 러스트 코드를 볼 때, 폐기된 `mem::uninitialized` 함수를 마주칠지도 모릅니다. 이 함수는 스택의 초기화되지 않은 메모리를 처리하는 유일한 방법이었지만, 
+언어의 다른 부분과 잘 통합되는 것이 불가능하다고 판단되었습니다. 항상 새로운 코드에서는 그 대신 `MaybeUninit`을 사용하시고, 기회가 있을 때 오래된 코드를 변환하세요.
 
-And that's about it for working with uninitialized memory! Basically nothing
-anywhere expects to be handed uninitialized memory, so if you're going to pass
-it around at all, be sure to be *really* careful.
+초기화되지 않은 메모리를 가지고 작업하는 것에 대한 내용은 이 정도쯤 되겠습니다! 기본적으로 어느 곳에 어떤 것이든 초기화되지 않은 메모리가 전달되는 것은 기대하지 않기 때문에, 
+만약 조금이라도 초기화되지 않은 메모리를 어딘가에 놓는다면, *매우* 조심하세요.
 
 [`MaybeUninit`]: https://doc.rust-lang.org/core/mem/union.MaybeUninit.html
 [assume_init]: https://doc.rust-lang.org/core/mem/union.MaybeUninit.html#method.assume_init
