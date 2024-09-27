@@ -71,42 +71,40 @@ fn main() {
 let x: i32;
 
 loop {
-    // Rust doesn't understand that this branch will be taken unconditionally,
-    // because it relies on actual values.
+    // 러스트는 이 경우가 조건 없이 실행될 거라는 것을 알지 못합니다
+    // 이 경우는 실제 값에 의존하기 때문이죠
     if true {
-        // But it does understand that it will only be taken once because
-        // we unconditionally break out of it. Therefore `x` doesn't
-        // need to be marked as mutable.
+        // 하지만 러스트는 이 경우가 정확히 한 번 실행될 거라는 것을 압니다
+        // 우리가 조건 없이 이 경우를 `break`하기 때문이죠.
+        // 따라서 `x`는 가변일 필요가 없습니다.
         x = 0;
         break;
     }
 }
-// It also knows that it's impossible to get here without reaching the break.
-// And therefore that `x` must be initialized here!
+// 또한 러스트는 `break`에 닿지 않고서는 여기에 도달할 수 없다는 것을 압니다.
+// 그리고 따라서 여기의 `x`는 반드시 초기화된 상태라는 것도요!
 println!("{}", x);
 ```
 
-If a value is moved out of a variable, that variable becomes logically
-uninitialized if the type of the value isn't Copy. That is:
+만약 어떤 변수에서 값이 이동한다면, 그 타입이 `Copy`가 아닐 경우 그 변수는 논리적으로 미초기화된 상태가 됩니다. 즉:
 
 ```rust
 fn main() {
     let x = 0;
     let y = Box::new(0);
-    let z1 = x; // x is still valid because i32 is Copy
-    let z2 = y; // y is now logically uninitialized because Box isn't Copy
+    let z1 = x; // `i32`는 `Copy`이므로 `x`는 여전히 유효합니다
+    let z2 = y; // `Box`는 `Copy`가 아니므로 `y`는 이제 논리적으로 미초기화 되었습니다
 }
 ```
 
-However reassigning `y` in this example *would* require `y` to be marked as
-mutable, as a Safe Rust program could observe that the value of `y` changed:
+하지만 이 예제에서 `y`에 값을 다시 할당하려면 `y`가 가변이어야 *할 겁니다*, 안전한 러스트에서 프로그램이 `y`의 값이 변했다는 것을 볼 수 있을 테니까요:
 
 ```rust
 fn main() {
     let mut y = Box::new(0);
-    let z = y; // y is now logically uninitialized because Box isn't Copy
-    y = Box::new(1); // reinitialize y
+    let z = y; // `Box`는 `Copy`가 아니므로 `y`는 이제 논리적으로 미초기화 되었습니다
+    y = Box::new(1); // `y`를 재초기화 합니다
 }
 ```
 
-Otherwise it's like `y` is a brand new variable.
+그게 아니라면 마치 `y`가 새로운 변수처럼 보일 테니까요.
