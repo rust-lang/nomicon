@@ -43,10 +43,10 @@ dbg!(x);
 
 2. 배열을 초기화합니다. 이것의 잘 보이지 않는 점은 보통, 우리가 `=`를 사용해서 러스트 타입 검사기가 이미 초기화되었다고 판단한 타입에 값을 할당할 때 (`x[i]` 같은), 좌변에 있던 이전의 값은 해제된다는 겁니다. 이건 재앙이 될 겁니다. 하지만, 이 경우에는 좌변의 타입이 `MaybeUninit<Box<u32>>` 이고, 이것을 해제해 봐야 아무 것도 일어나지 않습니다! 이 `drop` 사항에 관해서는 밑에서 좀더 논의하겠습니다.
 
-3. 마지막으로, 우리는 배열의 타입에서 `MaybeUninit` 을 지워야 합니다. 현재의 안정적인 러스트 버전으로는, 이 작업은 `transmute`를 써야 합니다. 이 변질은 합당한데 이는 메모리 안에서 `MaybeUninit<T>`은 `T`와 똑같이 보이기 때문입니다.
+3. 마지막으로, 우리는 배열의 타입에서 `MaybeUninit` 을 지워야 합니다. 현재의 안정적인 러스트 버전으로는, 이 작업은 `transmute`를 써야 합니다. 이 변질은 합당한데 이는 메모리 안에서 `MaybeUninit<T>`은 `T`와 똑같아 보이기 때문입니다.
 
 
-    하지만, 보통은 `Container<MaybeUninit<T>>>`는 `Container<T>`와 똑같이 보이지 *않습니다*! 만약 `Container`가 `Option`이고, `T`가 `bool`이라고 가정할 때,
+    하지만, 보통은 `Container<MaybeUninit<T>>>`는 `Container<T>`와 똑같아 보이지 *않습니다*! 만약 `Container`가 `Option`이고, `T`가 `bool`이라고 가정할 때,
    `Option<bool>`은 `bool`이 오직 유효한 2개의 값을 가지고 있다는 것을 이용하지만, `Option<MaybeUninit<bool>>`은 `bool`이 초기화되지 않아도 되기 때문에 그런 작업을 할 수 없습니다.
 
     따라서, `MaybeUninit`을 변질해서 타입에서 지워도 되는지는 `Container`에 따라 다릅니다. 배열에 대해서는 그렇습니다 (그리고 결국 표준 라이브러리도 이것을 알아차리고 적당한 메서드를 제공할 겁니다).
@@ -60,21 +60,14 @@ dbg!(x);
 
 우리는 `Box<u32>`를 실제로 덮어쓰게 되고, 미초기화된 데이터가 `drop`되며, 이는 엄청난 슬픔과 고통으로 다가올 것입니다.
 
+올바른 대체 방법은, 만약 어떤 이유로 우리가 `MaybeUninit::new`를 사용할 수 없다면, [`ptr`] 모듈을 사용하는 것입니다. 
+특히 이 모듈은 기존 값을 해제시키지 않으면서 메모리 위치에 값을 할당할 수 있게 해 주는 3개의 함수를 제공합니다: [`write`], [`copy`], 그리고 [`copy_nonoverlapping`]이죠.
 
+* `ptr::write(ptr, val)`는 `val`을 가지고 `ptr`이 가리키는 주소에 옮겨 놓습니다.
+* `ptr::copy(src, dest, count)`는 `count`만큼의 `T` 값들이 차지하는 비트들을 `src`에서 `dest`로 복사합니다. (이것은 C의 memmove와 같습니다 -- 다만 매개변수의 순서가 거꾸로입니다!)
+* `ptr::copy_nonoverlapping(src, dest, count)`는 `copy`가 하는 일을 하지만, 두 메모리 영역이 겹치지 않는다는 가정 하에 작업하기 때문에 좀더 빠릅니다. (이것은 C의 memcpy와 같습니다 -- 다만 매개변수의 순서가 거꾸로입니다!)
 
-The correct alternative, if for some reason we cannot use `MaybeUninit::new`, is
-to use the [`ptr`] module. In particular, it provides three functions that allow
-us to assign bytes to a location in memory without dropping the old value:
-[`write`], [`copy`], and [`copy_nonoverlapping`].
-
-* `ptr::write(ptr, val)` takes a `val` and moves it into the address pointed
-  to by `ptr`.
-* `ptr::copy(src, dest, count)` copies the bits that `count` T items would occupy
-  from src to dest. (this is equivalent to C's memmove -- note that the argument
-  order is reversed!)
-* `ptr::copy_nonoverlapping(src, dest, count)` does what `copy` does, but a
-  little faster on the assumption that the two ranges of memory don't overlap.
-  (this is equivalent to C's memcpy -- note that the argument order is reversed!)
+이 함수들이 오용된다면 심각한 피해를 초래하거나 바로 **미정의 동작을** 유발할 거라는 것은 두말할 필요가 없겠죠. 
 
 It should go without saying that these functions, if misused, will cause serious
 havoc or just straight up Undefined Behavior. The only requirement of these
