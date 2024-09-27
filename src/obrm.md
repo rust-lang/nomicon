@@ -1,14 +1,8 @@
 # 소유권 기반 자원 관리의 위협 (OBRM)
 
-OBRM (혹은 RAII: Resource Acquisition Is Initialization) is something you'll
-interact with a lot in Rust. Especially if you use the standard library.
+러스트에서는 여러분이 OBRM (혹은 RAII: Resource Acquisition Is Initialization) 을 많이 접할 것입니다. 특히 표준 라이브러리를 사용한다면 말이죠.
 
-Roughly speaking the pattern is as follows: to acquire a resource, you create an
-object that manages it. To release the resource, you simply destroy the object,
-and it cleans up the resource for you. The most common "resource" this pattern
-manages is simply *memory*. `Box`, `Rc`, and basically everything in
-`std::collections` is a convenience to enable correctly managing memory. This is
-particularly important in Rust because we have no pervasive GC to rely on for
-memory management. Which is the point, really: Rust is about control. However we
-are not limited to just memory. Pretty much every other system resource like a
-thread, file, or socket is exposed through this kind of API.
+간단히 말해 패턴은 이와 같습니다: 자원을 얻으려면 그 자원을 관리하는 객체를 만듭니다. 자원을 반납하려면 단지 객체를 해제하기만 하면 됩니다, 그럼 그 객체가 자원을 알아서 정리해 주죠. 
+이 패턴이 관리하는 가장 흔한 "자원"은 그냥 *메모리입니다*. `Box`, `Rc`, 그리고 `std::collection`에 있는 거의 모든 것이 정확히 메모리를 관리하기 위해 만든 도구입니다. 
+이것은 특히 러스트에서 중요한데, 메모리 관리에 대해서는 따로 의존할 전방위적인 GC도 없기 때문입니다. 이것이 바로 중요한 점입니다, 진짜로요: 러스트는 제어에 관한 것입니다. 하지만 우리는 메모리에만 국한되지는 않습니다. 
+스레드, 파일, 소켓 등 거의 모든 시스템 자원이 이런 종류의 API를 통해 제공됩니다.
