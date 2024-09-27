@@ -33,7 +33,7 @@
   * [검사받지 않는](unchecked-uninit.md)
 * [소유권 기반 자원 관리](obrm.md)
   * [생성자](constructors.md)
-  * [Destructors](destructors.md)
+  * [소멸자](destructors.md)
   * [Leaking](leaking.md)
 * [Unwinding](unwinding.md)
   * [Exception Safety](exception-safety.md)
