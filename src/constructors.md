@@ -1,7 +1,6 @@
-# Constructors
+# 생성자
 
-There is exactly one way to create an instance of a user-defined type: name it,
-and initialize all its fields at once:
+사용자 정의 타입의 값을 만드는 방법은 오직 하나입니다: 타입의 이름을 적고, 모든 필드들을 한번에 초기화하는 것입니다:
 
 ```rust
 struct Foo {
@@ -22,37 +21,21 @@ let bar = Bar::X(0);
 let empty = Unit;
 ```
 
-That's it. Every other way you make an instance of a type is just calling a
-totally vanilla function that does some stuff and eventually bottoms out to The
-One True Constructor.
+이게 전부입니다. 타입의 값을 만드는 다른 모든 방식은 다른 일을 좀 하고 결국에는 *오직 진정한 하나의 생성자를* 호출하는, 순수한 함수를 호출하는 것뿐입니다.
 
-Unlike C++, Rust does not come with a slew of built-in kinds of constructor.
-There are no Copy, Default, Assignment, Move, or whatever constructors. The
-reasons for this are varied, but it largely boils down to Rust's philosophy of
-*being explicit*.
+C++과 다르게, 러스트는 기본적으로 제공하는 다량의 생성자는 없습니다. 복사 생성자, 기본 생성자, 할당 생성자, 이동 생성자, 혹은 무슨 생성자든 없습니다. 
+이러는 이유는 여러 가지이지만, 가장 큰 이유는 러스트의 *명시적으로 하자는* 철학 때문입니다.
 
-Move constructors are meaningless in Rust because we don't enable types to
-"care" about their location in memory. Every type must be ready for it to be
-blindly memcopied to somewhere else in memory. This means pure on-the-stack-but-
-still-movable intrusive linked lists are simply not happening in Rust (safely).
+이동 생성자는 러스트에서는 의미가 없는데, 타입이 메모리의 위치에 대해서 "신경쓰는" 일이 없도록 하기 때문입니다. 모든 타입은 메모리의 다른 어딘가로 그냥 `memcopy`되도록 준비되어야 합니다. 
+이 뜻은 스택에는 있지만 이동 가능한, 불청객 링크드 리스트는 러스트에서는 존재하지 않는다는 뜻입니다 (안전하게 말이죠). 
 
-Assignment and copy constructors similarly don't exist because move semantics
-are the only semantics in Rust. At most `x = y` just moves the bits of y into
-the x variable. Rust does provide two facilities for providing C++'s copy-
-oriented semantics: `Copy` and `Clone`. Clone is our moral equivalent of a copy
-constructor, but it's never implicitly invoked. You have to explicitly call
-`clone` on an element you want to be cloned. Copy is a special case of Clone
-where the implementation is just "copy the bits". Copy types *are* implicitly
-cloned whenever they're moved, but because of the definition of Copy this just
-means not treating the old copy as uninitialized -- a no-op.
+할당 생성자와 복사 생성자는 마찬가지로, 이동만이 러스트에서 가지는 의미이기 때문입니다. 거의 모든 `x = y`는 그냥 `y`의 비트들을 `x` 변수로 옮깁니다. 
+러스트는 C++의 복사하는 의미를 제공하기 위해 2개의 장치를 제공합니다: `Copy`와 `Clone`이죠. `Clone`은 우리의 복사 생성자와 같은 기능을 하지만, 절대로 암시적으로 호출되지 않습니다. 
+복사를 원하는 값에 명시적으로 `clone`을 호출해야 하죠. `Copy`는 `Clone`의 특수한 경우로, 그 구현은 그냥 "비트를 그대로 복사합니다". 
+`Copy` 타입은 이동될 때 암시적으로 복사가 *됩니다*, 하지만 `Copy`의 정의 때문에 이 의미는 이전의 원본을 비초기화시키지 말라는 것이죠 -- 아무것도 하지 않는 작업입니다.
 
-While Rust provides a `Default` trait for specifying the moral equivalent of a
-default constructor, it's incredibly rare for this trait to be used. This is
-because variables [aren't implicitly initialized][uninit]. Default is basically
-only useful for generic programming. In concrete contexts, a type will provide a
-static `new` method for any kind of "default" constructor. This has no relation
-to `new` in other languages and has no special meaning. It's just a naming
-convention.
+러스트가 기본 생성자의 기능을 `Default` 트레잇을 통해서 제공하지만, 이 트레잇이 사용되는 일은 매우 적습니다. 왜냐하면 변수는 [암시적으로 초기화되지 않기 때문입니다][uninit]. `Default`는 제네릭 프로그래밍에서야 유용합니다. 
+타입이 다 밝혀진 경우에서는, 그 타입이 "기본" 생성자를 `new` 정적 메서드를 통해 제공할 것입니다. 이것은 다른 언어에서의 `new`와 관계가 없고, 특별한 의미도 없습니다. 그냥 이름 짓는 관례일 뿐입니다.
 
 TODO: talk about "placement new"?
 
