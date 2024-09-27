@@ -1,4 +1,4 @@
-# Unchecked Uninitialized Memory
+# 검사받지 않는 미초기화 메모리
 
 One interesting exception to this rule is working with arrays. Safe Rust doesn't
 permit you to partially initialize an array. When you initialize an array, you
