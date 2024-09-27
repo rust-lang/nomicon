@@ -31,7 +31,7 @@
   * [검사받는](checked-uninit.md)
   * [해제 표기](drop-flags.md)
   * [검사받지 않는](unchecked-uninit.md)
-* [Ownership Based Resource Management](obrm.md)
+* [소유권 기반 자원 관리](obrm.md)
   * [Constructors](constructors.md)
   * [Destructors](destructors.md)
   * [Leaking](leaking.md)
