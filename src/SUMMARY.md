@@ -32,7 +32,7 @@
   * [해제 표기](drop-flags.md)
   * [검사받지 않는](unchecked-uninit.md)
 * [소유권 기반 자원 관리](obrm.md)
-  * [Constructors](constructors.md)
+  * [생성자](constructors.md)
   * [Destructors](destructors.md)
   * [Leaking](leaking.md)
 * [Unwinding](unwinding.md)
