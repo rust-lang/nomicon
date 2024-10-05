@@ -102,7 +102,7 @@ struct Boxy<T> {
 }
 ```
 
-will have its data1 and data2's fields destructors whenever it "would" be
+will have the destructors of its `data1` and `data2` fields called whenever it "would" be
 dropped, even though it itself doesn't implement Drop. We say that such a type
 *needs Drop*, even though it is not itself Drop.
 
@@ -163,8 +163,8 @@ impl<T> Drop for SuperBox<T> {
 # fn main() {}
 ```
 
-However this has fairly odd semantics: you're saying that a field that *should*
-always be Some *may* be None, just because that happens in the destructor. Of
+However this has fairly odd semantics: you are saying that a field that *should*
+always be Some *may* be None, just because of what happens in the destructor. Of
 course this conversely makes a lot of sense: you can call arbitrary methods on
 self during the destructor, and this should prevent you from ever doing so after
 deinitializing the field. Not that it will prevent you from producing any other
