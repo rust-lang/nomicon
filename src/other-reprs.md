@@ -7,7 +7,8 @@ There's also the [unsafe code guidelines] (note that it's **NOT** normative).
 
 This is the most important `repr`. It has fairly simple intent: do what C does.
 The order, size, and alignment of fields is exactly what you would expect from C
-or C++. Any type you expect to pass through an FFI boundary should have
+or C++. The type is also passed across `extern "C"` function call boundaries the
+same way C would pass the corresponding type. Any type you expect to pass through an FFI boundary should have
 `repr(C)`, as C is the lingua-franca of the programming world. This is also
 necessary to soundly do more elaborate tricks with data layout such as
 reinterpreting values as a different type.
@@ -86,10 +87,14 @@ be 0. However Rust will not allow you to create an enum where two variants have
 the same discriminant.
 
 The term "fieldless enum" only means that the enum doesn't have data in any
-of its variants. A fieldless enum without a `repr(u*)` or `repr(C)` is
-still a Rust native type, and does not have a stable ABI representation.
-Adding a `repr` causes it to be treated exactly like the specified
-integer type for ABI purposes.
+of its variants. A fieldless enum without a `repr` is
+still a Rust native type, and does not have a stable layout or representation.
+Adding a `repr(u*)`/`repr(i*)` causes it to be treated exactly like the specified
+integer type for layout purposes (except that the compiler will still exploit its
+knowledge of "invalid" values at this type to optimize enum layout, such as when
+this enum is wrapped in `Option`). Note that the function call ABI for these
+types is still in general unspecified, except that across `extern "C"` calls they
+are ABI-compatible with C enums of the same sign and size.
 
 If the enum has fields, the effect is similar to the effect of `repr(C)`
 in that there is a defined layout of the type. This makes it possible to
