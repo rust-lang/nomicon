@@ -106,9 +106,9 @@ consequence of types with no size. In particular, pointer offsets are no-ops,
 and allocators typically [require a non-zero size][alloc].
 
 Note that references to ZSTs (including empty slices), just like all other
-references, must be non-null and suitably aligned. Dereferencing a null or
-unaligned pointer to a ZST is [undefined behavior][ub], just like for any other
-type.
+references, must be non-null and suitably aligned. However, dereferencing a
+null pointer to a ZST is not [undefined behavior][ub], unlike pointers to
+other types.
 
 [alloc]: ../std/alloc/trait.GlobalAlloc.html#tymethod.alloc
 [ub]: what-unsafe-does.html
