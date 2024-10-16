@@ -26,7 +26,7 @@ Naively, it would look something like this:
 use std::sync::atomic;
 
 pub struct Arc<T> {
-    ptr: *mut ArcInner<T>,
+    ptr: *const ArcInner<T>,
 }
 
 pub struct ArcInner<T> {
@@ -35,24 +35,34 @@ pub struct ArcInner<T> {
 }
 ```
 
-This would compile, however it would be incorrect. First of all, the compiler
-will give us too strict variance. For example, an `Arc<&'static str>` couldn't
-be used where an `Arc<&'a str>` was expected. More importantly, it will give
-incorrect ownership information to the drop checker, as it will assume we don't
-own any values of type `T`. As this is a structure providing shared ownership of
-a value, at some point there will be an instance of this structure that entirely
-owns its data. See [the chapter on ownership and lifetimes](../ownership.md) for
-all the details on variance and drop check.
+This would compile, however it would be incorrect--it will give
+incorrect ownership information to the drop checker, as it will assume
+we don't own any values of type `T`. As this is a structure providing
+shared ownership of a value, at some point there will be an instance
+of this structure that entirely owns its data.
 
-To fix the first problem, we can use `NonNull<T>`. Note that `NonNull<T>` is a
-wrapper around a raw pointer that declares that:
-
-* We are covariant over `T`
-* Our pointer is never null
-
-To fix the second problem, we can include a `PhantomData` marker containing an
+To fix the problem, we can include a `PhantomData` marker containing an
 `ArcInner<T>`. This will tell the drop checker that we have some notion of
 ownership of a value of `ArcInner<T>` (which itself contains some `T`).
+
+We should also use `NonNull<T>`, as it helps convey to the reader, and
+the compiler, more guarantees about our inner pointer. Note that
+`NonNull<T>` is a wrapper around a raw pointer that declares that:
+
+* We are covariant over `T`. This property is important to retain from
+  a `*const T` so that, for example, we could use an `Arc<&'static T>`
+  where an `Arc<&'a T>` was needed. This is perhaps a bit contrived but
+  there are cases when this could be useful, especially when dealing
+  with structures generic over lifetimes.
+* Our pointer is never null
+
+For more information on variance and the drop check, see [the chapter
+on ownership and lifetimes](../ownership.md).
+
+This can lead to some helpful compiler optimizations for layout (for
+example, the null pointer optimization for `Option<NonNull<T>>` would
+carry forth to an `Option<Arc<T>>` and perhaps even machine code
+optimizations in certain cases.
 
 With these changes we get our final structure:
 
