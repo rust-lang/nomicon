@@ -41,7 +41,7 @@ language cares about is preventing the following things:
     [`NonNull`] that is null. (Requesting custom invalid values is an unstable
     feature, but some stable libstd types, like `NonNull`, make use of it.)
 
-For a more detailed explanation about "Undefined Bahavior", you may refer to
+For a more detailed explanation about "Undefined Behavior", you may refer to
 [the reference][behavior-considered-undefined].
 
 "Producing" a value happens any time a value is assigned, passed to a
