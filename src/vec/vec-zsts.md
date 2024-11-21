@@ -214,3 +214,20 @@ impl<T> DoubleEndedIterator for RawValIter<T> {
 ```
 
 And that's it. Iteration works!
+
+One last thing that we need to take into account is that now when our vec gets dropped it deallocates the memory that was allocated during the time our vec was alive. With ZSTs we did not allocate any memory, and in fact we never do. So right now we have unsoundness in our code where we still try deallocate a `NonNull::dangling()` ptr that we use to simulate the ZST in our vec, This means that we would cause undefined behavior if we try to deallocate something that we never allocated (obviously and for the right reasons). To fix that, in our `RawVec` we are going to tweak our `Drop` trait and check that we deallocate only types that are sized.
+
+```rust,ignore
+impl<T> Drop for RawVec<T> {
+    fn drop(&mut self) {
+        println!("RawVec<T> Drop called, deallocating memory");
+        if self.cap != 0 && std::mem::size_of::<T>() > 0 {
+            let layout = std::alloc::Layout::array::<T>(self.cap).unwrap();
+            unsafe {
+                std::alloc::dealloc(self.ptr.as_ptr() as *mut _, layout);
+            }
+        }
+    }
+}
+```
+
