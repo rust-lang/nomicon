@@ -93,10 +93,14 @@ fn main() {
 ## Variance
 
 Above, we glossed over the fact that `'static <: 'b` implied that `&'static T <: &'b T`. This uses a property known as _variance_.
-It's not always as simple as this example, though. To understand that, let's try to extend this example a bit:
+It's not always as simple as this example, though. To understand that, let's try to extend this example a bit.
+
+For the purpose of demonstration, we will illustrate lifetimes using references.
+For example, the type `&'a T` will allow us to talk about lifetime `'a`.
+We will use `R` for generic type parameters that are meant to refer to some reference and associated lifetime.
 
 ```rust,compile_fail,E0597
-fn assign<T>(input: &mut T, val: T) {
+fn assign<R>(input: &mut R, val: R) {
     *input = val;
 }
 
@@ -104,7 +108,7 @@ fn main() {
     let mut hello: &'static str = "hello";
     {
         let world = String::from("world");
-        assign(&mut hello, &world);
+        assign(&mut hello, &world); // R should bind to &str; but we need a lifetime too
     }
     println!("{hello}"); // use after free 😿
 }
@@ -116,11 +120,12 @@ But then `world` goes out of scope, before the later use of `hello` in the print
 This is a classic use-after-free bug!
 
 Our first instinct might be to blame the `assign` impl, but there's really nothing wrong here.
-It shouldn't be surprising that we might want to assign a `T` into a `T`.
+It shouldn't be surprising that we might want to assign a `R` into a `R`.
 
 The problem is that we cannot assume that `&mut &'static str` and `&mut &'b str` are compatible.
-This means that `&mut &'static str` **cannot** be a *subtype* of `&mut &'b str`,
-even if `'static` is a subtype of `'b`.
+`'static` **is** a subtype of `'b`.
+Similarly, `R1 = &'static` **is** a subtype of  `R2 = &'b`.
+However, `&mut R1` **cannot** be a *subtype* of `&mut R2`, because `R1 ≠ R2`.
 
 Variance is the concept that Rust borrows to define relationships about subtypes through their generic parameters.
 
@@ -139,7 +144,8 @@ If we remember from the above examples,
 it was ok for us to treat `&'a T` as a subtype of `&'b T` if `'a <: 'b`,
 therefore we can say that `&'a T` is *covariant* over `'a`.
 
-Also, we saw that it was not ok for us to treat `&mut &'a U` as a subtype of `&mut &'b U`,
+Also, we saw that it was not ok for us to treat `&mut T1` as a subtype of `&mut T2`
+(for instance, with `T1 = &'a U` and `T2 = &'b U`),
 therefore we can say that `&mut T` is *invariant* over `T`
 
 Here is a table of some other generic types and their variances:
@@ -178,7 +184,7 @@ Now that we have some more formal understanding of variance,
 let's go through some more examples in more detail.
 
 ```rust,compile_fail,E0597
-fn assign<T>(input: &mut T, val: T) {
+fn assign<R>(input: &mut R, val: R) {
     *input = val;
 }
 
@@ -212,7 +218,7 @@ Good, it doesn't compile! Let's break down what's happening here in detail.
 First let's look at the `assign` function:
 
 ```rust
-fn assign<T>(input: &mut T, val: T) {
+fn assign<R>(input: &mut R, val: R) {
     *input = val;
 }
 ```
@@ -223,22 +229,22 @@ clearly says in its signature the referent and the value must be the *exact same
 
 Meanwhile, in the caller we pass in `&mut &'static str` and `&'world str`.
 
-Because `&mut T` is invariant over `T`, the compiler concludes it can't apply any subtyping
-to the first argument, and so `T` must be exactly `&'static str`.
+Because `&mut R` is invariant over `R`, the compiler concludes it can't apply any subtyping
+to the first argument, and so `R` must be exactly `&'static str`.
 
 This is counter to the `&T` case:
 
 ```rust
-fn debug<T: std::fmt::Debug>(a: T, b: T) {
+fn debug<R: std::fmt::Debug>(a: R, b: R) {
     println!("a = {a:?} b = {b:?}");
 }
 ```
 
-where similarly `a` and `b` must have the same type `T`.
-But since `&'a T` *is* covariant over `'a`, we are allowed to perform subtyping.
-So the compiler decides that `&'static str` can become `&'b str` if and only if
-`&'static str` is a subtype of `&'b str`, which will hold if `'static <: 'b`.
-This is true, so the compiler is happy to continue compiling this code.
+where similarly `a` and `b` must have the same type `R`.
+But since `&'a T` *is* covariant over `'a`, we are allowed to perform subtyping:
+`'static` is a sub-type `'b`, so `&'static str` is a subtype of `&'b str`.
+So we can bind `R` to `&'b str`, since it works for both arguments of `debug`.
+With this, the compiler is happy to continue compiling this code.
 
 As it turns out, the argument for why it's ok for Box (and Vec, HashMap, etc.) to be covariant is pretty similar to the argument for why it's ok for lifetimes to be covariant: as soon as you try to stuff them in something like a mutable reference, they inherit invariance and you're prevented from doing anything bad.
 
