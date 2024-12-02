@@ -41,9 +41,9 @@ be forced to accept your program on the assumption that it is correct.
 This will never happen to Rust. It's up to the programmer to prove to the
 compiler that everything is sound.
 
-Of course, Rust's story around ownership is much more complicated than just
-verifying that references don't escape the scope of their referent. That's
-because ensuring pointers are always valid is much more complicated than this.
+Of course, Rust's story around ownership is much more complicated than simply
+gauranteeing that references cannot outlive their target. That is
+because ensuring pointers are always valid in the general case is much more complicated.
 For instance in this code,
 
 ```rust,compile_fail
@@ -59,7 +59,10 @@ data.push(4);
 println!("{}", x);
 ```
 
-naive scope analysis would be insufficient to prevent this bug, because `data`
-does in fact live as long as we needed. However it was *changed* while we had
-a reference into it. This is why Rust requires any references to freeze the
-referent and its owners.
+a naive scope analysis would be insufficient to prevent this bug because `data`
+does indeed live as long as required. However, `data` is *changed* by `push(4)`
+and now may have been realocated to accommodate the new value. 
+Consequently, `x` may now be referring to the old
+value or memory already put to use in another process (pre-emptive multi-tasking).
+This is why Rust requires the code to also treat the target as frozen; and so,
+will refuse the expression, `data.push(4)`.
