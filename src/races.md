@@ -60,8 +60,8 @@ thread::spawn(move || {
 println!("{}", data[idx.load(Ordering::SeqCst)]);
 ```
 
-We can cause a data race if we instead do the bound check in advance, and then
-unsafely access the data with an unchecked value:
+We can cause a race condition to violate memory safety if we instead do the bound
+check in advance, and then unsafely access the data with an unchecked value:
 
 ```rust,no_run
 use std::thread;
