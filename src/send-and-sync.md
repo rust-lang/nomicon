@@ -253,6 +253,6 @@ only to data races?
 [box-is-special]: https://manishearth.github.io/blog/2017/01/10/rust-tidbits-box-is-special/
 [deref-doc]: https://doc.rust-lang.org/core/ops/trait.Deref.html
 [deref-mut-doc]: https://doc.rust-lang.org/core/ops/trait.DerefMut.html
-[mutex-guard-not-send-docs-rs]: https://doc.rust-lang.org/std/sync/struct.MutexGuard.html#impl-Send
+[mutex-guard-not-send-docs-rs]: https://doc.rust-lang.org/std/sync/struct.MutexGuard.html#impl-Send-for-MutexGuard%3C'_,+T%3E
 [mutex-guard-not-send-comment]: https://github.com/rust-lang/rust/issues/23465#issuecomment-82730326
 [libc-free-docs]: https://linux.die.net/man/3/free
