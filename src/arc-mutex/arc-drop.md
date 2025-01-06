@@ -51,7 +51,7 @@ implementation of `Arc`][3]:
 > > "acquire" operation before deleting the object.
 >
 > In particular, while the contents of an Arc are usually immutable, it's
-> possible to have interior writes to something like a Mutex<T>. Since a Mutex
+> possible to have interior writes to something like a `Mutex<T>`. Since a Mutex
 > is not acquired when it is deleted, we can't rely on its synchronization logic
 > to make writes in thread A visible to a destructor running in thread B.
 >
