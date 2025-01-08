@@ -891,13 +891,13 @@ To do this in Rust, let’s create our own opaque types:
 ```rust
 #[repr(C)]
 pub struct Foo {
-    _data: [u8; 0],
+    _data: (),
     _marker:
         core::marker::PhantomData<(*mut u8, core::marker::PhantomPinned)>,
 }
 #[repr(C)]
 pub struct Bar {
-    _data: [u8; 0],
+    _data: (),
     _marker:
         core::marker::PhantomData<(*mut u8, core::marker::PhantomPinned)>,
 }
