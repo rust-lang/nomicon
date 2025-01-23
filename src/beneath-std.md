@@ -30,7 +30,8 @@ We will probably need a nightly version of the compiler to produce
 a `#![no_std]` executable because on many platforms, we have to provide the
 `eh_personality` [lang item], which is unstable.
 
-You will need to define a symbol for the entry point that is suitable for your target. For example, `main`, `_start`, `WinMain`, or whatever starting point is relevant for your target. Additionally, we use the `#![no_main]` attribute to override the compiler-inserted `main` shim.
+You will need to define a symbol for the entry point that is suitable for your target. For example, `main`, `_start`, `WinMain`, or whatever starting point is relevant for your target.
+Additionally, you need to use the `#![no_main]` attribute to prevent the compiler from attempting to generate an entry point itself.
 
 Additionally, it's required to define a [panic handler function](panic-handler.html).
 
