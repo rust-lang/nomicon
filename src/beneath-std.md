@@ -30,46 +30,10 @@ We will probably need a nightly version of the compiler to produce
 a `#![no_std]` executable because on many platforms, we have to provide the
 `eh_personality` [lang item], which is unstable.
 
-Controlling the entry point is possible in two ways: the `#[start]` attribute,
-or overriding the default shim for the C `main` function with your own.
+You will need to define a symbol for the entry point that is suitable for your target. For example, `main`, `_start`, `WinMain`, or whatever starting point is relevant for your target.
+Additionally, you need to use the `#![no_main]` attribute to prevent the compiler from attempting to generate an entry point itself.
+
 Additionally, it's required to define a [panic handler function](panic-handler.html).
-
-The function marked `#[start]` is passed the command line parameters
-in the same format as C (aside from the exact integer types being used):
-
-```rust
-#![feature(start, lang_items, core_intrinsics, rustc_private)]
-#![allow(internal_features)]
-#![no_std]
-
-// Necessary for `panic = "unwind"` builds on cfg(unix) platforms.
-#![feature(panic_unwind)]
-extern crate unwind;
-
-// Pull in the system libc library for what crt0.o likely requires.
-#[cfg(not(windows))]
-extern crate libc;
-
-use core::panic::PanicInfo;
-
-// Entry point for this program.
-#[start]
-fn main(_argc: isize, _argv: *const *const u8) -> isize {
-    0
-}
-
-// These functions are used by the compiler, but not for an empty program like this.
-// They are normally provided by `std`.
-#[lang = "eh_personality"]
-fn rust_eh_personality() {}
-#[panic_handler]
-fn panic_handler(_info: &PanicInfo) -> ! { core::intrinsics::abort() }
-```
-
-To override the compiler-inserted `main` shim, we have to disable it
-with `#![no_main]` and then create the appropriate symbol with the
-correct ABI and the correct name, which requires overriding the
-compiler's name mangling too:
 
 ```rust
 #![feature(lang_items, core_intrinsics, rustc_private)]
