@@ -145,7 +145,7 @@ and it will become a hard error.
 `repr(packed)/repr(packed(n))` is not to be used lightly. Unless you have
 extreme requirements, this should not be used.
 
-This repr is a modifier on `repr(C)` and `repr(Rust)`. For FFI compatibilty
+This repr is a modifier on `repr(C)` and `repr(Rust)`. For FFI compatibility
 you most likely always want to be explicit: `repr(C, packed)`.
 
 ## repr(align(n))
