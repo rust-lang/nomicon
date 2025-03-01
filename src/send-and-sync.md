@@ -89,7 +89,7 @@ to the heap.
 #    pub use ::std::os::raw::{c_int, c_void};
 #    #[allow(non_camel_case_types)]
 #    pub type size_t = usize;
-#    extern "C" { pub fn posix_memalign(memptr: *mut *mut c_void, align: size_t, size: size_t) -> c_int; }
+#    unsafe extern "C" { pub fn posix_memalign(memptr: *mut *mut c_void, align: size_t, size: size_t) -> c_int; }
 # }
 use std::{
     mem::{align_of, size_of},
@@ -225,7 +225,7 @@ allocation done on another thread. We can check this is true in the docs for
 # struct Carton<T>(std::ptr::NonNull<T>);
 # mod libc {
 #     pub use ::std::os::raw::c_void;
-#     extern "C" { pub fn free(p: *mut c_void); }
+#     unsafe extern "C" { pub fn free(p: *mut c_void); }
 # }
 impl<T> Drop for Carton<T> {
     fn drop(&mut self) {

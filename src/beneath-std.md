@@ -53,7 +53,7 @@ use core::ffi::{c_char, c_int};
 use core::panic::PanicInfo;
 
 // Entry point for this program.
-#[no_mangle] // ensure that this symbol is included in the output as `main`
+#[unsafe(no_mangle)] // ensure that this symbol is included in the output as `main`
 extern "C" fn main(_argc: c_int, _argv: *const *const c_char) -> c_int {
     0
 }
