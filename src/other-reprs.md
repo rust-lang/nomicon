@@ -7,7 +7,8 @@ There's also the [unsafe code guidelines] (note that it's **NOT** normative).
 
 This is the most important `repr`. It has fairly simple intent: do what C does.
 The order, size, and alignment of fields is exactly what you would expect from C
-or C++. Any type you expect to pass through an FFI boundary should have
+or C++. The type is also passed across `extern "C"` function call boundaries the
+same way C would pass the corresponding type. Any type you expect to pass through an FFI boundary should have
 `repr(C)`, as C is the lingua-franca of the programming world. This is also
 necessary to soundly do more elaborate tricks with data layout such as
 reinterpreting values as a different type.
@@ -86,10 +87,14 @@ be 0. However Rust will not allow you to create an enum where two variants have
 the same discriminant.
 
 The term "fieldless enum" only means that the enum doesn't have data in any
-of its variants. A fieldless enum without a `repr(u*)` or `repr(C)` is
-still a Rust native type, and does not have a stable ABI representation.
-Adding a `repr` causes it to be treated exactly like the specified
-integer type for ABI purposes.
+of its variants. A fieldless enum without a `repr` is
+still a Rust native type, and does not have a stable layout or representation.
+Adding a `repr(u*)`/`repr(i*)` causes it to be treated exactly like the specified
+integer type for layout purposes (except that the compiler will still exploit its
+knowledge of "invalid" values at this type to optimize enum layout, such as when
+this enum is wrapped in `Option`). Note that the function call ABI for these
+types is still in general unspecified, except that across `extern "C"` calls they
+are ABI-compatible with C enums of the same sign and size.
 
 If the enum has fields, the effect is similar to the effect of `repr(C)`
 in that there is a defined layout of the type. This makes it possible to
@@ -119,31 +124,34 @@ assert_eq!(16, size_of::<MyReprOption<&u16>>());
 
 This optimization still applies to fieldless enums with an explicit `repr(u*)`, `repr(i*)`, or `repr(C)`.
 
-## repr(packed)
+## repr(packed), repr(packed(n))
 
-`repr(packed)` forces Rust to strip any padding, and only align the type to a
-byte. This may improve the memory footprint, but will likely have other negative
-side-effects.
+`repr(packed(n))` (where `n` is a power of two) forces the type to have an
+alignment of *at most* `n`. Most commonly used without an explicit `n`,
+`repr(packed)` is equivalent to `repr(packed(1))` which forces Rust to strip
+any padding, and only align the type to a byte. This may improve the memory
+footprint, but will likely have other negative side-effects.
 
-In particular, most architectures *strongly* prefer values to be aligned. This
-may mean the unaligned loads are penalized (x86), or even fault (some ARM
-chips). For simple cases like directly loading or storing a packed field, the
-compiler might be able to paper over alignment issues with shifts and masks.
-However if you take a reference to a packed field, it's unlikely that the
-compiler will be able to emit code to avoid an unaligned load.
+In particular, most architectures *strongly* prefer values to be naturally
+aligned. This may mean that unaligned loads are penalized (x86), or even fault
+(some ARM chips). For simple cases like directly loading or storing a packed
+field, the compiler might be able to paper over alignment issues with shifts
+and masks. However if you take a reference to a packed field, it's unlikely
+that the compiler will be able to emit code to avoid an unaligned load.
 
 [As this can cause undefined behavior][ub loads], the lint has been implemented
 and it will become a hard error.
 
-`repr(packed)` is not to be used lightly. Unless you have extreme requirements,
-this should not be used.
+`repr(packed)/repr(packed(n))` is not to be used lightly. Unless you have
+extreme requirements, this should not be used.
 
-This repr is a modifier on `repr(C)` and `repr(Rust)`.
+This repr is a modifier on `repr(C)` and `repr(Rust)`. For FFI compatibility
+you most likely always want to be explicit: `repr(C, packed)`.
 
 ## repr(align(n))
 
 `repr(align(n))` (where `n` is a power of two) forces the type to have an
-alignment of *at least* n.
+alignment of *at least* `n`.
 
 This enables several tricks, like making sure neighboring elements of an array
 never share the same cache line with each other (which may speed up certain

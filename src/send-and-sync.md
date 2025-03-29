@@ -89,7 +89,7 @@ to the heap.
 #    pub use ::std::os::raw::{c_int, c_void};
 #    #[allow(non_camel_case_types)]
 #    pub type size_t = usize;
-#    extern "C" { pub fn posix_memalign(memptr: *mut *mut c_void, align: size_t, size: size_t) -> c_int; }
+#    unsafe extern "C" { pub fn posix_memalign(memptr: *mut *mut c_void, align: size_t, size: size_t) -> c_int; }
 # }
 use std::{
     mem::{align_of, size_of},
@@ -225,7 +225,7 @@ allocation done on another thread. We can check this is true in the docs for
 # struct Carton<T>(std::ptr::NonNull<T>);
 # mod libc {
 #     pub use ::std::os::raw::c_void;
-#     extern "C" { pub fn free(p: *mut c_void); }
+#     unsafe extern "C" { pub fn free(p: *mut c_void); }
 # }
 impl<T> Drop for Carton<T> {
     fn drop(&mut self) {
@@ -253,6 +253,6 @@ only to data races?
 [box-is-special]: https://manishearth.github.io/blog/2017/01/10/rust-tidbits-box-is-special/
 [deref-doc]: https://doc.rust-lang.org/core/ops/trait.Deref.html
 [deref-mut-doc]: https://doc.rust-lang.org/core/ops/trait.DerefMut.html
-[mutex-guard-not-send-docs-rs]: https://doc.rust-lang.org/std/sync/struct.MutexGuard.html#impl-Send
+[mutex-guard-not-send-docs-rs]: https://doc.rust-lang.org/std/sync/struct.MutexGuard.html#impl-Send-for-MutexGuard%3C'_,+T%3E
 [mutex-guard-not-send-comment]: https://github.com/rust-lang/rust/issues/23465#issuecomment-82730326
 [libc-free-docs]: https://linux.die.net/man/3/free
