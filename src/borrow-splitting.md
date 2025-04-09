@@ -215,7 +215,9 @@ pub struct IterMut<'a, T: 'a>(VecDeque<NodeIterMut<'a, T>>);
 impl<T> Tree<T> {
     pub fn iter_mut(&mut self) -> IterMut<T> {
         let mut deque = VecDeque::new();
-        self.root.as_mut().map(|root| deque.push_front(root.iter_mut()));
+        if let Some(root) = self.root.as_mut() {
+            deque.push_front(root.iter_mut());
+        }
         IterMut(deque)
     }
 }
@@ -224,42 +226,33 @@ impl<T> Node<T> {
     pub fn iter_mut(&mut self) -> NodeIterMut<T> {
         NodeIterMut {
             elem: Some(&mut self.elem),
-            left: self.left.as_mut().map(|node| &mut **node),
-            right: self.right.as_mut().map(|node| &mut **node),
+            left: self.left.as_deref_mut(),
+            right: self.right.as_deref_mut(),
         }
     }
 }
-
 
 impl<'a, T> Iterator for NodeIterMut<'a, T> {
     type Item = State<'a, T>;
 
     fn next(&mut self) -> Option<Self::Item> {
-        match self.left.take() {
-            Some(node) => Some(State::Node(node)),
-            None => match self.elem.take() {
-                Some(elem) => Some(State::Elem(elem)),
-                None => match self.right.take() {
-                    Some(node) => Some(State::Node(node)),
-                    None => None,
-                }
-            }
-        }
+        self.left.take().map(State::Node).or_else(|| {
+            self.elem
+                .take()
+                .map(State::Elem)
+                .or_else(|| self.right.take().map(State::Node))
+        })
     }
 }
 
 impl<'a, T> DoubleEndedIterator for NodeIterMut<'a, T> {
     fn next_back(&mut self) -> Option<Self::Item> {
-        match self.right.take() {
-            Some(node) => Some(State::Node(node)),
-            None => match self.elem.take() {
-                Some(elem) => Some(State::Elem(elem)),
-                None => match self.left.take() {
-                    Some(node) => Some(State::Node(node)),
-                    None => None,
-                }
-            }
-        }
+        self.right.take().map(State::Node).or_else(|| {
+            self.elem
+                .take()
+                .map(State::Elem)
+                .or_else(|| self.left.take().map(State::Node))
+        })
     }
 }
 
@@ -267,10 +260,12 @@ impl<'a, T> Iterator for IterMut<'a, T> {
     type Item = &'a mut T;
     fn next(&mut self) -> Option<Self::Item> {
         loop {
-            match self.0.front_mut().and_then(|node_it| node_it.next()) {
+            match self.0.front_mut().and_then(Iterator::next) {
                 Some(State::Elem(elem)) => return Some(elem),
                 Some(State::Node(node)) => self.0.push_front(node.iter_mut()),
-                None => if let None = self.0.pop_front() { return None },
+                None => {
+                    self.0.pop_front()?;
+                }
             }
         }
     }
@@ -279,10 +274,12 @@ impl<'a, T> Iterator for IterMut<'a, T> {
 impl<'a, T> DoubleEndedIterator for IterMut<'a, T> {
     fn next_back(&mut self) -> Option<Self::Item> {
         loop {
-            match self.0.back_mut().and_then(|node_it| node_it.next_back()) {
+            match self.0.back_mut().and_then(DoubleEndedIterator::next_back) {
                 Some(State::Elem(elem)) => return Some(elem),
                 Some(State::Node(node)) => self.0.push_back(node.iter_mut()),
-                None => if let None = self.0.pop_back() { return None },
+                None => {
+                    self.0.pop_back()?;
+                }
             }
         }
     }
