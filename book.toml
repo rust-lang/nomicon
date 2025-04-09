@@ -31,5 +31,8 @@ git-repository-url = "https://github.com/rust-lang/nomicon"
 "./arc-layout.html" = "./arc-mutex/arc-layout.html"
 "./arc.html" = "./arc-mutex/arc.html"
 
+# Atomics chapter
+"./atomics.html" = "./atomics/atomics.html"
+
 [rust]
 edition = "2024"
