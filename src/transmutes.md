@@ -28,7 +28,7 @@ boggling.
   * No you're not special.
 
 * Transmuting to a reference without an explicitly provided lifetime
-  produces an [unbounded lifetime].
+  may produce an [unbounded lifetime], unless [elision rules] apply.
 
 * When transmuting between different compound types, you have to make sure they
   are laid out the same way! If layouts differ, the wrong fields are going to
@@ -57,3 +57,4 @@ checks. Raw pointer casts and `union`s do not magically avoid the above rules.
 [transmute]: ../std/mem/fn.transmute.html
 [transmute_copy]: ../std/mem/fn.transmute_copy.html
 [ucg-layout]: https://rust-lang.github.io/unsafe-code-guidelines/layout.html
+[elision rules]: ./lifetime-elision.md
