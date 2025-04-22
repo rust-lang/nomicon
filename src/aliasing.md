@@ -23,7 +23,7 @@ Consider this simple function:
 ```rust
 fn compute(input: &u32, output: &mut u32) {
     if *input > 10 {
-        *output = 1;
+        *output = 2;
     }
     if *input > 5 {
         *output *= 2;
