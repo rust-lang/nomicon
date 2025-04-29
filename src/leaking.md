@@ -75,7 +75,7 @@ let mut vec = vec![Box::new(0); 4];
 
 {
     // start draining, vec can no longer be accessed
-    let mut drainer = vec.drain(..);
+    let mut drainer = vec.drain(..3);
 
     // pull out two elements and immediately drop them
     drainer.next();
