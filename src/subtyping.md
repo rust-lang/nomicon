@@ -139,7 +139,7 @@ If we remember from the above examples,
 it was ok for us to treat `&'a T` as a subtype of `&'b T` if `'a <: 'b`,
 therefore we can say that `&'a T` is *covariant* over `'a`.
 
-Also, we saw that it was not ok for us to treat `&mut &'a U` as a subtype of `&mut &'b U`,
+Also, we saw that it was not ok for us to treat `&mut &'a T` as a subtype of `&mut &'b T`,
 therefore we can say that `&mut T` is *invariant* over `T`
 
 Here is a table of some other generic types and their variances:
