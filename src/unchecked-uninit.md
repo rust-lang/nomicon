@@ -23,12 +23,8 @@ use std::mem::{self, MaybeUninit};
 const SIZE: usize = 10;
 
 let x = {
-    // Create an uninitialized array of `MaybeUninit`. The `assume_init` is
-    // safe because the type we are claiming to have initialized here is a
-    // bunch of `MaybeUninit`s, which do not require initialization.
-    let mut x: [MaybeUninit<Box<u32>>; SIZE] = unsafe {
-        MaybeUninit::uninit().assume_init()
-    };
+    // Create an uninitialized array of `MaybeUninit`.
+    let mut x = [const { MaybeUninit::uninit() }; SIZE];
 
     // Dropping a `MaybeUninit` does nothing. Thus using raw pointer
     // assignment instead of `ptr::write` does not cause the old
@@ -48,14 +44,7 @@ dbg!(x);
 
 This code proceeds in three steps:
 
-1. Create an array of `MaybeUninit<T>`. With current stable Rust, we have to use
-   unsafe code for this: we take some uninitialized piece of memory
-   (`MaybeUninit::uninit()`) and claim we have fully initialized it
-   ([`assume_init()`][assume_init]). This seems ridiculous, because we didn't!
-   The reason this is correct is that the array consists itself entirely of
-   `MaybeUninit`, which do not actually require initialization. For most other
-   types, doing `MaybeUninit::uninit().assume_init()` produces an invalid
-   instance of said type, so you got yourself some Undefined Behavior.
+1. Create an array of `MaybeUninit<T>`.
 
 2. Initialize the array. The subtle aspect of this is that usually, when we use
    `=` to assign to a value that the Rust type checker considers to already be
@@ -165,7 +154,6 @@ anywhere expects to be handed uninitialized memory, so if you're going to pass
 it around at all, be sure to be *really* careful.
 
 [`MaybeUninit`]: ../core/mem/union.MaybeUninit.html
-[assume_init]: ../core/mem/union.MaybeUninit.html#method.assume_init
 [`ptr`]: ../core/ptr/index.html
 [raw_reference]: ../reference/types/pointer.html#r-type.pointer.raw.constructor
 [`write`]: ../core/ptr/fn.write.html
