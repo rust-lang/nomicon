@@ -41,11 +41,13 @@ impl<T: Clone> Vec<T> {
     fn push_all(&mut self, to_push: &[T]) {
         self.reserve(to_push.len());
         unsafe {
+            let end_ptr = self.as_mut_ptr().add(self.len());
+
             // can't overflow because we just reserved this
             self.set_len(self.len() + to_push.len());
 
             for (i, x) in to_push.iter().enumerate() {
-                self.ptr().add(i).write(x.clone());
+                end_ptr.add(i).write(x.clone());
             }
         }
     }
