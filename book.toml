@@ -1,5 +1,5 @@
 [book]
-author = "The Rust Project Developers"
+authors = ["The Rust Project Developers"]
 title = "The Rustonomicon"
 description = "The Dark Arts of Advanced and Unsafe Rust Programming"
 
