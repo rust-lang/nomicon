@@ -90,7 +90,7 @@ The `extern` block can be extended to cover the entire snappy API:
 use libc::{c_int, size_t};
 
 #[link(name = "snappy")]
-unsafe extern {
+unsafe extern "C" {
     fn snappy_compress(input: *const u8,
                        input_length: size_t,
                        compressed: *mut u8,
