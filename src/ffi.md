@@ -25,7 +25,7 @@ libc = "0.2.0"
 
 Because [snappy](https://github.com/google/snappy) is a static library by default.
 So there is no C++ std linked in the output artifact. 
-n order to use this foreign library in Rust, we have to manually specify that we want to link stdc++ in our project.
+In order to use this foreign library in Rust, we have to manually specify that we want to link stdc++ in our project.
 The easiest way to do this is by setting up a build script.
 
 First edit `Cargo.toml`, inside `package` add `build = "build.rs"`:
