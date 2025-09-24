@@ -213,7 +213,7 @@ strictly outlive that value.
 The precise rules that govern drop checking may be less restrictive in
 the future.
 
-The current analysis is deliberately conservative and trivial; it forces all
+The current analysis is deliberately conservative; it forces all
 borrowed data in a value to outlive that value, which is certainly sound.
 
 Future versions of the language may make the analysis more precise, to
