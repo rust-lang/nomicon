@@ -104,7 +104,7 @@ code and the unsafe code into two separate phases:
 ```text
 bubble_up(heap, index):
     let end_index = index;
-    while end_index != 0 && heap[end_index] < heap[parent(end_index)]:
+    while end_index != 0 && heap[index] < heap[parent(end_index)]:
         end_index = parent(end_index)
 
     let elem = heap[index]
