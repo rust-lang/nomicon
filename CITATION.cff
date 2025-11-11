@@ -1,0 +1,9 @@
+cff-version: 1.2.0
+message: If you use this book, please cite it using these metadata.
+title: The Rustonomicon
+abstract: The Dark Arts of Advanced and Unsafe Rust Programming
+authors:
+  - name: "The Rust Project Developers"
+date-released: "2017-03-03"
+license: "MIT OR Apache-2.0"
+repository-code: "https://github.com/rust-lang/nomicon"
