@@ -11,7 +11,7 @@ snappy includes a C interface (documented in
 ## A note about libc
 
 Many of these examples use [the `libc` crate][libc], which provides various
-type definitions for C types, among other things. If you’re trying these
+type definitions for C types, among other things. If you’re trying out these
 examples yourself, you’ll need to add `libc` to your `Cargo.toml`:
 
 ```toml
@@ -23,9 +23,8 @@ libc = "0.2.0"
 
 ## Prepare the build script
 
-Because [snappy](https://github.com/google/snappy) is a static library by default.
-So there is no C++ std linked in the output artifact. 
-In order to use this foreign library in Rust, we have to manually specify that we want to link stdc++ in our project.
+Because [snappy](https://github.com/google/snappy) is a static library by default, so there is no stdc++ linked in the output artifact. 
+In order to use this foreign library in Rust, we have to manually specify that we want to link stdc++ std to our project.
 The easiest way to do this is by setting up a build script.
 
 First edit `Cargo.toml`, inside `package` add `build = "build.rs"`:
@@ -39,7 +38,7 @@ Then create a new file at the root of your workspace, named `build.rs`:
 ```rust
 // build.rs
 fn main() {
-    println!("cargo:rustc-link-lib=dylib=stdc++"); // This line may be unnecessary for some environment.
+    println!("cargo:rustc-link-lib=dylib=stdc++"); // This line may be unnecessary for some environments.
     println!("cargo:rustc-link-search=<YOUR SNAPPY LIBRARY PATH>");
 }
 ```
@@ -69,7 +68,7 @@ fn main() {
 
 The `extern` block is a list of function signatures in a foreign library, in
 this case with the platform's C ABI. The `#[link(...)]` attribute is used to
-instruct the linker to link against the snappy library so the symbols are
+instruct the linker to link against the snappy library so the symbols can be
 resolved.
 
 Foreign functions are assumed to be unsafe so calls to them need to be wrapped
@@ -115,7 +114,7 @@ The raw C API needs to be wrapped to provide memory safety and make use of highe
 like vectors. A library can choose to expose only the safe, high-level interface and hide the unsafe
 internal details.
 
-Wrapping the functions which expect buffers involves using the `slice::raw` module to manipulate Rust
+Wrapping the functions which expect buffers involves using the `slice::raw` module to manipulate Rust's
 vectors as pointers to memory. Rust's vectors are guaranteed to be a contiguous block of memory. The
 length is the number of elements currently contained, and the capacity is the total size in elements of
 the allocated memory. The length is less than or equal to the capacity.
@@ -262,13 +261,13 @@ mod tests {
 
 Foreign libraries often hand off ownership of resources to the calling code.
 When this occurs, we must use Rust's destructors to provide safety and guarantee
-the release of these resources (especially in the case of panic).
+the release of these resources (especially in the case of a panic).
 
-For more about destructors, see the [Drop trait](../std/ops/trait.Drop.html).
+For more information about destructors, see the [Drop trait](../std/ops/trait.Drop.html).
 
 ## Calling Rust code from C
 
-You may wish to compile Rust code in a way so that it can be called from C.
+You may wish to compile Rust code in a way that can be called from C.
 This is fairly easy, but requires a few things.
 
 ### Rust side
@@ -294,7 +293,7 @@ Then, to compile Rust code as a shared library that can be called from C, add th
 crate-type = ["cdylib"]
 ```
 
-(NOTE: We could also use the `staticlib` crate type but it needs to tweak some linking flags.)
+(NOTE: We could also use the `staticlib` crate type but it also requires tweaking some linking flags.)
 
 Run `cargo build` and you're ready to go on the Rust side.
 
@@ -332,7 +331,7 @@ Hello from Rust!
 ```
 
 That's it!
-For more realistic example, check the [`cbindgen`].
+For a more realistic example, check the [`cbindgen`].
 
 [`cbindgen`]: https://github.com/eqrion/cbindgen
 
@@ -621,7 +620,7 @@ This is currently hidden behind the `abi_vectorcall` gate and is subject to chan
 * `win64`
 * `sysv64`
 
-Most of the abis in this list are self-explanatory, but the `system` abi may
+Most of the ABIs in this list are self-explanatory, but the `system` ABI may
 seem a little odd. This constraint selects whatever the appropriate ABI is for
 interoperating with the target's libraries. For example, on win32 with a x86
 architecture, this means that the abi used would be `stdcall`. On x86_64,
