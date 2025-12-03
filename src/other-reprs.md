@@ -1,7 +1,6 @@
 # Alternative representations
 
 Rust allows you to specify alternative data layout strategies from the default.
-There's also the [unsafe code guidelines] (note that it's **NOT** normative).
 
 ## repr(C)
 
@@ -160,7 +159,6 @@ kinds of concurrent code).
 This is a modifier on `repr(C)` and `repr(Rust)`. It is incompatible with
 `repr(packed)`.
 
-[unsafe code guidelines]: https://rust-lang.github.io/unsafe-code-guidelines/layout.html
 [drop flags]: drop-flags.html
 [ub loads]: https://github.com/rust-lang/rust/issues/27060
 [issue-60405]: https://github.com/rust-lang/rust/issues/60405
