@@ -276,7 +276,7 @@ provide a function with the following signature instead:
 fn get_static() -> &'static str;
 ```
 
-So when the function is called, all it's expecting is a `&str` which lives at least the lifetime of `'a`,
+So when the function is called, all its caller is expecting is a `&str` which lives at least the lifetime of `'a`,
 it doesn't matter if the value actually lives longer.
 
 However, the same logic does not apply to *arguments*. Consider trying to satisfy:
