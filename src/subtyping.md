@@ -118,9 +118,7 @@ This is a classic use-after-free bug!
 Our first instinct might be to blame the `assign` impl, but there's really nothing wrong here.
 It shouldn't be surprising that we might want to assign a `T` into a `T`.
 
-The problem is that we cannot assume that `&mut &'static str` (the `&mut hello` argument) and `&mut &'b str` (the `input` parameter) are compatible.
-This means that `&mut &'static str` **cannot** be a *subtype* of `&mut &'b str`,
-even if `'static` is a subtype of `'b`.
+The problem is that we cannot assume `&'static str` can still be downgraded into `&'world str` to satisfy `T`, once it's behind a `&mut` reference. This means that `&mut &'static str` **cannot** be a *subtype* of `&mut &'world str`, even if `'static` is a subtype of `'world`.
 
 Variance is the concept that Rust borrows to define relationships about subtypes through their generic parameters.
 
