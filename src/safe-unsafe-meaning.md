@@ -41,7 +41,7 @@ The standard library has a number of unsafe functions, including:
 * All FFI (Foreign Function Interface) functions are `unsafe` to call because the
   other language can do arbitrary operations that the Rust compiler can't check.
 
-As of Rust 1.29.2 the standard library defines the following unsafe traits
+As of Rust 1.29.2, the standard library defines the following unsafe traits
 (there are others, but they are not stabilized yet and some of them may never
 be):
 
@@ -55,7 +55,7 @@ Much of the Rust standard library also uses Unsafe Rust internally. These
 implementations have generally been rigorously manually checked, so the Safe Rust
 interfaces built on top of these implementations can be assumed to be safe.
 
-The need for all of this separation boils down a single fundamental property
+The need for all of this separation boils down to a single fundamental property
 of Safe Rust, the *soundness property*:
 
 **No matter what, Safe Rust can't cause Undefined Behavior.**
@@ -129,9 +129,9 @@ traits `unsafe` because it makes Unsafe Rust pervasive, which isn't desirable.
 
 `Send` and `Sync` are marked unsafe because thread safety is a *fundamental
 property* that unsafe code can't possibly hope to defend against in the way it
-could defend against a buggy `Ord` implementation. Similarly, `GlobalAllocator`
+could defend against a buggy `Ord` implementation. Similarly, `GlobalAlloc`
 is keeping accounts of all the memory in the program and other things like
-`Box` or `Vec` build on top of it. If it does something weird (giving the same
+`Box` or `Vec` that build on top of it. If it does something weird (giving the same
 chunk of memory to another request when it is still in use), there's no chance
 to detect that and do anything about it.
 
@@ -141,7 +141,7 @@ against a broken implementation of the trait, then marking the trait `unsafe` is
 a reasonable choice.
 
 As an aside, while `Send` and `Sync` are `unsafe` traits, they are *also*
-automatically implemented for types when such derivations are provably safe
+automatically implemented for types when such derivations are probably safe
 to do. `Send` is automatically derived for all types composed only of values
 whose types also implement `Send`. `Sync` is automatically derived for all
 types composed only of values whose types also implement `Sync`. This minimizes
