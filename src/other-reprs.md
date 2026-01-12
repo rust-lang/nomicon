@@ -29,6 +29,8 @@ says they should still consume a byte of space.
 * DST pointers (wide pointers) and tuples are not a concept
   in C, and as such are never FFI-safe.
 
+* Raw arrays of types are not FFI-safe.
+
 * Enums with fields also aren't a concept in C or C++, but a valid bridging
   of the types [is defined][really-tagged].
 
