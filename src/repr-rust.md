@@ -9,7 +9,7 @@ of 2.
 
 Primitives are usually aligned to their size, although this is
 platform-specific behavior. For example, on x86 `u64` and `f64` are often
-aligned to 4 bytes (32 bits).
+aligned to 8 bytes (64 bits).
 
 A type's size must always be a multiple of its alignment (Zero being a valid size
 for any alignment). This ensures that an array of that type may always be indexed
