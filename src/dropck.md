@@ -260,7 +260,7 @@ compiler is not checking the implicit assertion that no potentially expired data
 
 The attribute can be applied to any number of lifetime and type parameters. In
 the following example, we assert that we access no data behind a reference of
-lifetime `'b` and that the only uses of `T` will be moves or drops, but omit
+lifetime `'b` and that the only uses of `T` will be drops, but omit
 the attribute from `'a` and `U`, because we do access data with that lifetime
 and that type:
 
