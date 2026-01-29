@@ -206,7 +206,7 @@ fn main() {
     // ... distribute lock to threads somehow ...
 
     // Try to acquire the lock by setting it to true
-    while lock.compare_and_swap(false, true, Ordering::Acquire) { }
+    while lock.compare_exchange(false, true, Ordering::Acquire, Ordering::Relaxed).is_err() { }
     // broke out of the loop, so we successfully acquired the lock!
 
     // ... scary data accesses ...
