@@ -356,7 +356,7 @@ extern fn callback(a: i32) {
 }
 
 #[link(name = "extlib")]
-unsafe extern {
+unsafe extern "C" {
    fn register_callback(cb: extern fn(i32)) -> i32;
    fn trigger_callback();
 }
@@ -417,9 +417,9 @@ unsafe extern "C" fn callback(target: *mut RustObject, a: i32) {
 }
 
 #[link(name = "extlib")]
-unsafe extern {
+unsafe extern "C" {
    fn register_callback(target: *mut RustObject,
-                        cb: unsafe extern fn(*mut RustObject, i32)) -> i32;
+                        cb: unsafe extern "C" fn(*mut RustObject, i32)) -> i32;
    fn trigger_callback();
 }
 
@@ -548,7 +548,7 @@ blocks with the `static` keyword:
 <!-- ignore: requires libc crate -->
 ```rust,ignore
 #[link(name = "readline")]
-unsafe extern {
+unsafe extern "C" {
     static rl_readline_version: libc::c_int;
 }
 
@@ -568,7 +568,7 @@ use std::ffi::CString;
 use std::ptr;
 
 #[link(name = "readline")]
-unsafe extern {
+unsafe extern "C" {
     static mut rl_prompt: *const libc::c_char;
 }
 
@@ -659,7 +659,7 @@ In C, functions can be 'variadic', meaning they accept a variable number of argu
 be achieved in Rust by specifying `...` within the argument list of a foreign function declaration:
 
 ```no_run
-unsafe extern {
+unsafe extern "C" {
     fn foo(x: i32, ...);
 }
 
