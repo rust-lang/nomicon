@@ -58,12 +58,14 @@ interfaces built on top of these implementations can be assumed to be safe.
 The need for all of this separation boils down to a single fundamental property
 of Safe Rust, the *soundness property*:
 
-**No matter what, Safe Rust can't cause Undefined Behavior.**
+**No matter what, Safe Rust clients can't cause Undefined Behavior.**
 
 The design of the safe/unsafe split means that there is an asymmetric trust
 relationship between Safe and Unsafe Rust. Safe Rust inherently has to
 trust that any Unsafe Rust it touches has been written correctly.
-On the other hand, Unsafe Rust cannot trust Safe Rust without care.
+On the other hand, Unsafe Rust cannot trust Safe Rust without care. It can
+trust Safe Rust it is a client of, but it cannot trust Safe Rust chosen or
+supplied by its clients.
 
 As an example, Rust has the [`PartialOrd`] and [`Ord`] traits to differentiate
 between types which can "just" be compared, and those that provide a "total"
@@ -91,8 +93,13 @@ can be weighed against the benefit. In this case there's basically zero risk;
 if integers and slices are broken, *everyone* is broken. Also, they're maintained
 by the same people who maintain `BTreeMap`, so it's easy to keep tabs on them.
 
-On the other hand, `BTreeMap`'s key type is generic. Trusting its `Ord` implementation
-means trusting every `Ord` implementation in the past, present, and future.
+The same can be true across crate boundaries. Say crate `foo` depends on crate
+`bar`, then Unsafe Rust in crate `foo` may trust Safe Rust in crate `bar`. This
+is because crate `foo` chose to depend on crate `bar`, and by doing so trusted
+crate `bar` to be implemented correctly.
+
+On the other hand, `BTreeMap`'s key type is generic. Trusting its `Ord`
+implementation means trusting the `Ord` implementation of arbitrary clients.
 Here the risk is high: someone somewhere is going to make a mistake and mess up
 their `Ord` implementation, or even just straight up lie about providing a total
 ordering because "it seems to work". When that happens, `BTreeMap` needs to be
