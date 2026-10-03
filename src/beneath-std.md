@@ -63,7 +63,7 @@ extern "C" fn main(_argc: c_int, _argv: *const *const c_char) -> c_int {
 #[lang = "eh_personality"]
 fn rust_eh_personality() {}
 #[panic_handler]
-fn panic_handler(_info: &PanicInfo) -> ! { core::intrinsics::abort() }
+fn panic_handler(_info: &PanicInfo) -> ! { core::intrinsics::abort_immediate() }
 ```
 
 If you are working with a target that doesn't have binary releases of the
