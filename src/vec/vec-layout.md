@@ -20,11 +20,9 @@ compiler will give us too strict variance. So a `&Vec<&'static str>`
 couldn't be used where a `&Vec<&'a str>` was expected. See [the chapter
 on ownership and lifetimes][ownership] for all the details on variance.
 
-As we saw in the ownership chapter, the standard library uses `Unique<T>` in place of
-`*mut T` when it has a raw pointer to an allocation that it owns. Unique is unstable,
-so we'd like to not use it if possible, though.
-
-As a recap, Unique is a wrapper around a raw pointer that declares that:
+As we saw in the ownership chapter, when the standard library has a raw pointer
+to an allocation that it owns, it wants that pointer to declare more than a bare
+`*mut T` does:
 
 * We are covariant over `T`
 * We may own a value of type `T` (this is not relevant for our example here, but see 
@@ -32,11 +30,10 @@ As a recap, Unique is a wrapper around a raw pointer that declares that:
 * We are Send/Sync if `T` is Send/Sync
 * Our pointer is never null (so `Option<Vec<T>>` is null-pointer-optimized)
 
-We can implement all of the above requirements in stable Rust. To do this, instead
-of using `Unique<T>` we will use [`NonNull<T>`][NonNull], another wrapper around a
-raw pointer, which gives us two of the above properties, namely it is covariant
-over `T` and is declared to never be null. By implementing Send/Sync if `T` is,
-we get the same results as using `Unique<T>`:
+We can implement all of the above requirements in stable Rust. To do this, we will
+use [`NonNull<T>`][NonNull], a wrapper around a raw pointer which gives us two of
+the above properties, namely it is covariant over `T` and is declared to never be
+null. By implementing Send/Sync if `T` is, we get the rest of what we need:
 
 ```rust
 use std::ptr::NonNull;
