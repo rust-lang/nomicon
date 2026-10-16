@@ -229,13 +229,15 @@ struct Vec<T> {
 
 ___
 
-Raw pointers that own an allocation is such a pervasive pattern that the
-standard library made a utility for itself called `Unique<T>` which:
+Raw pointers that own an allocation are such a pervasive pattern that the
+standard library's own types bundle the same pieces together every time:
 
-* wraps a `*const T` for variance
-* includes a `PhantomData<T>`
-* auto-derives `Send`/`Sync` as if T was contained
-* marks the pointer as `NonZero` for the null-pointer optimization
+* a `NonNull<T>`, for variance and the null-pointer optimization
+* a `PhantomData<T>`
+* `Send`/`Sync` impls as if a `T` was contained
+
+(For many years the standard library packaged these up as an internal
+`Unique<T>` type. It was never stable, and it has since been removed.)
 
 ## Table of `PhantomData` patterns
 

@@ -27,47 +27,44 @@ this is totally fine.
 For instance, a custom implementation of `Box` might write `Drop` like this:
 
 ```rust
-#![feature(ptr_internals, allocator_api)]
-
 use std::alloc::{Allocator, Global, GlobalAlloc, Layout};
+use std::marker::PhantomData;
 use std::mem;
-use std::ptr::{drop_in_place, NonNull, Unique};
+use std::ptr::{drop_in_place, NonNull};
 
-struct Box<T>{ ptr: Unique<T> }
+struct Box<T>{ ptr: NonNull<T>, _marker: PhantomData<T> }
 
 impl<T> Drop for Box<T> {
     fn drop(&mut self) {
         unsafe {
             drop_in_place(self.ptr.as_ptr());
-            let c: NonNull<T> = self.ptr.into();
-            Global.deallocate(c.cast(), Layout::new::<T>())
+            Global.deallocate(self.ptr.cast(), Layout::new::<T>())
         }
     }
 }
 # fn main() {}
 ```
 
-and this works fine because when Rust goes to drop the `ptr` field it just sees
-a [Unique] that has no actual `Drop` implementation. Similarly nothing can
-use-after-free the `ptr` because when drop exits, it becomes inaccessible.
+and this works fine because when Rust goes to drop the fields it just sees a
+[`NonNull`] and a [`PhantomData`], neither of which has an actual `Drop`
+implementation. Similarly nothing can use-after-free the `ptr` because when drop
+exits, it becomes inaccessible.
 
 However this wouldn't work:
 
 ```rust
-#![feature(allocator_api, ptr_internals)]
-
 use std::alloc::{Allocator, Global, GlobalAlloc, Layout};
-use std::ptr::{drop_in_place, Unique, NonNull};
+use std::marker::PhantomData;
+use std::ptr::{drop_in_place, NonNull};
 use std::mem;
 
-struct Box<T>{ ptr: Unique<T> }
+struct Box<T>{ ptr: NonNull<T>, _marker: PhantomData<T> }
 
 impl<T> Drop for Box<T> {
     fn drop(&mut self) {
         unsafe {
             drop_in_place(self.ptr.as_ptr());
-            let c: NonNull<T> = self.ptr.into();
-            Global.deallocate(c.cast(), Layout::new::<T>());
+            Global.deallocate(self.ptr.cast(), Layout::new::<T>());
         }
     }
 }
@@ -79,8 +76,7 @@ impl<T> Drop for SuperBox<T> {
         unsafe {
             // Hyper-optimized: deallocate the box's contents for it
             // without `drop`ing the contents
-            let c: NonNull<T> = self.my_box.ptr.into();
-            Global.deallocate(c.cast::<u8>(), Layout::new::<T>());
+            Global.deallocate(self.my_box.ptr.cast::<u8>(), Layout::new::<T>());
         }
     }
 }
@@ -127,20 +123,18 @@ The classic safe solution to overriding recursive drop and allowing moving out
 of Self during `drop` is to use an Option:
 
 ```rust
-#![feature(allocator_api, ptr_internals)]
-
 use std::alloc::{Allocator, GlobalAlloc, Global, Layout};
-use std::ptr::{drop_in_place, Unique, NonNull};
+use std::marker::PhantomData;
+use std::ptr::{drop_in_place, NonNull};
 use std::mem;
 
-struct Box<T>{ ptr: Unique<T> }
+struct Box<T>{ ptr: NonNull<T>, _marker: PhantomData<T> }
 
 impl<T> Drop for Box<T> {
     fn drop(&mut self) {
         unsafe {
             drop_in_place(self.ptr.as_ptr());
-            let c: NonNull<T> = self.ptr.into();
-            Global.deallocate(c.cast(), Layout::new::<T>());
+            Global.deallocate(self.ptr.cast(), Layout::new::<T>());
         }
     }
 }
@@ -154,8 +148,7 @@ impl<T> Drop for SuperBox<T> {
             // without `drop`ing the contents. Need to set the `box`
             // field as `None` to prevent Rust from trying to Drop it.
             let my_box = self.my_box.take().unwrap();
-            let c: NonNull<T> = my_box.ptr.into();
-            Global.deallocate(c.cast(), Layout::new::<T>());
+            Global.deallocate(my_box.ptr.cast(), Layout::new::<T>());
             mem::forget(my_box);
         }
     }
@@ -174,4 +167,5 @@ On balance this is an ok choice. Certainly what you should reach for by default.
 However, in the future we expect there to be a first-class way to announce that
 a field shouldn't be automatically dropped.
 
-[Unique]: phantom-data.html
+[`NonNull`]: ../std/ptr/struct.NonNull.html
+[`PhantomData`]: phantom-data.html
